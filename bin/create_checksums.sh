@@ -123,10 +123,23 @@ else
   error "Please provide a DIR_LIST or IMAGE_DIR"
 fi
 
+# CHECK THE DIRECTORY LISTING
+BAD_DIRS=
 while read dir
 do
-  echo $dir
+  if [ ! -d $dir ]; then
+    BAD_DIRS="$BAD_DIRS $dir"
+  fi
 done < $WORKING_LIST
+
+if [ -n "$BAD_DIRS" ]; then
+  echo "ERORR: The following directories in $WORKING_LIST could not be found" >&2
+  for dir in $BAD_DIRS
+  do
+    echo "ERROR: $dir" >&2
+  done
+  error "Please correct directory listing"
+fi
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
