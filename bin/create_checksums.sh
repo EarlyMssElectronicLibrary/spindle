@@ -174,6 +174,19 @@ fi
 dir=
 file=
 
+### CREATE MANIFESTS
+message "Writing manifests"
+while read dir
+do
+  $(cd $dir
+  for file in `ls *.tif *.tiff *.jpg *.jpeg 2>/dev/null`
+  do
+    md5 -r $file >> $MANIFEST_FILE
+  done
+  )
+done < $WORKING_LIST
+
+
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
 rm -f $tmp.?
