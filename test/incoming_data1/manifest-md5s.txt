@@ -1,0 +1,5 @@
+44943bbb7d369448027783b67fa579e1 data/dir1/file1.tif
+cf2bdfd16d69233f1b725038c2235e37 data/dir1/file2.tiff
+f9d56cbbb540b4c6f192a27c9ccb2bb7 data/dir1/file4.jpeg
+7b9da80eb03f5b08372aa137c021e6aa data/dir2/file3.jpg
+8f55980b0490ec47c20ccd0677b2ab1d data/dir2/file4.jpg
