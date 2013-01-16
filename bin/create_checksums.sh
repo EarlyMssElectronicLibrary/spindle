@@ -1,37 +1,44 @@
 #!/bin/sh
 
 read -r -d '' HELP <<-'EOF'
-Create manifests for all TIFF and JPEG files in each directory in DIR_LIST or
-the directory passed to the '-d' flag.  Directories are NOT handled
-recursively. One manifest will be created for each folder containing files.
-Thus a DIR_LIST with this content:
+Create a checksum manifest for all TIFF and JPEG files found under the 'data'
+directory in INPUT_DIR. INPUT_DIR defaults to the current dir if not provided.
 
-   ./dir1
-   ./dir2
-   ./dir3
-   ...
+The following is a valid directory structure:
 
-will generate the following manifest files:
+      .
+      └── data
+          ├── dir1
+          │   ├── file1.tif
+          │   ├── file2.tif
+          │   └── file4.jpg
+          └── dir2
+              ├── file3.jpg
+              └── file4.jpg
 
-   dir1/
-      file1.jpg
-      file2.jpg
-      manifest-md5s.txt
-   dir2/
-      file3.jpg
-      file4.jpg
-      manifest-md5s.txt
-   dir3/
-      ...
+Running $cmd script will add the file manifest-md5s.txt:
 
-Each manifest-md5s.txt file will look like this:
+      .
+      ├── data
+      │   ├── dir1
+      │   │   ├── file1.tif
+      │   │   ├── file2.tif
+      │   │   └── file4.jpg
+      │   └── dir2
+      │       ├── file3.jpg
+      │       └── file4.jpg
+      └── manifest-md5s.txt
 
-   9cd129974aeb50cb890a2505161177d0 file1.jpg
-   484c05e7dbc10e9c1671d6b7ab7a09fa file2.jpg
+The manifest file will have the content:
 
-This script is written for Mac OSs md5 command and runs md5 with '-r'
-option to ensure output of the format above, which is the standard idiom for
-md5 checksums. The default output of Mac OSs md5 command is different.
+      44943bbb7d369448027783b67fa579e1 data/dir1/file1.tif
+      cf2bdfd16d69233f1b725038c2235e37 data/dir1/file2.tif
+      f9d56cbbb540b4c6f192a27c9ccb2bb7 data/dir1/file4.jpg
+      7b9da80eb03f5b08372aa137c021e6aa data/dir2/file3.jpg
+      8f55980b0490ec47c20ccd0677b2ab1d data/dir2/file4.jpg
+
+This script runs the Mac OS command 'md5 -r'. The '-r' option reverses the 
+output to conform with more common 'md5' command behavior.
 EOF
 
 ### TEMPFILES
@@ -48,13 +55,14 @@ trap "rm -f $tmp.?; exit 1" 0 1 2 3 13 15
 cmd=`basename $0 .sh`
 
 usage() {
-   echo "Usage: $cmd {-h|-d IMAGE_DIR|DIR_LIST}"
+   echo "usage: $cmd [-h] [INPUT_DIR]"
+   echo ""
+   echo "Create a manifest for all image files in INPUT_DIR/data."
+   echo "INPUT_DIR defaults to '.'"
    echo ""
    echo "OPTIONS"
    echo ""
    echo "   -h             Display help message"
-   echo "   -d IMAGE_DIR   Directory to create the manifest in. DIR_LIST"
-   echo "                  argument will be ignored."
    echo ""
 }
 
@@ -73,6 +81,7 @@ error_no_exit() {
 
 error() {
   echo "$cmd: ERROR   - $1" 1>&2
+  echo ""
   usage
   exit 1
 }
@@ -90,12 +99,10 @@ log() {
 
 ### VARIABLES
 
-# a directory of images, arg to -d option
-IMAGE_DIR=
-# the user DIR_LIST argument; it is ignored if DIR_LIST
-DIR_LIST=
-# the list file the script uses
-WORKING_LIST=
+# the input dir
+INPUT_DIR=
+# the data directory
+DATA_DIR=
 # the name of the manifest in each dir
 MANIFEST_FILE=manifest-md5s.txt
 # image file extensions
@@ -109,9 +116,6 @@ while getopts ":hd:" opt; do
       help
       exit 1
       ;;
-    d)
-      IMAGE_DIR=$OPTARG
-      ;;
     \?)
       echo "ERROR Invalid option: -$OPTARG" >&2
       echo ""
@@ -124,89 +128,19 @@ done
 shift $((OPTIND-1))
 
 ### THESCRIPT
-# grab argument 1; it may be empty; if needed, we check for that below
-DIR_LIST=$1
-
-### get the WORKING_LIST
-if [ -n "$IMAGE_DIR" ]; then
-  if [ ! -d "$IMAGE_DIR" ]; then
-    error "Option IMAGE_DIR is not a directory: '$IMAGE_DIR'"
-  fi
-  WORKING_LIST=$tmp.1
-  echo "$IMAGE_DIR" > $WORKING_LIST
-  if [ -n "$DIR_LIST" ]; then
-    warning "Found IMAGE_DIR '$IMAGE_DIR' ignoring DIR_LIST '$DIR_LIST'"
-  fi
-elif [ -n "$DIR_LIST" ]; then
-    if [ ! -f $DIR_LIST ]; then
-      error "Directory listing not found: $DIR_LIST"
-    fi
-    WORKING_LIST=$DIR_LIST
-else
-  error "Please provide a DIR_LIST or IMAGE_DIR"
+# grab input directoy and confirm it exists
+INPUT_DIR=$1
+if [ -z "$INPUT_DIR" ]; then
+  message "No INPUT_DIR provided. Using '.'"
+  INPUT_DIR=.
+elif [ ! -d $INPUT_DIR ]; then
+  error "INPUT_DIR not found: $INPUT_DIR"
 fi
-
-# CHECK THE DIRECTORY LISTING
-message "Checking directories"
-BAD_DIRS=
-CHECKSUM_FILES=
-while read dir
-do
-  if [ ! -d $dir ]; then
-    BAD_DIRS="$BAD_DIRS $dir"
-  elif [ -f "$dir/$MANIFEST_FILE" ]; then
-    CHECKSUM_FILES="$CHECKSUM_FILES $dir/$MANIFEST_FILE"
-  fi
-done < $WORKING_LIST
-dir=
-
-
-if [ -n "$BAD_DIRS" -o -n "$CHECKSUM_FILES" ]; then
-  error_no_exit "The following errors were found:"
-  for dir in $BAD_DIRS
-  do
-    error_no_exit "Not a valid diretory: $dir"
-  done
-  for file in $CHECKSUM_FILES
-  do
-    error_no_exit "Checksum file exists: $file"
-  done
-  error "Please correct directory listing"
+# make sure there's a data directory in INPUT_DIR
+DATA_DIR=$INPUT_DIR/data
+if [ ! -d $DATA_DIR ]; then
+  error "Data directory not found: $DATA_DIR"
 fi
-dir=
-file=
-
-### CREATE MANIFESTS
-LS_ARGS=
-for x in $FILE_TYPES
-do
-  LS_ARGS="$LS_ARGS *.$x"
-done
-message "Writing manifests for files of type: $LS_ARGS"
-while read dir
-do
-  $(
-  cd $dir
-  for file in `ls $LS_ARGS 2>/dev/null`
-  do
-    md5 -r $file >> $MANIFEST_FILE
-  done
-  )
-  manifest=$dir/$MANIFEST_FILE
-  if [ -f $manifest ]; then
-    if [ -s $manifest ]; then
-      size=`wc -l $manifest | awk '{ print $1 }'`
-      message "  $manifest ($size entries)"
-      size=
-    else
-      warning "  EMPTY FILE $manifest"
-    fi
-  else
-    warning "FILE NOT CREATED: $manifest"
-  fi
-  manifest=
-done < $WORKING_LIST
-dir=
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
