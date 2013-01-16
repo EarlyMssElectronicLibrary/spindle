@@ -97,16 +97,17 @@ log() {
     echo "`date +%Y-%m-%dT%H:%M:%S` [$cmd] $1" >> $LOG
 }
 
-### VARIABLES
-
-# the input dir
-INPUT_DIR=
-# the data directory
-DATA_DIR=
+### CONSTANTS
 # the name of the manifest in each dir
 MANIFEST_FILE=manifest-md5s.txt
 # image file extensions
 FILE_TYPES="jpg JPG jpeg JPEG tiff TIFF tif TIF"
+
+### VARIABLES
+# the input dir
+INPUT_DIR=
+# the data directory
+DATA_DIR=
 
 ### OPTIONS
 while getopts ":hd:" opt; do
@@ -127,7 +128,9 @@ done
 
 shift $((OPTIND-1))
 
-### THESCRIPT
+### THE SCRIPT
+# check for valid input
+
 # grab input directoy and confirm it exists
 INPUT_DIR=$1
 if [ -z "$INPUT_DIR" ]; then
@@ -136,11 +139,24 @@ if [ -z "$INPUT_DIR" ]; then
 elif [ ! -d $INPUT_DIR ]; then
   error "INPUT_DIR not found: $INPUT_DIR"
 fi
+
 # make sure there's a data directory in INPUT_DIR
 DATA_DIR=$INPUT_DIR/data
 if [ ! -d $DATA_DIR ]; then
   error "Data directory not found: $DATA_DIR"
 fi
+
+# make sure the manifest doesn't already exist
+if [ -e $INPUT_DIR/$MANIFEST_FILE ]; then
+  error "Manifest already exists: $INPUT_DIR/$MANIFEST_FILE"
+fi
+
+# Build the manifest
+if [ "$INPUT_DIR" != "." ]; then
+  cd $INPUT_DIR
+fi
+
+find data -type f -exec md5 -r {} \; >> $MANIFEST_FILE
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
