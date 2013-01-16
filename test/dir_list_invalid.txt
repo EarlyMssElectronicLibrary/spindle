@@ -2,3 +2,4 @@ test/dir1
 test/dir2
 test/not_a_dir1
 test/not_a_dir2
+test/dir_with_manifest
