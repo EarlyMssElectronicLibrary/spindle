@@ -125,7 +125,7 @@ fi
 
 while read dir
 do
-
+  echo $dir
 done < $WORKING_LIST
 
 ### EXIT
