@@ -19,7 +19,9 @@ This command will verify the following:
   * each file in the 'data' occurs in the manifest
   * each file in 'data' matches its manifest checkum
 
-The manifest file must have the following structure.
+The manifest file must have one checksum on each line. Each line should be the
+digest, followed by one space, two spaces, or one space and an asterisk,
+followed by the path to the file. Thus:
 
       44943bbb7d369448027783b67fa579e1 data/dir1/file1.tif
       8f55980b0490ec47c20ccd0677b2ab1d data/dir2/file4.jpg
@@ -28,10 +30,10 @@ The manifest file must have the following structure.
 Note that there the data file path does not begin with a dot './data/...'.
 
 Be aware that different MD5 commands produce different ouptput formats. The
-only allowable variation is the number of spaces between the checksum and the
-file path. The above was produced using Mac OS 'md5' with the '-r' (reverse)
-option: 'md5 -r ARG'.  Normal Mac OS 'md5' output is atypical:
+above was produced using Mac OS command 'md5' with the '-r' option (reverse),
+'md5 -r ARG'. Normal Mac OS 'md5' output is atypical and is not valid:
 
+      # THIS FORMAT IS NOT VALID:
       MD5 (data/dir1/file1.tif) = 44943bbb7d369448027783b67fa579e1
 
 GNU md5sum and GNU coreutils 'gmd5sum' produce output with two spaces. 
@@ -39,7 +41,7 @@ GNU md5sum and GNU coreutils 'gmd5sum' produce output with two spaces.
       $ gmd5sum data/dir1/file1.tif 
       44943bbb7d369448027783b67fa579e1  data/dir1/file1.tif
 
-The second space is for a '*' when the -b/--binary option is used:
+The second space is will be an '*' when the -b/--binary option is used:
 
       $ gmd5sum -b data/dir1/file1.tif 
       44943bbb7d369448027783b67fa579e1 *data/dir1/file1.tif
@@ -87,6 +89,16 @@ error() {
   exit 1
 }
 
+fail() {
+  echo "$cmd: INVALID - $1" 1>&2
+  exit 2
+}
+
+success() {
+  echo "$cmd: VALID   - $1" 1>&2
+  exit 0
+}
+
 warning() {
   echo "$cmd: WARNING - $1" 1>&2
 }
@@ -109,6 +121,10 @@ FILE_TYPES="jpg JPG jpeg JPEG tiff TIFF tif TIF"
 INPUT_DIR=
 # the data directory
 DATA_DIR=
+# files that are missing from the manifest
+NOT_LISTED=
+# files in the manifest not found in the directory
+NOT_FOUND=
 
 ### OPTIONS
 while getopts ":hd:" opt; do
@@ -130,6 +146,19 @@ done
 shift $((OPTIND-1))
 
 ### THESCRIPT
+# first, find an MD5 command
+MD5_CMD=
+if which md5sum >/dev/null 2>&1 ; then
+  MD5_CMD=`which md5sum`
+elif which gmd5sum >/dev/null 2>&1 ; then
+  MD5_CMD=`which gmd5sum`
+elif which md5 >/dev/null 2>&1 ; then
+  MD5_CMD=`which md5`
+else
+  error "MD5 command not found; looked for gmd5sum, md5sum, md5"
+fi
+message "Using MD5 command: $MD5_CMD"
+
 # grab input directoy and confirm it exists
 INPUT_DIR=$1
 if [ -z "$INPUT_DIR" ]; then
@@ -150,82 +179,83 @@ if [ ! -f $INPUT_DIR/$MANIFEST_FILE ]; then
   error "No manifest found in $INPUT_DIR"
 fi
 
-exit
-
-### get the WORKING_LIST
-if [ -n "$IMAGE_DIR" ]; then
-  if [ ! -d "$IMAGE_DIR" ]; then
-    error "Option IMAGE_DIR is not a directory: '$IMAGE_DIR'"
-  fi
-  WORKING_LIST=$tmp.1
-  echo "$IMAGE_DIR" > $WORKING_LIST
-  if [ -n "$DIR_LIST" ]; then
-    warning "Found IMAGE_DIR '$IMAGE_DIR' ignoring DIR_LIST '$DIR_LIST'"
-  fi
-elif [ -n "$DIR_LIST" ]; then
-    if [ ! -f $DIR_LIST ]; then
-      error "Directory listing not found: $DIR_LIST"
-    fi
-    WORKING_LIST=$DIR_LIST
-else
-  error "Please provide a DIR_LIST or IMAGE_DIR"
+# make sure the md5 file is a valid format
+valid_format="[0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z] [ *]\?[0-9a-zA-Z_/.-][0-9a-zA-Z_/.-]*"
+if grep "^MD5" $INPUT_DIR/$MANIFEST_FILE > /dev/null 2>&1 ; then
+  error_no_exit "This looks like a Mac OS md5 command file; please use 'md5 -r'"
+  error "manifest file format not valid"
+elif grep -v "$valid_format" $INPUT_DIR/$MANIFEST_FILE >/dev/null 2>&1 ; then
+  error "manifest file format not valid"
 fi
 
-# CHECK THE DIRECTORY LISTING
-message "Checking directories"
-BAD_DIRS=
-CHECKSUM_FILES=
-while read dir
-do
-  if [ ! -d $dir ]; then
-    BAD_DIRS="$BAD_DIRS $dir"
-  elif [ -f "$dir/$MANIFEST_FILE" ]; then
-    CHECKSUM_FILES="$CHECKSUM_FILES $dir/$MANIFEST_FILE"
-  fi
-done < $WORKING_LIST
-dir=
-
-
-if [ -n "$BAD_DIRS" -o -n "$CHECKSUM_FILES" ]; then
-  error_no_exit "The following errors were found:"
-  for dir in $BAD_DIRS
-  do
-    error_no_exit "Not a valid diretory: $dir"
-  done
-  for file in $CHECKSUM_FILES
-  do
-    error_no_exit "Checksum file exists: $file"
-  done
-  error "Please correct directory listing"
+### VERIFY MANIFEST
+# change to the input dir
+if [ "$INPUT_DIR" != "." ]; then
+  cd $INPUT_DIR
 fi
-dir=
-file=
 
-### CREATE MANIFESTS
-message "Writing manifests"
-while read dir
-do
-  $(cd $dir
-  for file in `ls *.tif *.tiff *.jpg *.jpeg 2>/dev/null`
+### VERIFY FILE LISTS
+# make sure all 'data' files listed in manifest
+data_files=$tmp.1
+find data -type f | sort > $data_files
+manifest_files=$tmp.2
+awk '{ print $2 }' $MANIFEST_FILE | sed 's/\*//' | sort > $manifest_files
+diff_file=$tmp.3
+
+# run diff
+diff $data_files $manifest_files > $diff_file
+# if diff errors out, then something's not right; dig out the differences
+if [ $? -ne 0 ]; then
+  error_no_exit "Manifest does not match directory contents"
+
+  NOT_LISTED=`grep "^<" $diff_file | sed 's/<//'`
+  for file in $NOT_LISTED
   do
-    md5 -r $file >> $MANIFEST_FILE
+    error_no_exit "   Not in manifest-md5s.txt: $file"
   done
-  )
-  manifest=$dir/$MANIFEST_FILE
-  if [ -f $manifest ]; then
-    if [ -s $manifest ]; then
-      size=`wc -l $manifest | awk '{ print $1 }'`
-      message "  $manifest ($size entries)"
-      size=
-    else
-      warning "  EMPTY FILE $manifest"
-    fi
+
+  NOT_FOUND=`grep "^>" $diff_file | sed 's/>//'`
+  for file in $NOT_FOUND
+  do
+    error_no_exit "   Manifest file not found:  $file"
+  done
+  fail "MANIFEST LIST DOES NOT MATCH data DIRECTORY CONTENTS"
+fi
+
+### VERIFY THE CHECKSUMS
+# see if we can find md5sum or gmd5sum
+
+if echo "$MD5_CMD" | grep "md5sum" >/dev/null 2>&1 ; then
+  message "Checking $INPUT_DIR/$MANIFEST_FILE with $MD5_CMD"
+  # run the command
+  $MD5_CMD -c $MANIFEST_FILE
+  if [ $? -eq 0 ]; then
+    success "data is valid"
   else
-    warning "FILE NOT CREATED: $manifest"
+    fail "ERRORS FOUND"
   fi
-  manifest=
-done < $WORKING_LIST
-dir=
+fi
+
+# if we got this far, we have to use md5 and check each entry individually 
+bad_checksum=
+while read file
+do
+  line=`$MD5_CMD -r $file`
+  sum=`echo $line | awk '{ print $1 }'`
+  path=`echo $line | sed 's/\*//' | awk '{ print $2 }'`
+  if grep "$sum [* ]\?$path" $MANIFEST_FILE >/dev/null 2>&1 ; then
+    echo "$file: OK"
+  else
+    echo "$file: FAILED"
+    bad_checksum="$bad_checksum $file"
+  fi
+done < $data_files
+
+if [ -n "$bad_checksum" ]; then
+  fail "ERRORS FOUND"
+else
+  success "data is valid"
+fi
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
