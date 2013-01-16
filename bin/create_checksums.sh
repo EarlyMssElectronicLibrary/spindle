@@ -184,8 +184,21 @@ do
     md5 -r $file >> $MANIFEST_FILE
   done
   )
+  manifest=$dir/$MANIFEST_FILE
+  if [ -f $manifest ]; then
+    if [ -s $manifest ]; then
+      size=`wc -l $manifest | awk '{ print $1 }'`
+      message "  $manifest ($size entries)"
+      size=
+    else
+      warning "  EMPTY FILE $manifest"
+    fi
+  else
+    warning "FILE NOT CREATED: $manifest"
+  fi
+  manifest=
 done < $WORKING_LIST
-
+dir=
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
