@@ -98,6 +98,8 @@ DIR_LIST=
 WORKING_LIST=
 # the name of the manifest in each dir
 MANIFEST_FILE=manifest-md5s.txt
+# image file extensions
+FILE_TYPES="jpg JPG jpeg JPEG tiff TIFF tif TIF"
 
 ### OPTIONS
 while getopts ":hd:" opt; do
@@ -175,11 +177,17 @@ dir=
 file=
 
 ### CREATE MANIFESTS
-message "Writing manifests"
+LS_ARGS=
+for x in $FILE_TYPES
+do
+  LS_ARGS="$LS_ARGS *.$x"
+done
+message "Writing manifests for files of type: $LS_ARGS"
 while read dir
 do
-  $(cd $dir
-  for file in `ls *.tif *.tiff *.jpg *.jpeg 2>/dev/null`
+  $(
+  cd $dir
+  for file in `ls $LS_ARGS 2>/dev/null`
   do
     md5 -r $file >> $MANIFEST_FILE
   done
