@@ -129,8 +129,20 @@ done
 shift $((OPTIND-1))
 
 ### THE SCRIPT
-# check for valid input
+# first, find an MD5 command
+MD5_CMD=
+if which md5sum >/dev/null 2>&1 ; then
+  MD5_CMD=`which md5sum`
+elif which gmd5sum >/dev/null 2>&1 ; then
+  MD5_CMD=`which gmd5sum`
+elif which md5 >/dev/null 2>&1 ; then
+  MD5_CMD="`which md5` -r"
+else
+  error "MD5 command not found; looked for gmd5sum, md5sum, md5"
+fi
+message "Using MD5 command: $MD5_CMD"
 
+# check for valid input
 # grab input directoy and confirm it exists
 INPUT_DIR=$1
 if [ -z "$INPUT_DIR" ]; then
@@ -156,7 +168,23 @@ if [ "$INPUT_DIR" != "." ]; then
   cd $INPUT_DIR
 fi
 
-find data -type f -exec md5 -r {} \; >> $MANIFEST_FILE
+file_list=$tmp.1
+find data -type f > $file_list
+
+curr=0
+total=`wc -l $file_list | awk '{ print $1 }'`
+width=`echo $total | wc -c`
+date_cmd="date +%FT%T%z"
+count=`printf "%${width}d" $curr`
+message "$count/$total `$date_cmd`"
+while read file
+do
+  $MD5_CMD $file >> $MANIFEST_FILE
+  curr=$(( $curr + 1))
+  count=`printf "%${width}d" $curr`
+  message "$count/$total  `$date_cmd`  $file"
+done < $file_list
+message "$count/$total `$date_cmd` $MANIFEST_FILE complete" 
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
