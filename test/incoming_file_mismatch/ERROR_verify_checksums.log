@@ -1,0 +1,3 @@
+2013-01-18T00:12:09 [verify_checksums] data/.hidden_file    NOT IN MANIFEST
+2013-01-18T00:12:09 [verify_checksums] data/dir2/file20.jpg NOT IN MANIFEST
+2013-01-18T00:12:09 [verify_checksums] data/dir2/file4.jpg  NO SUCH FILE

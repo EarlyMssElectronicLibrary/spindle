@@ -1,0 +1,5 @@
+2013-01-18T00:04:52 [verify_filenames] data/dir1/file1.tif   BAD_SHOOT_LIST
+2013-01-18T00:04:52 [verify_filenames] data/dir1/file2.tiff  BAD_SHOOT_LIST
+2013-01-18T00:04:52 [verify_filenames] data/dir1/file4.jpeg  BAD_SHOOT_LIST
+2013-01-18T00:04:52 [verify_filenames] data/dir2/file3.jpg   BAD_SHOOT_LIST
+2013-01-18T00:04:52 [verify_filenames] data/dir2/file4.jpg   BAD_SHOOT_LIST

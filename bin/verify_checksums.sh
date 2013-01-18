@@ -104,10 +104,16 @@ warning() {
 }
 
 ### LOGGING
-logfile=${LOGFILE:LOG_${cmd}}.log
+logfile=LOG_${cmd}.log
 
 log() {
-    echo "`date +%Y-%m-%dT%H:%M:%S` [$cmd] $1" >> $LOG
+    echo "`date +%Y-%m-%dT%H:%M:%S` [$cmd] $1" >> $logfile
+}
+
+error_file=ERROR_${cmd}.log
+
+log_error() {
+  echo "`date +%Y-%m-%dT%H:%M:%S` [$cmd] $1" >> $error_file
 }
 
 ### CONSTANTS
@@ -194,10 +200,22 @@ if [ "$INPUT_DIR" != "." ]; then
   cd $INPUT_DIR
 fi
 
+# clean up the logs
+if [ -f $logfile ]; then
+  message "Deleting previous log file `pwd`/$logfile"
+  rm $logfile
+fi
+if [ -f $error_file ]; then
+  message "Deleting previous error file `pwd`/$error_file"
+  rm $error_file
+fi
+
 ### VERIFY FILE LISTS
 # make sure all 'data' files listed in manifest
 data_files=$tmp.1
 find data -type f | sort > $data_files
+file_width=`awk '{ if (length($1) > max) { max = length($1) } } END { print max }' $data_files`
+
 manifest_files=$tmp.2
 awk '{ print $2 }' $MANIFEST_FILE | sed 's/\*//' | sort > $manifest_files
 diff_file=$tmp.3
@@ -211,14 +229,19 @@ if [ $? -ne 0 ]; then
   NOT_LISTED=`grep "^<" $diff_file | sed 's/<//'`
   for file in $NOT_LISTED
   do
-    error_no_exit "   Not in manifest-md5s.txt: $file"
+    msg="`printf "%-${file_width}s" $file` NOT IN MANIFEST"
+    log_error "$msg"
+    error_no_exit "$msg"
   done
 
   NOT_FOUND=`grep "^>" $diff_file | sed 's/>//'`
   for file in $NOT_FOUND
   do
-    error_no_exit "   Manifest file not found:  $file"
+    msg="`printf "%-${file_width}s" $file` NO SUCH FILE"
+    log_error "$msg"
+    error_no_exit "$msg"
   done
+  message "Errors logged to `pwd`/$error_file"
   fail "MANIFEST LIST DOES NOT MATCH data DIRECTORY CONTENTS"
 fi
 
@@ -230,8 +253,12 @@ if echo "$MD5_CMD" | grep "md5sum" >/dev/null 2>&1 ; then
   # run the command
   $MD5_CMD -c $MANIFEST_FILE
   if [ $? -eq 0 ]; then
+    log "ALL VALID"
+    message "Completion logged to `pwd`/$logfile"
     success "data is valid"
   else
+    log_error "ERRORS FOUND"
+    message "Errors logged to `pwd`/$error_file"
     fail "ERRORS FOUND"
   fi
 fi
@@ -252,8 +279,12 @@ do
 done < $data_files
 
 if [ -n "$bad_checksum" ]; then
+  log_error "ERRORS FOUND"
+  message "Errors logged to `pwd`/$error_file"
   fail "ERRORS FOUND"
 else
+  log "ALL VALID"
+  message "Completion logged to `pwd`/$logfile"
   success "data is valid"
 fi
 

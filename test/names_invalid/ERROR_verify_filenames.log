@@ -1,0 +1,6 @@
+2013-01-17T23:50:08 [verify_filenames] data/0020_00.009_WCB_PCA_RGB_01.jpg       BAD_SHOT_SEQ
+2013-01-17T23:50:08 [verify_filenames] data/0020_000009_W-B_PCA_RGB_01.jpg       BAD_PROCESSOR
+2013-01-17T23:50:08 [verify_filenames] data/0020_000009_WCB_PC(A_RGB_01.jpg      BAD_MODIFIERS
+2013-01-17T23:50:08 [verify_filenames] data/0020_000009_WCB_PCA_RGB123j-01'.jpg  BAD_MODIFIERS
+2013-01-17T23:50:08 [verify_filenames] data/0020_000009_WCBA_PCA_RGB_01.jpg      BAD_PROCESSOR
+2013-01-17T23:50:08 [verify_filenames] data/0A20_000009_WCB_PCA_RGB_01.jpg       BAD_SHOOT_LIST

@@ -33,7 +33,7 @@ This command will verify:
 
 Valid characters are:
 
-      abcdefghijklmnopqrstuvwxyz1234567890_-+
+   ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_-+
 
 First order fields are divided by underscores: _
 Second order fields are divided by dashes: -
@@ -132,27 +132,30 @@ warning() {
 }
 
 ### LOGGING
-logfile=${LOGFILE:LOG_${cmd}}.log
+logfile=LOG_${cmd}.log
 
 log() {
-    echo "`date +%Y-%m-%dT%H:%M:%S` [$cmd] $1" >> $LOG
+    echo "`date +%Y-%m-%dT%H:%M:%S` [$cmd] $1" >> $logfile
 }
+
+error_file=ERROR_${cmd}.log
+
+log_error() {
+  echo "`date +%Y-%m-%dT%H:%M:%S` [$cmd] $1" >> $error_file
+}
+
 
 ### CONSTANTS
 # the name of the manifest in each dir
-MANIFEST_FILE=manifest-md5s.txt
 # image file extensions
 FILE_TYPES="jpg JPG jpeg JPEG tiff TIFF tif TIF"
+STANDARD_EXTS="jpg tif"
 
 ### VARIABLES
 # the input dir
 INPUT_DIR=
 # the data directory
 DATA_DIR=
-# files that are missing from the manifest
-NOT_LISTED=
-# files in the manifest not found in the directory
-NOT_FOUND=
 
 ### OPTIONS
 while getopts ":hd:" opt; do
@@ -174,7 +177,155 @@ done
 shift $((OPTIND-1))
 
 ### THESCRIPT
+# grab input directoy and confirm it exists
+INPUT_DIR=$1
+if [ -z "$INPUT_DIR" ]; then
+  message "No INPUT_DIR provided. Using '.'"
+  INPUT_DIR=.
+elif [ ! -d $INPUT_DIR ]; then
+  error "INPUT_DIR not found: $INPUT_DIR"
+fi
 
+# make sure there's a data directory in INPUT_DIR
+DATA_DIR=$INPUT_DIR/data
+if [ ! -d $DATA_DIR ]; then
+  error "Data directory not found: $DATA_DIR"
+fi
+
+### VERIFY FILENAMES
+# change to the input dir
+if [ "$INPUT_DIR" != "." ]; then
+  cd $INPUT_DIR
+fi
+
+# clean up the logs
+if [ -f $logfile ]; then
+  message "Deleting previous log file `pwd`/$logfile"
+  rm $logfile
+fi
+if [ -f $error_file ]; then
+  message "Deleting previous error file `pwd`/$error_file"
+  rm $error_file
+fi
+
+file_list=$tmp.1
+find data -type f > $file_list
+file_width=`awk '{ if (length($1) > max) { max = length($1) } } END { print max }' $file_list`
+file_types=$tmp.2
+for x in $FILE_TYPES; do echo $x; done > $file_types
+standard_exts=$tmp.3
+for x in $STANDARD_EXTS; do echo $x; done > $standard_exts
+
+# SHOOT_LIST
+VALID_CHARS="[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_+-]"
+VALID_FIELD_CHARS="[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890+-]"
+SHOOT_LIST="[0-9][0-9][0-9][0-9]"
+SHOT_SEQ="[0-9][0-9][0-9][0-9][0-9][0-9]"
+PROCESSOR="[a-zA-Z][a-zA-Z][a-zA-Z]"
+
+file_shoot_list="^${SHOOT_LIST}_"
+file_shot_seq="${file_shoot_list}${SHOT_SEQ}_"
+file_processor="${file_shot_seq}${PROCESSOR}_"
+file_proc_type="${file_processor}${VALID_FIELD_CHARS}${VALID_FIELD_CHARS}*"
+file_modifiers="${file_proc_type}_\?${VALID_CHARS}${VALID_CHARS}*$"
+
+date_cmd="date +%FT%T%z"
+bad_file_names=$tmp.4
+warnings=$tmp.5
+skipped=$tmp.6
+curr=0
+good=0
+total=`wc -l $file_list | awk '{ print $1 }'`
+checked=$total
+width=`echo $total | wc -c`
+count=`printf "%${width}d" $curr`
+message "$count/$total `$date_cmd`"
+while read file
+do
+  curr=$(( $curr + 1))
+  base=`basename $file`
+  # HIDDEN FILES
+  if echo $base | grep "^\." >/dev/null 2>&1 ; then
+    echo "SKIPPED `printf "%-15s" "HIDDEN_FILE"` $base" >> $skipped
+    checked=$(( $checked - 1))
+  # REGULAR FILES
+  else
+    ext=`echo $base | awk -F'.' '{ print $NF }'`
+    if grep "^$ext$" $file_types >/dev/null 2>&1 ; then
+      if ! grep "^$ext$" $standard_exts >/dev/null 2>&1 ; then
+        echo "`printf "%-10s" "NON_STD_EXT"` $base" >> $warnings
+      fi
+
+      # THESE WE CHECK
+      core=`basename $base ".$ext"`
+      if ! echo "$core" | grep "$file_shoot_list" > /dev/null 2>&1 ; then
+        echo "`printf "%-${file_width}s" $file`  BAD_SHOOT_LIST" >> $bad_file_names
+      elif ! echo "$core" | grep "$file_shot_seq" > /dev/null 2>&1 ; then
+        echo "`printf "%-${file_width}s" $file`  BAD_SHOT_SEQ" >> $bad_file_names
+      elif ! echo "$core" | grep "$file_processor" > /dev/null 2>&1 ; then
+        echo "`printf "%-${file_width}s" $file`  BAD_PROCESSOR" >> $bad_file_names
+      elif ! echo "$core" | grep "$file_proc_type" > /dev/null 2>&1 ; then
+        echo "`printf "%-${file_width}s" $file`  BAD_PROC_TYPE" >> $bad_file_names
+      elif ! echo "$core" | grep "$file_modifiers" > /dev/null 2>&1 ; then
+        echo "`printf "%-${file_width}s" $file`  BAD_MODIFIERS" >> $bad_file_names
+      else
+        good=$(( $good + 1 ))
+      fi
+
+    else
+      echo "SKIPPED `printf "%-15s" "INVALID_TYPE"` $base" >> $skipped
+      checked=$(( $checked - 1 ))
+    fi
+  fi
+  # print count and time every 1000 files
+  if [ $(( $curr % 1000 )) -eq 0 ]; then
+    count=`printf "%${width}d" $curr`
+    message "$count/$total `$date_cmd`"
+  fi
+done < $file_list
+count=`printf "%${width}d" $curr`
+message "$count/$total `$date_cmd`"
+
+
+if [ -s $warnings ]; then
+  num=`wc -l $warnings | awk '{ print $1 }'`
+  warning "there were $num WARNINGS"
+  while read line
+  do
+    warning "    $line"
+  done < $warnings
+fi
+
+if [ -s $bad_file_names ]; then
+  num=`wc -l $bad_file_names | awk '{ print $1 }'`
+  while read line
+  do
+    error_no_exit "$line"
+    log_error "$line"
+  done < $bad_file_names
+  error_no_exit "$num of $total files had bad names"
+fi
+
+if [ -s $skipped ]; then
+  num=`wc -l $skipped | awk '{ print $1 }'`
+  warning "$num of $total files were SKIPPED"
+  while read line
+  do
+    message "    $line"
+  done < $skipped
+fi
+
+message "$good of $checked checked files had VALID file names"
+
+if [ -s $bad_file_names ]; then
+  message "Errors logged to `pwd`/$error_file"
+  exit 2
+fi
+
+# leave a timestamp of when this task finish
+log "ALL VALID"
+message "Completion logged to `pwd`/$logfile"
+success "$good of $checked checked files had VALID file names"
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
