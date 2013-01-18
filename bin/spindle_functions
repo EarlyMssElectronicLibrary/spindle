@@ -4,6 +4,15 @@
 #  --  export SPINDLE_COMMAND=`basename $0`
 #  --  export HELP
 #  --  source `dirname $0`/spindle_functions
+#  --  if present, delete function 'message'
+#  --  if present, delete function 'error_no_exit'
+#  --  if present, delete function 'error'
+#  --  if present, delete function 'fail'
+#  --  if present, delete function 'success'
+#  --  if present, delete function 'warning'
+#  --  if present, delete function 'help'
+#  --  if present, delete function 'log'
+#  --  if present, delete function 'log_error'
 #
 
 # MESSAGE AND USAGE FUNCTIONS 
