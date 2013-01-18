@@ -22,7 +22,6 @@ The following illustrates the correct directory structure.
       │   └── 0015_000013_DJK_ICA_04_RGB.tif
       └── manifest-md5s.txt
 
-
 EOF
 
 ### TEMPFILES
@@ -58,10 +57,10 @@ MANIFEST_FILE=manifest-md5s.txt
 INPUT_DIR=
 # the data directory
 DATA_DIR=
-# files that are missing from the manifest
-NOT_LISTED=
-# files in the manifest not found in the directory
-NOT_FOUND=
+# JSON_FILE
+JSON_FILE=
+# FILE_NAME_PATTERN=
+
 
 ### OPTIONS
 while getopts ":hd:" opt; do
@@ -98,11 +97,57 @@ if [ ! -d $DATA_DIR ]; then
   error "Data directory not found: $DATA_DIR"
 fi
 
-# TODO Check for ERROR files
-# TODO Check for LOG_verify_filenames.log
-# TODO Check for LOG_verify_metadata.log
-# TODO Check manifest-md5s.txt date
-# TODO Check manifest-md5s.txt file lists
+### HARVEST METADATA
+# change to the input dir
+if [ "$INPUT_DIR" != "." ]; then
+  cd $INPUT_DIR
+fi
+
+file_list=$tmp.1
+# get all non-hidden files
+find data -type f ! -name .\* > $file_list
+# get the processor code
+processor=`grep  "${SHOOT_LIST}_${SHOT_SEQ}_${PROCESSOR}_.*" $file_list | head -n1`
+processor=`basename $processor | awk -F_ '{ print $3 }'`
+json_base="${processor}_metadata_`date +%Y%m%d`"
+
+json_tmp=$tmp.2
+chunk=0
+count=0
+total=`wc -l $file_list | awk '{ print $1 }'`
+width=`echo "$total" | wc -c`
+width=$(( $width - 1 ))
+date_cmd="date +%FT%T%z"
+message "`$date_cmd`  `printf "%${width}d" $count`/$total files read"
+while read file
+do
+  count=$(( $count + 1 ))
+  if [ $count -eq 1 ]; then
+    # first file; replace last line "}]" with "},"
+    exiftool -j $file | sed '$ s/\]$/,/' >> $json_tmp
+  else
+    # replace first line "[{" with "{"
+    # replace last line "}]" with "},"
+    exiftool -j $file | sed -e '$ s/\]$/,/' -e '1 s/^\[//' >> $json_tmp
+  fi
+  if [ "$(( $count % 200 ))" -eq 0 ]; then
+    json_file="${json_base}_`printf "%03d" $chunk`.json"
+    # last line should be "}]"; make it so
+    sed '$ s/,$/]/' $json_tmp > $json_file
+    message "Wrote JSON file to: `pwd`/$json_file"
+    message "`$date_cmd`  `printf "%${width}d" $count`/$total files read"
+    # empty the temp file
+    : > $json_tmp
+    chunk=$(( $chunk + 1 ))
+  fi
+done < $file_list
+
+# last line should be "}]"; make it so
+json_file="${json_base}_`printf "%03d" $chunk`.json"
+sed '$ s/,$/]/' $json_tmp > $json_file
+message "Wrote JSON file to: `pwd`/$json_file"
+message "`$date_cmd`  `printf "%${width}d" $count`/$total files read"
+  
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
