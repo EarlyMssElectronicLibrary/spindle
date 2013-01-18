@@ -65,3 +65,8 @@ error_file=ERROR_${SPINDLE_COMMAND}.log
 log_error() {
   echo "`date +%Y-%m-%dT%H:%M:%S` [$SPINDLE_COMMAND] $1" >> $error_file
 }
+
+# CONSTANTS
+SHOOT_LIST="[0-9][0-9][0-9][0-9]"
+SHOT_SEQ="[0-9][0-9][0-9][0-9][0-9][0-9]"
+PROCESSOR="[a-zA-Z][a-zA-Z][a-zA-Z]"
