@@ -1,5 +1,19 @@
 #!/bin/sh
 
+# TODO update to use spindle_functions
+# TODO export SPINDLE_COMMAND=`basename $0`
+# TODO export HELP
+# TODO source `dirname $0`/spindle_functions
+# TODO delete function 'message'
+# TODO delete function 'error_no_exit'
+# TODO delete function 'error'
+# TODO delete function 'fail'
+# TODO delete function 'success'
+# TODO delete function 'warning'
+# TODO delete function 'help'
+# TODO delete function 'log'
+# TODO delete function 'log_error'
+
 read -r -d '' HELP <<-'EOF'
 For an INPUT_DIR of the correct structure, verify all image file names for
 correct format. The INPUT dir must contain at its root a 'data' directoy. 
