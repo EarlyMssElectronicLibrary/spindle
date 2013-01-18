@@ -1,0 +1,58 @@
+# spindle functions shared by all spindle shells scripts.  Scripts using
+# spindle_functions should:
+# 
+#  --  export SPINDLE_COMMAND=`basename $0`
+#  --  export HELP
+#  --  source `dirname $0`/spindle_functions
+#
+
+# MESSAGE AND USAGE FUNCTIONS 
+message() {
+  echo "$SPINDLE_COMMAND: INFO    - $1"
+}
+
+error_no_exit() {
+  echo "$SPINDLE_COMMAND: ERROR   - $1" 1>&2
+}
+
+error() {
+  echo "$SPINDLE_COMMAND: ERROR   - $1" 1>&2
+  # if there's a usage function; print usage
+  if type usage | grep "function" >/dev/null 2>&1 ; then
+    echo ""
+    usage
+  fi
+  exit 1
+}
+
+fail() {
+  echo "$SPINDLE_COMMAND: INVALID - $1" 1>&2
+  exit 2
+}
+
+success() {
+  echo "$SPINDLE_COMMAND: VALID   - $1" 1>&2
+  exit 0
+}
+
+warning() {
+  echo "$SPINDLE_COMMAND: WARNING - $1" 1>&2
+}
+
+help() {
+  echo "$HELP"
+  echo ""
+}
+
+### LOGGING
+logfile=LOG_${SPINDLE_COMMAND}.log
+
+log() {
+    echo "`date +%Y-%m-%dT%H:%M:%S` [$SPINDLE_COMMAND] $1" >> $logfile
+}
+
+error_file=ERROR_${SPINDLE_COMMAND}.log
+
+log_error() {
+  echo "`date +%Y-%m-%dT%H:%M:%S` [$SPINDLE_COMMAND] $1" >> $error_file
+}
