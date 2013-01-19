@@ -170,6 +170,8 @@ STANDARD_EXTS="jpg tif"
 INPUT_DIR=
 # the data directory
 DATA_DIR=
+VALID_FILES=valid_file_names.txt
+:> $VALID_FILES
 
 ### OPTIONS
 while getopts ":hd:" opt; do
@@ -283,6 +285,7 @@ do
       elif ! echo "$core" | grep "$file_modifiers" > /dev/null 2>&1 ; then
         echo "`printf "%-${file_width}s" $file`  BAD_MODIFIERS" >> $bad_file_names
       else
+        echo "$file" >> $VALID_FILES
         good=$(( $good + 1 ))
       fi
 
