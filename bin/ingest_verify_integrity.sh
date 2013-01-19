@@ -137,10 +137,10 @@ do
     count=`printf "%${width}d" $curr`
     if md5sum -c  `basename $file`.md5 ; then
       echo "$SPINDLE_COMMAND: OK      -  $file" >> $INGEST_VERICATION_LOG
-      message "$count/$total $file OK"
+      message "$count/$total $file  `$date_cmd`  OK"
     else
       echo "$SPINDLE_COMMAND: ERROR   -  $file" >> $INGEST_VERICATION_LOG
-      error_no_exit "$count/$total $file ERROR"
+      error_no_exit "$count/$total $file  `$date_cmd`  ERROR"
     fi
   done < $seq_files
 done
