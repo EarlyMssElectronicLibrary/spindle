@@ -29,10 +29,12 @@ The ingest of delivered processed images has the following steps:
 
 * Verification of correct file name formats -- `verify_filenames.sh`
 
-* Verification of the presence of expected metadata `-verify_metadata.sh`
+* Verification of the presence of expected metadata -- `verify_metadata.sh`
 
-* Collection of metadata for ingest
+* Collection of metadata for ingest -- `collect_metadata.sh`
 
 * Upload of ingest metadata
 
-* Copying of data to repository
+* Copying of data to repository -- `ingest_processed.sh`
+
+* Verification of copy -- `ingest_verify_integrity.sh`
