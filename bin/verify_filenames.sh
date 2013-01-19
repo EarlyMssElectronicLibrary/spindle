@@ -103,7 +103,7 @@ trap "rm -f $tmp.?; exit 1" 0 1 2 3 13 15
 cmd=`basename $0 .sh`
 
 usage() {
-   echo "Usage: $cmd {-h|-d IMAGE_DIR|DIR_LIST}"
+   echo "Usage: $cmd [-h] [INPUT_DIR]"
    echo ""
    echo "OPTIONS"
    echo ""
