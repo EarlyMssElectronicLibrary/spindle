@@ -40,7 +40,7 @@ export SPINDLE_COMMAND=$cmd
 source `dirname $0`/spindle_functions
 
 usage() {
-   echo "Usage: $cmd {-h|-d IMAGE_DIR|DIR_LIST}"
+   echo "Usage: $cmd [-h] [INPUT_DIR]"
    echo ""
    echo "OPTIONS"
    echo ""
@@ -110,25 +110,31 @@ find data -type f ! -name .\* > $file_list
 processor=`grep  "${SHOOT_LIST}_${SHOT_SEQ}_${PROCESSOR}_.*" $file_list | head -n1`
 processor=`basename $processor | awk -F_ '{ print $3 }'`
 json_base="${processor}_metadata_`date +%Y%m%d`"
-
 json_tmp=$tmp.2
-chunk=0
-count=0
+
+# get file size in bytes, then make sure we get everything else
+exif_opts="-fileSize# -all"
+
+count=0  # which file we're one
+chunk=0  # chunk in to json files of 200 images ea.
 total=`wc -l $file_list | awk '{ print $1 }'`
+# width for printf; make the count line up
 width=`echo "$total" | wc -c`
 width=$(( $width - 1 ))
+# ISO date format YYYY-mm-ddTHH:MM:SS+-OFFSET
 date_cmd="date +%FT%T%z"
 message "`$date_cmd`  `printf "%${width}d" $count`/$total files read"
 while read file
 do
   count=$(( $count + 1 ))
-  if [ $count -eq 1 ]; then
+  # if json_tmp is empty, then this is the first entry
+  if [ ! -s $json_tmp ]; then
     # first file; replace last line "}]" with "},"
-    exiftool -j $file | sed '$ s/\]$/,/' >> $json_tmp
+    exiftool -j $exif_opts $file | sed '$ s/\]$/,/' >> $json_tmp
   else
     # replace first line "[{" with "{"
     # replace last line "}]" with "},"
-    exiftool -j $file | sed -e '$ s/\]$/,/' -e '1 s/^\[//' >> $json_tmp
+    exiftool -j $exif_opts $file | sed -e '$ s/\]$/,/' -e '1 s/^\[//' >> $json_tmp
   fi
   if [ "$(( $count % 200 ))" -eq 0 ]; then
     json_file="${json_base}_`printf "%03d" $chunk`.json"
@@ -142,11 +148,14 @@ do
   fi
 done < $file_list
 
-# last line should be "}]"; make it so
-json_file="${json_base}_`printf "%03d" $chunk`.json"
-sed '$ s/,$/]/' $json_tmp > $json_file
-message "Wrote JSON file to: `pwd`/$json_file"
-message "`$date_cmd`  `printf "%${width}d" $count`/$total files read"
+# if we have any data left over, put it in a file
+if [ -s $json_tmp ]; then
+  # last line should be "}]"; make it so
+  json_file="${json_base}_`printf "%03d" $chunk`.json"
+  sed '$ s/,$/]/' $json_tmp > $json_file
+  message "Wrote JSON file to: `pwd`/$json_file"
+  message "`$date_cmd`  `printf "%${width}d" $count`/$total files read"
+fi
   
 
 ### EXIT
