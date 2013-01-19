@@ -70,3 +70,5 @@ log_error() {
 SHOOT_LIST="[0-9][0-9][0-9][0-9]"
 SHOT_SEQ="[0-9][0-9][0-9][0-9][0-9][0-9]"
 PROCESSOR="[a-zA-Z][a-zA-Z][a-zA-Z]"
+MANIFEST_FILE=manifest-md5s.txt
+VALID_FILES=valid_file_names.txt
