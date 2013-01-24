@@ -36,6 +36,7 @@ testBadShootList () {
   archive=$FIXTURES/names_invalid
   output=$tmp.1
   verify_filenames.sh $archive > $output 2>&1
+  assertEquals "should error on exit" 1 $?
   bad_shoot_list=`grep "BAD_SHOOT_LIST" $output | awk '{ print $4 }'`
   assertEquals "BAD_SHOOT_LIST" 'data/0A20_000009_WCB_PCA_RGB_01.jpg' $bad_shoot_list
   
@@ -51,6 +52,7 @@ testBadModifiers() {
   archive=$FIXTURES/names_invalid
   output=$tmp.1
   verify_filenames.sh $archive > $output 2>&1
+  assertEquals "should error on exit" 1 $?
   bad_modifiers=`grep "BAD_MODIFIERS" $output | sed -n '1p' | awk '{ print $4 }'`
   assertEquals "BAD_MODIFIERS" 'data/0020_000009_WCB_PC(A_RGB_01.jpg' $bad_modifiers
   bad_modifiers=`grep "BAD_MODIFIERS" $output | sed -n '2p' | awk '{ print $4 }'`
