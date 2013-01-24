@@ -38,3 +38,30 @@ The ingest of delivered processed images has the following steps:
 * Copying of data to repository -- `ingest_processed.sh`
 
 * Verification of copy -- `ingest_verify_integrity.sh`
+
+# Publication of data to scholars
+
+The creation of a package of files for sharing with scholars. The steps to
+creating the data set are. 
+
+
+* Preparing an input file listing files to select - TBD
+
+* Building up the package structure and adding selected files to the package --
+  `package_add_data.sh`
+
+* Creating support files and adding documentation to the package --
+  `package_document.sh`
+
+* Tarring the publication archive -- `package_archive.sh`
+
+* Creating delivery drives -- `package_delivery.sh`
+
+Publication involves creating an archive of data for scholar presentation
+
+It has this structure:
+
+      Greek_NF_MG_99/
+        data/
+                     
+
