@@ -1,4 +1,9 @@
 test/dir1/manifest-md5s.txt
 test/dir2/manifest-md5s.txt
-test/metadata/*.json
+test/fixtures/metadata/*.json
+test/fixtures/metadata/*.log
+test/fixtures/names_invalid/*.log
+test/fixtures/names_invalid/valid_file_names.txt
+test/fixtures/names_valid/*.log
+test/fixtures/names_valid/valid_file_names.txt
 tmp
