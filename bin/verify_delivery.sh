@@ -166,6 +166,7 @@ fi
 # TODO Check for LOG_verify_metadata.log
 # TODO Check manifest-md5s.txt date
 # TODO Check manifest-md5s.txt file lists
+# TODO confirm all data files younger than logs and manifest
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
