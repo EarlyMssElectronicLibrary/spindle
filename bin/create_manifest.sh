@@ -1,19 +1,5 @@
 #!/bin/sh
 
-# TODO update to use spindle_functions
-# TODO export SPINDLE_COMMAND=`basename $0`
-# TODO export HELP
-# TODO source `dirname $0`/spindle_functions
-# TODO delete function 'message'
-# TODO delete function 'error_no_exit'
-# TODO delete function 'error'
-# TODO delete function 'fail'
-# TODO delete function 'success'
-# TODO delete function 'warning'
-# TODO delete function 'help'
-# TODO delete function 'log'
-# TODO delete function 'log_error'
-
 read -r -d '' HELP <<-'EOF'
 Create a checksum manifest for all TIFF and JPEG files found under the 'data'
 directory in INPUT_DIR. INPUT_DIR defaults to the current dir if not provided.
@@ -56,7 +42,6 @@ output to conform with more common 'md5' command behavior.
 EOF
 
 ### TEMPFILES
-# From:
 #   http://stackoverflow.com/questions/430078/shell-script-templates
 # create a default tmp file name
 tmp=${TMPDIR:-/tmp}/prog.$$
@@ -67,6 +52,8 @@ trap "rm -f $tmp.?; exit 1" 0 1 2 3 13 15
 
 #### USAGE AND ERRORS
 cmd=`basename $0 .sh`
+export SPINDLE_COMMAND=$cmd
+source `dirname $0`/spindle_functions
 
 usage() {
    echo "usage: $cmd [-h] [INPUT_DIR]"
@@ -83,32 +70,6 @@ usage() {
 help() {
   echo "$HELP"
   echo ""
-}
-
-message() {
-  echo "$cmd: INFO    - $1"
-}
-
-error_no_exit() {
-  echo "$cmd: ERROR   - $1" 1>&2
-}
-
-error() {
-  echo "$cmd: ERROR   - $1" 1>&2
-  echo ""
-  usage
-  exit 1
-}
-
-warning() {
-  echo "$cmd: WARNING - $1" 1>&2
-}
-
-### LOGGING
-logfile=${LOGFILE:LOG_${cmd}}.log
-
-log() {
-    echo "`date +%Y-%m-%dT%H:%M:%S` [$cmd] $1" >> $LOG
 }
 
 ### CONSTANTS
@@ -144,14 +105,9 @@ shift $((OPTIND-1))
 
 ### THE SCRIPT
 # first, find an MD5 command
-MD5_CMD=
-if which md5sum >/dev/null 2>&1 ; then
-  MD5_CMD=`which md5sum`
-elif which gmd5sum >/dev/null 2>&1 ; then
-  MD5_CMD=`which gmd5sum`
-elif which md5 >/dev/null 2>&1 ; then
-  MD5_CMD="`which md5` -r"
-else
+# call the spindle_function
+MD5_CMD=`whichMd5`
+if [ "$MD5_CMD" = "" ]; then
   error "MD5 command not found; looked for gmd5sum, md5sum, md5"
 fi
 message "Using MD5 command: $MD5_CMD"
