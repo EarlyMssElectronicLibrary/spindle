@@ -66,6 +66,19 @@ log_error() {
   echo "`date +%Y-%m-%dT%H:%M:%S` [$SPINDLE_COMMAND] $1" >> $error_file
 }
 
+# utility commands
+whichMd5() {
+  MD5_CMD=
+  if which md5sum >/dev/null 2>&1 ; then
+    MD5_CMD=`which md5sum`
+  elif which gmd5sum >/dev/null 2>&1 ; then
+    MD5_CMD=`which gmd5sum`
+  elif which md5 >/dev/null 2>&1 ; then
+    MD5_CMD="`which md5` -r"
+  fi
+  echo $MD5_CMD
+}
+
 # CONSTANTS
 SHOOT_LIST="[0-9][0-9][0-9][0-9]"
 SHOT_SEQ="[0-9][0-9][0-9][0-9][0-9][0-9]"
