@@ -15,9 +15,23 @@
 #  --  if present, delete function 'log_error'
 #
 
+# VERSION
+VERSION=0.5.0
+
 # MESSAGE AND USAGE FUNCTIONS 
+print_message() {
+  msg_type=$1
+  msg=$2
+  echo "$SPINDLE_COMMAND `printf "%-12s" $msg_type`  $msg"
+}
+
+version() {
+  prog=$1
+  echo "Spindle: $prog v$VERSION"
+}
+
 message() {
-  echo "$SPINDLE_COMMAND: INFO    - $1"
+  print_message INFO "$1"
 }
 
 error_no_exit() {
@@ -34,18 +48,26 @@ error() {
   exit 1
 }
 
+invalid() {
+  print_message INVALID "$1"
+}
+
+valid() {
+  print_message VALID "$1"
+}
+
 fail() {
-  echo "$SPINDLE_COMMAND: INVALID - $1" 1>&2
+  print_message FAIL "$1"
   exit 2
 }
 
 success() {
-  echo "$SPINDLE_COMMAND: VALID   - $1" 1>&2
+  print_message ALL_VALID "$1"
   exit 0
 }
 
 warning() {
-  echo "$SPINDLE_COMMAND: WARNING - $1" 1>&2
+  print_message WARNING "$1"
 }
 
 help() {
@@ -66,7 +88,65 @@ log_error() {
   echo "`date +%Y-%m-%dT%H:%M:%S` [$SPINDLE_COMMAND] $1" >> $error_file
 }
 
+
+log_invalid() {
+  the_log=$1
+  msg="$2"
+  echo "INVALID  $msg" >> $the_log
+}
+
+log_valid() {
+  the_log=$1
+  msg="$2"
+  echo "VALID    $msg" >> $the_log
+}
+
+# usage: log_code LOG_FILE CODE [FILE]
+log_code() {
+  the_log=$1
+  code=$2
+  file=$3
+  width=-15
+  echo "`printf "%${width}s" $code`  $file" >> $the_log
+}
+
 # utility commands
+
+# usage: input_dir $1
+# make sure the input dir exists; return '.' if $1 empty
+input_dir() {
+  user_arg=$1
+  if [ -z "$user_arg" ]; then
+    user_arg=.
+  elif [ ! -d $user_arg ]; then
+    error "INPUT_DIR not found: $user_arg"
+  fi
+  echo $user_arg
+  return 0
+}
+
+#usage data_dir INPUT_DIR
+data_dir() {
+  input=$1
+  data_dir=$input/data
+  if [ ! -d $data_dir ]; then
+    error "Data directory not found: $data_dir"
+  else
+    echo $data_dir
+  fi
+  return 0
+}
+
+# usage: list_of_files MANIFEST_FILE OUTPUT_FILE
+#
+# Write a list of files from the manifest MANIFEST_FILE to file OUTPUT_FILE.
+write_file_list() {
+  manifest=$1
+  output=$2
+  awk '{ print $2 }' $manifest | sort > $output
+}
+
+# determine the md5sum command to use
 whichMd5() {
   MD5_CMD=
   if which md5sum >/dev/null 2>&1 ; then
@@ -79,9 +159,168 @@ whichMd5() {
   echo $MD5_CMD
 }
 
-# CONSTANTS
-SHOOT_LIST="[0-9][0-9][0-9][0-9]"
-SHOT_SEQ="[0-9][0-9][0-9][0-9][0-9][0-9]"
-PROCESSOR="[a-zA-Z][a-zA-Z][a-zA-Z]"
+# FILENAMES
+# image file extensions
+FILE_TYPES="jpg JPG jpeg JPEG tiff TIFF tif TIF dng DNG"
+STANDARD_EXTS="jpg tif dng"
+# file name characters and fields
+# super set of valid file name characters; excluding '.'
+VALID_CHARS="[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_+-]"
+# characters valid within a filename field
+VALID_MEDIAL_CHARS="[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890+-]"
+# characters that may atart or end a filename field
+VALID_INIT_FINAL_CHARS="[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890]"
+SHOOT_LIST_PTRN="^[0-9][0-9][0-9][0-9]$"
+SHOT_SEQ_PTRN="^[0-9][0-9][0-9][0-9][0-9][0-9]$"
+PROCESSOR_PTRN="^[a-zA-Z][a-zA-Z][a-zA-Z]$"
+PROC_TYPE_PTRN="^${VALID_INIT_FINAL_CHARS}${VALID_MEDIAL_CHARS}*${VALID_INIT_FINAL_CHARS}$"
+MODIFIERS_PTRN="^(${VALID_INIT_FINAL_CHARS}${VALID_MEDIAL_CHARS}*${VALID_INIT_FINAL_CHARS}$|$)"
+# valid file name patterns
+# FILE_SHOOT_LIST_PTRN="^${SHOOT_LIST}_"
+# FILE_SHOT_SEQ_PTRN="${FILE_SHOOT_LIST_PTRN}${SHOT_SEQ}_"
+# FILE_PROCESSOR_PTRN="${FILE_SHOT_SEQ_PTRN}${PROCESSOR}_"
+# FILE_PROC_TYPE_PTRN="${FILE_PROCESSOR_PTRN}_${VALID_FIELD_CHARS}${VALID_FIELD_CHARS}*(\.|_)"
+# Note that MODIFIERS is not required
+# FILE_MODIFIERS_PTRN="${FILE_PROC_TYPE_PTRN}_\?${VALID_CHARS}${VALID_CHARS}*$"
+
+isImageFile() {
+  file=$1
+  ext=`getExtension $file`
+  stat=0
+  for iext in $FILE_TYPES 
+  do
+    if [ "$ext" = "$iext" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+hasValidExt() {
+  file=$1
+  ext=`getExtension $file`
+  stat=0
+  for iext in $STANDARD_EXTS 
+  do
+    if [ "$ext" = "$iext" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+getExtension() {
+  file=$1
+  echo $file | awk -F '.' '{ print $NF }'
+}
+
+matchesPattern() {
+  text=$1
+  pattern=$2
+  if echo "$text" | egrep "$pattern" >/dev/null 2>&1 ; then
+    return 0
+  fi
+  return 1
+}
+
+validateFilename() {
+  file=$1 
+  if [ -z "$file" ]; then
+    error "validateFilename: please provide a file name; got '$file'"
+  fi
+
+  code=UNSET
+  if ! isImageFile $file ; then
+    section=`getExtension $file`
+    code=BAD_FILE_TYPE
+  elif ! hasValidExt $file ; then
+    section=`getExtension $file`
+    code=BAD_EXTENSION
+  else
+    ext=`echo $file | awk -F '.' '{ print $NF }'`
+    base=`basename $file .${ext}`
+    shoot_list=`echo $base | awk -F '_' '{ print $1 }'`
+    shot_seq=`echo $base | awk -F '_' '{ print $2 }'`
+    processor=`echo $base | awk -F '_' '{ print $3 }'`
+    proc_type=`echo $base | awk -F '_' '{ print $4 }'`
+    num_fields=`echo $base | awk -F '_' '{ print NF }'`
+    if [ $num_fields -gt 4 ]; then
+      modifiers=`echo $base | awk -F '_' '{ 
+      printf $5; 
+      for (i = 6; i <= NF; i++) { 
+        printf "_" $i 
+      }; 
+      printf "\n" }'`
+    fi
+    if ! matchesPattern "$shoot_list" "$SHOOT_LIST_PTRN" ; then
+      section=$shoot_list
+      code=BAD_SHOOT_LIST
+    elif ! matchesPattern "$shot_seq" "$SHOT_SEQ_PTRN" ; then
+      section=$shot_seq
+      code=BAD_SHOT_SEQ
+    elif ! matchesPattern "$processor" "$PROCESSOR_PTRN" ; then
+      section=$processor
+      code=BAD_PROCESSOR
+    elif ! matchesPattern "$proc_type" "$PROC_TYPE_PTRN" ; then
+      section=$proc_type
+      code=BAD_PROC_TYPE
+    else
+      code=VALID
+    fi
+
+    # finally we check the modifiers if we have have any
+    if [ -n "$modifiers" ]; then
+      for field in `echo $modifiers | sed 's/_/ /g'`
+      do
+        if ! matchesPattern "$field" "$MODIFIERS_PTRN" ; then
+          code=BAD_MODIFIERS
+        fi
+      done
+      if [ "$code" == "BAD_MODIFIERS" ]; then
+        section=$modifiers
+      fi
+    fi
+  fi
+
+  if [ -n "$section" ]; then
+    reason="$code=$section"
+  else
+    reason=$code
+  fi
+  echo "`printf "%-25s" $reason`  $file"
+}
+
+# From sorted lists of actual and logged files, say whether the lists are
+# identical, and if not, say which is missing which files.
+#
+# usage: cmpActualToLogged ACTUAL LOGGED
+#
+# Where ACTUAL is file containing a sorted list of actual files in the data
+# directory; and LOGGED is a file containing a list of logged files. Returns
+# 0 if lists are identical; 1 otherwise.
+cmpActualToLogged() {
+  actual=$1
+  logged=$2
+  diff_out=/tmp/spindle_functions_diff$$
+  if diff $actual $logged > $diff_out ; then
+    message "VALID actual and logged files match"
+    return 0
+  else
+    NOT_LOGGED=`grep "^<" $diff_out | sed 's/^<//'`
+    for file in $NOT_LOGGED
+    do
+      error_no_exit "NOT_LOGGED    $file"
+    done
+
+    NO_SUCH_FILE=`grep "^>" $diff_out | sed 's/^>//'`
+    for file in $NO_SUCH_FILE
+    do
+      error_no_exit "NO_SUCH_FILE  $file"
+    done
+    
+    return 1
+  fi
+}
+
 MANIFEST_FILE=manifest-md5s.txt
 VALID_FILES=valid_file_names.txt

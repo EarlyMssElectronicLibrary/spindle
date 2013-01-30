@@ -1,16 +1,5 @@
 #!/bin/sh
 
-# TODO update to use spindle_functions
-# TODO delete function 'message'
-# TODO delete function 'error_no_exit'
-# TODO delete function 'error'
-# TODO delete function 'fail'
-# TODO delete function 'success'
-# TODO delete function 'warning'
-# TODO delete function 'help'
-# TODO delete function 'log'
-# TODO delete function 'log_error'
-
 read -r -d '' HELP <<-'EOF'
 For an INPUT_DIR of the correct structure, verify all image file names for
 correct format. The INPUT dir must contain at its root a 'data' directoy. 
@@ -37,8 +26,32 @@ to the directory structure in which the files are stored.
 
 This command will verify:
 
+ * that all file are of the correct type: JPEG, TIFF, DNG
+ * that all file names have the correct extension: 'jpg', 'tif', or 'dng'
  * that all file names have the correct format
- * that all file names have the correct extentions
+
+In 'Delivery' mode (the default) this script wll generate a log file
+`DLVRY_filenames.log`. This file will list all file names found in the `data`
+directory, giving:
+
+ - a code VALID for a valid filename, or  BAD_SHOT_SEQ, BAD_SHOOT_LIST,
+   BAD_PROCESSOR, BAD_PROC_TYPE, BAD_MODIFIERS, BAD_EXTENSTION, or
+   BAD_FILE_TYPE for a file with an error
+
+ - the relative path of the file; e.g.,
+   `data/Processed_Images/0015_000012_KTK_sharpie_MB365UV-MB625Rd.jpg`
+
+The last line of the file will be a timestamped message: 'ALL VALID' or 'ERRORS
+FOUND'.
+
+In 'Delivery' mode this script will refuse to overwrite the DLVRY_filenames.log
+file.
+
+In 'Receipt' mode (using the -R flag) this script will confirm the existence of
+the file 'DLVRY_filenames.log', and that its last line contains the text 'ALL
+VALID'. It will then confirm that all files in `data` are named correctly, and
+the list of files in 'DLVRY_filenames.log' matches the list of file in `data` 
+exactly. These last steps ensure against tampering.
  
 # VALID FILE NAME CHARACTERS
 
@@ -48,9 +61,11 @@ Valid characters are:
 
 First order fields are divided by underscores: _
 Second order fields are divided by dashes: -
+Fields may not begin or end with: - or +
 
-For use of the plus sign '+' please see the Data Delivery Recommendations
-document.
+For use of the plus sign '+' and dash '-' please see the Data Delivery
+Recommendations document.  Note that this is a valid field '..._GOOD-FIELD_...';
+while this is not: '..._+BAD-FIELD-_'.
 
 # VALID FILE NAME FORMAT
 
@@ -64,9 +79,9 @@ Where:
 
   * SHOT_SEQ is a 6-digit string, right-padded with zeros: '000123'
 
-  * PROCESSOR is  3-characer string: 'WCB'
+  * PROCESSOR is  3-character string: 'WCB'; all characters must be alphabetic
 
-  * PROCESSING_TYPE is string composed of valid file name characters, expect
+  * PROCESSING_TYPE is string composed of valid file name characters, except
     the first-order field separator '_' (see below): 'sharpie'
 
   * MODIFIERS is a string composed of valid file name characters, and may be
@@ -92,7 +107,7 @@ EOF
 # create a default tmp file name
 tmp=${TMPDIR:-/tmp}/prog.$$
 # delete any existing temp files
-trap "rm -f $tmp.?; exit 1" 0 1 2 3 13 15
+trap "rm -f $tmp.?; exit 1" 1 2 3 13 15
 # then do
 #   ...real work that creates temp files $tmp.1, $tmp.2, ...
 
@@ -107,6 +122,7 @@ usage() {
    echo "OPTIONS"
    echo ""
    echo "   -h             Display help message"
+   echo "   -R             Run in Receipt mode"
    echo ""
 }
 
@@ -115,27 +131,67 @@ help() {
   echo ""
 }
 
-### CONSTANTS
-# the name of the manifest in each dir
-# image file extensions
-FILE_TYPES="jpg JPG jpeg JPEG tiff TIFF tif TIF"
-STANDARD_EXTS="jpg tif"
+# usage: validateFilenames LIST_OF_FILES DELIVERY_LOG
+# 
+# Where LIST_OF_FILES is a file listing all filenames to validate; and DELIVERY_LOG
+# is where to log the results. Returns 0 if all files valid; 1 otherwise.
+this_dir=`dirname $0`
+this_dir=`(cd $this_dir; pwd)`
+VALIDATE_FILENAME=$this_dir/verify_filename
+if [ ! -x $VALIDATE_FILENAME ]; then
+  error "Command not found $VALIDATE_FILENAME"
+fi
 
+validateFilenames() {
+  files=$1
+  logfile=$2
+  curr=0
+  total=`wc -l $file_list | awk '{ print $1 }'`
+  status=0
+  message "`printf "%5d" $curr`/$total `$date_cmd`"
+  while read file
+  do
+    curr=$(( $curr + 1))
+    # call spindle_function validateFilename()
+    result=`$VALIDATE_FILENAME $file`
+    code=`echo $result | awk '{ print $1 }'`
+    # change the code to 1 if we get a bad file
+    if echo "$code" | grep "^BAD_" >/dev/null 2>&1 ; then
+      log_invalid $logfile "$result"
+      status=1
+    else
+      log_valid $logfile "$result"
+    fi
+    # TODO make logging/message work for full validate_filename output
+    # print count and time every 1000 files
+    if [ $(( $curr % 1000 )) -eq 0 ]; then
+      message "`printf "%5d" $curr`/$total `$date_cmd`"
+    fi
+  done < $file_list
+  message "`printf "%5d" $curr`/$total `$date_cmd`"
+
+  return $status
+}
+
+### CONSTANTS
 ### VARIABLES
 # the input dir
 INPUT_DIR=
 # the data directory
 DATA_DIR=
-VALID_FILES=valid_file_names.txt
-:> $VALID_FILES
+DELIVERY_LOG=DLVRY_filenames.log
+RECEIPT_LOG=RECPT_filenames.log
 
 ### OPTIONS
-while getopts ":hd:" opt; do
+while getopts ":hR" opt; do
   case $opt in
     h)
       usage 
       help
-      exit 1
+      exit 0
+      ;;
+    R)
+      RECEIPT_MODE=true
       ;;
     \?)
       echo "ERROR Invalid option: -$OPTARG" >&2
@@ -150,155 +206,91 @@ shift $((OPTIND-1))
 
 ### THESCRIPT
 # grab input directoy and confirm it exists
-INPUT_DIR=$1
-if [ -z "$INPUT_DIR" ]; then
-  message "No INPUT_DIR provided. Using '.'"
-  INPUT_DIR=.
-elif [ ! -d $INPUT_DIR ]; then
-  error "INPUT_DIR not found: $INPUT_DIR"
-fi
-
+INPUT_DIR=`input_dir $1`
+message "INPUT_DIR is $INPUT_DIR"
 # make sure there's a data directory in INPUT_DIR
-DATA_DIR=$INPUT_DIR/data
-if [ ! -d $DATA_DIR ]; then
-  error "Data directory not found: $DATA_DIR"
-fi
+DATA_DIR=`data_dir $INPUT_DIR`
 
-### VERIFY FILENAMES
 # change to the input dir
 if [ "$INPUT_DIR" != "." ]; then
   cd $INPUT_DIR
 fi
 
-# clean up the logs
-if [ -f $logfile ]; then
-  message "Deleting previous log file `pwd`/$logfile"
-  rm $logfile
-fi
-if [ -f $error_file ]; then
-  message "Deleting previous error file `pwd`/$error_file"
-  rm $error_file
-fi
-
+### VERIFY FILENAMES
 file_list=$tmp.1
-find data -type f > $file_list
-file_width=`awk '{ if (length($1) > max) { max = length($1) } } END { print max }' $file_list`
-file_types=$tmp.2
-for x in $FILE_TYPES; do echo $x; done > $file_types
-standard_exts=$tmp.3
-for x in $STANDARD_EXTS; do echo $x; done > $standard_exts
-
-# SHOOT_LIST
-VALID_CHARS="[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_+-]"
-VALID_FIELD_CHARS="[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890+-]"
-SHOOT_LIST="[0-9][0-9][0-9][0-9]"
-SHOT_SEQ="[0-9][0-9][0-9][0-9][0-9][0-9]"
-PROCESSOR="[a-zA-Z][a-zA-Z][a-zA-Z]"
-
-file_shoot_list="^${SHOOT_LIST}_"
-file_shot_seq="${file_shoot_list}${SHOT_SEQ}_"
-file_processor="${file_shot_seq}${PROCESSOR}_"
-file_proc_type="${file_processor}${VALID_FIELD_CHARS}${VALID_FIELD_CHARS}*"
-file_modifiers="${file_proc_type}_\?${VALID_CHARS}${VALID_CHARS}*$"
-
-date_cmd="date +%FT%T%z"
-bad_file_names=$tmp.4
-warnings=$tmp.5
-skipped=$tmp.6
-curr=0
-good=0
-total=`wc -l $file_list | awk '{ print $1 }'`
-checked=$total
-width=`echo $total | wc -c`
-count=`printf "%${width}d" $curr`
-message "$count/$total `$date_cmd`"
-while read file
-do
-  curr=$(( $curr + 1))
-  base=`basename $file`
-  # HIDDEN FILES
-  if echo $base | grep "^\." >/dev/null 2>&1 ; then
-    echo "SKIPPED `printf "%-15s" "HIDDEN_FILE"` $base" >> $skipped
-    checked=$(( $checked - 1))
-  # REGULAR FILES
-  else
-    ext=`echo $base | awk -F'.' '{ print $NF }'`
-    if grep "^$ext$" $file_types >/dev/null 2>&1 ; then
-      if ! grep "^$ext$" $standard_exts >/dev/null 2>&1 ; then
-        echo "`printf "%-10s" "NON_STD_EXT"` $base" >> $warnings
-      fi
-
-      # THESE WE CHECK
-      core=`basename $base ".$ext"`
-      if ! echo "$core" | grep "$file_shoot_list" > /dev/null 2>&1 ; then
-        echo "`printf "%-${file_width}s" $file`  BAD_SHOOT_LIST" >> $bad_file_names
-      elif ! echo "$core" | grep "$file_shot_seq" > /dev/null 2>&1 ; then
-        echo "`printf "%-${file_width}s" $file`  BAD_SHOT_SEQ" >> $bad_file_names
-      elif ! echo "$core" | grep "$file_processor" > /dev/null 2>&1 ; then
-        echo "`printf "%-${file_width}s" $file`  BAD_PROCESSOR" >> $bad_file_names
-      elif ! echo "$core" | grep "$file_proc_type" > /dev/null 2>&1 ; then
-        echo "`printf "%-${file_width}s" $file`  BAD_PROC_TYPE" >> $bad_file_names
-      elif ! echo "$core" | grep "$file_modifiers" > /dev/null 2>&1 ; then
-        echo "`printf "%-${file_width}s" $file`  BAD_MODIFIERS" >> $bad_file_names
-      else
-        echo "$file" >> $VALID_FILES
-        good=$(( $good + 1 ))
-      fi
-
-    else
-      echo "SKIPPED `printf "%-15s" "INVALID_TYPE"` $base" >> $skipped
-      checked=$(( $checked - 1 ))
+manifest=manifest-md5s.txt
+# check log file
+if [ "$RECEIPT_MODE" ]; then
+  if [ -f $manifest ]; then
+    if ! write_file_list $manifest $file_list ; then
+      error "Unable to get file list from $manifest"
     fi
+  else
+    error "No manifest file found `pwd`/$manifest"
   fi
-  # print count and time every 1000 files
-  if [ $(( $curr % 1000 )) -eq 0 ]; then
-    count=`printf "%${width}d" $curr`
-    message "$count/$total `$date_cmd`"
+else
+  if [ -f $DELIVERY_LOG ]; then
+    error "DELIVERY MODE: will not overwrite $DELIVERY_LOG"
+  else
+    message "DELIVERY MODE: creating new log file $DELIVERY_LOG"
   fi
-done < $file_list
-count=`printf "%${width}d" $curr`
-message "$count/$total `$date_cmd`"
-
-
-if [ -s $warnings ]; then
-  num=`wc -l $warnings | awk '{ print $1 }'`
-  warning "there were $num WARNINGS"
-  while read line
-  do
-    warning "    $line"
-  done < $warnings
 fi
 
-if [ -s $bad_file_names ]; then
-  num=`wc -l $bad_file_names | awk '{ print $1 }'`
-  while read line
-  do
-    error_no_exit "$line"
-    log_error "$line"
-  done < $bad_file_names
-  error_no_exit "$num of $total files had bad names"
+
+logged_files=$tmp.2
+date_cmd="date +%FT%T%z"
+
+if [ "$RECEIPT_MODE" ]; then
+  message "Running in RECEIPT MODE"
+  # double check the file names
+  message "Confirming filename validation"
+  if validateFilenames $file_list $RECEIPT_LOG ; then
+    echo "ALL_VALID" >> $RECEIPT_LOG
+    message "ALL_VALID"
+  else
+    fail "ERRORS_FOUND see `pwd`/$RECEIPT_LOG"
+  fi
+
+else
+  message "Running in DELIVERY MODE"
+
+  find data -type f | sort > $file_list
+  total=`wc -l $file_list | awk '{ print $1 }'`
+  if validateFilenames $file_list $DELIVERY_LOG ; then
+    echo "ALL_VALID  `$date_cmd`" >> $DELIVERY_LOG
+  fi
+ 
+
+  warnings=$tmp.5
+  grep WARNING $DELIVERY_LOG > $warnings
+  if [ -s $warnings ]; then
+    num=`wc -l $warnings | awk '{ print $1 }'`
+    warning "there were $num WARNINGS"
+    while read line
+    do
+      warning "    $line"
+    done < $warnings
+  fi
+
+  bad_file_names=$tmp.4
+  grep "BAD_" $DELIVERY_LOG > $bad_file_names
+  if [ -s $bad_file_names ]; then
+    num=`wc -l $bad_file_names | awk '{ print $1 }'`
+    while read line
+    do
+      error_no_exit "$line"
+    done < $bad_file_names
+    error_no_exit "$num of $total files had bad names"
+  fi
+
+  good=`grep "^VALID" $DELIVERY_LOG | wc -l`
+  message "$good of $total files had VALID file names"
+
+  if [ -s $bad_file_names ]; then
+    echo "ERRORS_FOUND" >> $DELIVERY_LOG
+    fail "ERRORS_FOUND"
+  fi
 fi
-
-if [ -s $skipped ]; then
-  num=`wc -l $skipped | awk '{ print $1 }'`
-  warning "$num of $total files were SKIPPED"
-  while read line
-  do
-    message "    $line"
-  done < $skipped
-fi
-
-message "$good of $checked checked files had VALID file names"
-
-if [ -s $bad_file_names ]; then
-  message "Errors logged to `pwd`/$error_file"
-  exit 2
-fi
-
-# leave a timestamp of when this task finish
-log "ALL VALID"
-message "Completion logged to `pwd`/$logfile"
-message "$good of $checked checked files had VALID file names"
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates

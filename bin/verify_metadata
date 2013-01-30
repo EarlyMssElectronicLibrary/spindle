@@ -1,0 +1,250 @@
+#!/bin/sh
+
+read -r -d '' HELP <<-'EOF'
+
+For FILE, verify all image file have the corret metadata.
+  
+Files are expected to have the following metadata values:
+
+* IPTC Source                        - required
+* IPTC Object name                   - required
+* IPTC Keywords                      - required
+* DC Creator                         - required
+* AP DAT Bits Per Sample             - required
+* AP DAT File Processing             - required
+* AP DAT File Processing Rotation    - required
+* AP DAT Joining Different Parts Of  - required
+* AP DAT Joining Same Parts of Folio - required
+* AP DAT Processing Comments         - optional
+* AP DAT Processing Program          - required
+* AP DAT Software Version            - required; "See DAT_Processing Program"
+* AP DAT Type of Contrast Adjustment - required
+* AP DAT Type of Image Processing    - required
+* AP ID Parent File                  - required
+
+
+EOF
+
+### TEMPFILES
+# From:
+#   http://stackoverflow.com/questions/430078/shell-script-templates
+# create a default tmp file name
+tmp=${TMPDIR:-/tmp}/prog.$$
+# delete any existing temp files
+trap "rm -f $tmp.?; exit 1" 1 2 3 13 15
+# then do
+#   ...real work that creates temp files $tmp.1, $tmp.2, ...
+
+#### USAGE AND ERRORS
+cmd=`basename $0 .sh`
+export SPINDLE_COMMAND=$cmd
+source `dirname $0`/spindle_functions
+
+usage() {
+   echo "Usage: $cmd [-h] FILENAME"
+   echo ""
+   echo "OPTIONS"
+   echo ""
+   echo "   -h             Display help message"
+   echo "   -v             Display version"
+   echo ""
+}
+
+help() {
+  echo "$HELP"
+  echo ""
+}
+
+# VARIABLES
+REQUIRED_TAGS="Creator
+Source
+Keywords
+ObjectName
+DAT_Bits_Per_Sample
+DAT_File_Processing
+DAT_File_Processing_Rotation
+DAT_Joining_Different_Parts_Of_Folio
+DAT_Joining_Same_Parts_of_Folio
+DAT_Processing_Program
+DAT_Samples_Per_Pixel
+DAT_Type_of_Contrast_Adjustment
+DAT_Type_of_Image_Processing
+ID_Parent_File"
+
+OPTIONAL_TAGS="DAT_Processing_Comments
+Contributor"
+
+SW_VERSION_TAG="DAT_Software_Version"
+SW_VERSION_LITERAL="See DAT_Processing_Program"
+
+ROTATION_REGEX="^[0-9][0-9]*$"
+
+EXPECTED_KEYWORDS="Resolution (PPI)
+Position"
+
+# METHODS
+
+get_tag_value() {
+  metatada="$1"
+  tagx=$2
+  echo "$metatada" | grep "^-$tagx=" | awk -F'=' '{ print $2 }'
+}
+
+check_numeric() {
+  val=$1
+  if echo "$val" | grep "^[0-9.][0-9.]*$" > /dev/null 2>&1 ; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+check_tag() {
+  tag="$1"
+  metatada="$2"
+  if echo "$metadata" | grep "^-$tag=" > /dev/null 2>&1 ; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+check_required() {
+  metatada="$1"
+  status=0
+  for tag in $REQUIRED_TAGS
+  do
+    if ! check_tag "$tag" "$metadata" ; then
+      status=1
+      echo "$tag"
+    fi
+  done
+  return $status
+}
+
+# report required tags are missing
+report_required_missing() {
+  file=$1
+  shift
+  tags="$*"
+  for tag in $tags
+  do
+    msg="$file  REQ_MISSING  $tag"
+    error_no_exit "$msg"
+  done
+}
+
+check_optional() {
+  file=$1
+  for tag in $OPTIONAL_TAGS
+  do
+    if ! grep "$tag" $file > /dev/null 2>&1 ; then
+      echo "$tag"
+    fi
+  done
+}
+
+report_optional_missing() {
+  file=$1
+  width=$2
+  shift 2
+  tags="$*"
+  for tag in $tags
+  do
+    warning "`printf "%-${width}s" $file` OPT_MISSING  $tag"
+  done
+}
+
+check_keyword() {
+  keyword="$1"
+  metadata="$2"
+  keywords=`echo "$metadata" | grep "^-Keywords=" | sed 's/^-Keywords=//'`
+  status=1
+  OLDIFS=$IFS
+  IFS=","
+  for pair in $keywords
+  do
+    if echo $pair | grep "^ \?${keyword}:" >/dev/null ; then
+      status=0
+    fi
+  done
+  IFS=$OLDIFS
+  return $status
+}
+
+### OPTIONS
+while getopts ":hv" opt; do
+  case $opt in
+    h)
+      usage 
+      help
+      exit 0
+      ;;
+    v)
+      version $cmd
+      exit 0
+      ;;
+    \?)
+      echo "ERROR Invalid option: -$OPTARG" >&2
+      echo ""
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND-1))
+
+# THE SCRIPT
+file=$1
+if [ -z "$file" ]; then
+  error "Please provide an input file"
+elif [ ! -f $file ]; then
+  error "No file found: $file"
+fi
+
+metadata=`exiftool -args $file` 
+missing=`check_required "$metadata"`
+
+status=0
+if [ -n "$missing" ]; then
+  for field in $missing
+  do
+    echo "MISSING  $field  $file"
+  done
+  status=1
+fi
+
+echo "$EXPECTED_KEYWORDS" | while read keyword
+do
+  if ! check_keyword "$keyword" "$metadata" ; then
+    echo "MISSING_KEYWORD  '$keyword'  $file"
+    status=1
+  fi
+done
+
+sw_version=`get_tag_value "$metadata" $SW_VERSION_TAG`
+if [ "$sw_version" != "$SW_VERSION_LITERAL" ]; then
+  echo "BAD_LITERAL  DAT_Software_Version  $file"
+  status=1
+fi
+
+rotation=`get_tag_value "$metadata" DAT_File_Processing_Rotation`
+if check_numeric $rotation ; then
+  :
+else
+  echo "BAD_NUMBER  DAT_File_Processing_Rotation  $file"
+  status=1
+fi
+
+if [ $status -ne 0 ]; then
+  exit 1
+fi
+
+echo "METADATA_VALID  $file"
+
+### EXIT
+# http://stackoverflow.com/questions/430078/shell-script-templates
+rm -f $tmp.?
+trap 0
+exit 0

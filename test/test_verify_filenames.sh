@@ -1,5 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 shunit=`dirname $0`/shunit2/src/shunit2
+shunit_helper=`dirname $0`/shunit_helper
 PATH=`dirname $0`/../bin:$PATH
 FIXTURES=`dirname $0`/fixtures
 
@@ -7,90 +8,78 @@ FIXTURES=`dirname $0`/fixtures
 tmp=${TMPDIR:-/tmp}/prog.$$
 
 # suite() {
-#   suite_addTest "testBadShootList"
+  # suite_addTest "testDeliveryLogFileCreation"
+  # suite_addTest "testDeliveryLogFileCheck"
+  # suite_addTest "testDeliveryAllValid"
+  # suite_addTest "testDeliveryBadFiles"
+  # suite_addTest "testReceiptBadLogFile"
+  # suite_addTest "testReceiptInconsistentLogFile"
+  # suite_addTest "testReceiptOutOfDateLogFile"
+  # suite_addTest "testReceiptLoggedFileMismatch"
 # }
+
 tearDown() {
   rm -f $tmp.?
 }
 
-testGoodNames() {
+
+# DELIVERY_MODE make sure delivery creates a log file DLVRY_filenames.log
+testDeliveryLogFileCreation() {
   # we should have a log file LOG_verify_filenames.log
   # the last line of the log should contain: ALL VALID
   archive=$FIXTURES/names_valid
   output=$tmp.1
   verify_filenames.sh $archive > $output 2>&1
+  assertTrue "File not found DLVRY_filenames.log" "[ -f $archive/DLVRY_filenames.log ]"
+  rm -f $archive/DLVRY_filenames.log
+}
+
+# in DELIVERY MODE bail if DLVRY_filenames.log found
+testDeliveryLogFileCheck() {
+  archive=$FIXTURES/names_valid
+  logfile=$archive/DLVRY_filenames.log
+  # create log file
+  touch $logfile
+  output=`verify_filenames.sh $archive 2>&1`
+
+  assertMatch "Expected overwrite error in $output" "$output" "ERROR.*overwrite"
+  # clean up
+  rm -f $logfile
+}
+
+# DELIVERY_MODE if all names valid; DLVRY_filenames.log should say ALL_VALID
+testDeliveryAllValid() {
+  # we should have a log file DLVRY_filenames.log
+  # the last line of the log should contain: ALL VALID
+  archive=$FIXTURES/names_valid
+  logfile=$archive/DLVRY_filenames.log
+  # verify_filenames.sh $archive > $output 2>&1
+  verify_filenames.sh $archive >/dev/null 2>&1
   assertEquals "verify_filenames.sh should exit without error" 0 $? 
-  log=$archive/LOG_verify_filenames.log
-  assertTrue "Missing file $log" "[ -f $log ]"
-  assertTrue "Expected log to have ALL VALID" "grep 'ALL VALID' $log >/dev/null"
+  last_code=`sed -n '$p' $logfile | awk '{ print $1 }'`
+  assertEquals "Unexpected last log line" "ALL_VALID" $last_code
+  rm -f $logfile
 }
 
-testBadShootList () {
-  # there should be a number of errors: 
-  # verify_filenames: ERROR   - data/0020_00.009_WCB_PCA_RGB_01.jpg       BAD_SHOT_SEQ
-  # verify_filenames: ERROR   - data/0020_000009_W-B_PCA_RGB_01.jpg       BAD_PROCESSOR
-  # verify_filenames: ERROR   - data/0020_000009_WCB_PC(A_RGB_01.jpg      BAD_MODIFIERS
-  # verify_filenames: ERROR   - data/0020_000009_WCB_PCA_RGB123j-01'.jpg  BAD_MODIFIERS
-  # verify_filenames: ERROR   - data/0020_000009_WCBA_PCA_RGB_01.jpg      BAD_PROCESSOR
-  # verify_filenames: ERROR   - data/0A20_000009_WCB_PCA_RGB_01.jpg       BAD_SHOOT_LIST
+# DELIVERY_MODE log file test should report all types of errors
+testDeliveryBadFiles() {
+  expected_errors="BAD_SHOT_SEQ BAD_PROCESSOR BAD_SHOOT_LIST BAD_PROC_TYPE BAD_MODIFIERS BAD_EXTENSION BAD_FILE_TYPE"
   archive=$FIXTURES/names_invalid
-  output=$tmp.1
-  verify_filenames.sh $archive > $output 2>&1
-  assertEquals "should error on exit" 1 $?
-  bad_shoot_list=`grep "BAD_SHOOT_LIST" $output | awk '{ print $4 }'`
-  assertEquals "BAD_SHOOT_LIST" 'data/0A20_000009_WCB_PCA_RGB_01.jpg' $bad_shoot_list
-  
-}
-testBadModifiers() {
-  # there should be a number of errors: 
-  # verify_filenames: ERROR   - data/0020_00.009_WCB_PCA_RGB_01.jpg       BAD_SHOT_SEQ
-  # verify_filenames: ERROR   - data/0020_000009_W-B_PCA_RGB_01.jpg       BAD_PROCESSOR
-  # verify_filenames: ERROR   - data/0020_000009_WCB_PC(A_RGB_01.jpg      BAD_MODIFIERS
-  # verify_filenames: ERROR   - data/0020_000009_WCB_PCA_RGB123j-01'.jpg  BAD_MODIFIERS
-  # verify_filenames: ERROR   - data/0020_000009_WCBA_PCA_RGB_01.jpg      BAD_PROCESSOR
-  # verify_filenames: ERROR   - data/0A20_000009_WCB_PCA_RGB_01.jpg       BAD_SHOOT_LIST
-  archive=$FIXTURES/names_invalid
-  output=$tmp.1
-  verify_filenames.sh $archive > $output 2>&1
-  assertEquals "should error on exit" 1 $?
-  bad_modifiers=`grep "BAD_MODIFIERS" $output | sed -n '1p' | awk '{ print $4 }'`
-  assertEquals "BAD_MODIFIERS" 'data/0020_000009_WCB_PC(A_RGB_01.jpg' $bad_modifiers
-  bad_modifiers=`grep "BAD_MODIFIERS" $output | sed -n '2p' | awk '{ print $4 }'`
-  assertEquals "BAD_MODIFIERS" "data/0020_000009_WCB_PCA_RGB123j-01'.jpg" $bad_modifiers
+  logfile=$archive/DLVRY_filenames.log
+  output=`verify_filenames.sh $archive 2>&1`
+  assertNotEquals "verify_filenames.sh should exit with error" 0 $? 
+  last_code=`sed -n '$p' $logfile | awk '{ print $1 }'`
+  assertEquals "Unexpected last log line" "ERRORS_FOUND" "$last_code"
+  for error in $expected_errors
+  do
+    count=`grep $error $logfile | wc -l`
+    assertTrue "Expected at least one $error; found $count" "[ $count -gt 0 ]"
+  done
+  assertMatch "$output" "FAIL"
+  rm -f $logfile
 }
 
-testBadShotSeq() {
-  # there should be a number of errors: 
-  # verify_filenames: ERROR   - data/0020_00.009_WCB_PCA_RGB_01.jpg       BAD_SHOT_SEQ
-  # verify_filenames: ERROR   - data/0020_000009_W-B_PCA_RGB_01.jpg       BAD_PROCESSOR
-  # verify_filenames: ERROR   - data/0020_000009_WCB_PC(A_RGB_01.jpg      BAD_MODIFIERS
-  # verify_filenames: ERROR   - data/0020_000009_WCB_PCA_RGB123j-01'.jpg  BAD_MODIFIERS
-  # verify_filenames: ERROR   - data/0020_000009_WCBA_PCA_RGB_01.jpg      BAD_PROCESSOR
-  # verify_filenames: ERROR   - data/0A20_000009_WCB_PCA_RGB_01.jpg       BAD_SHOOT_LIST
-  archive=$FIXTURES/names_invalid
-  output=$tmp.1
-  verify_filenames.sh $archive > $output 2>&1
-  assertEquals "should error on exit" 1 $?
-  bad_shot_seq=`grep "BAD_SHOT_SEQ" $output | awk '{ print $4 }'`
-  assertEquals "BAD_SHOT_SEQ" "data/0020_00.009_WCB_PCA_RGB_01.jpg" "$bad_shot_seq"
-}
 
-testBadProcessor() {
-  # there should be a number of errors: 
-  # verify_filenames: ERROR   - data/0020_00.009_WCB_PCA_RGB_01.jpg       BAD_SHOT_SEQ
-  # verify_filenames: ERROR   - data/0020_000009_W-B_PCA_RGB_01.jpg       BAD_PROCESSOR
-  # verify_filenames: ERROR   - data/0020_000009_WCB_PC(A_RGB_01.jpg      BAD_MODIFIERS
-  # verify_filenames: ERROR   - data/0020_000009_WCB_PCA_RGB123j-01'.jpg  BAD_MODIFIERS
-  # verify_filenames: ERROR   - data/0020_000009_WCBA_PCA_RGB_01.jpg      BAD_PROCESSOR
-  # verify_filenames: ERROR   - data/0A20_000009_WCB_PCA_RGB_01.jpg       BAD_SHOOT_LIST
-  archive=$FIXTURES/names_invalid
-  output=$tmp.1
-  verify_filenames.sh $archive > $output 2>&1
-  assertEquals "should error on exit" 1 $?
-  bad_processor=`grep "BAD_PROCESSOR" $output | sed -n '1p' | awk '{ print $4 }'`
-  assertEquals "BAD_PROCESSOR" "data/0020_000009_W-B_PCA_RGB_01.jpg" "$bad_processor"
-  bad_processor=`grep "BAD_PROCESSOR" $output | sed -n '2p' | awk '{ print $4 }'`
-  assertEquals "BAD_PROCESSOR" "data/0020_000009_WCBA_PCA_RGB_01.jpg" "$bad_processor"
-}
 
+. $shunit_helper
 . $shunit

@@ -1,11 +1,70 @@
 #!/bin/sh
-shunit=`dirname $0`/shunit2/src/shunit2
+# shunit_helper will source shunit2 code
+shunit_helper=`dirname $0`/shunit_helper
 BIN_DIR=`dirname $0`/../bin
 PATH=$BIN_DIR:$PATH
 FIXTURES=`dirname $0`/fixtures
+tmp=/tmp/`basename $0 .sh`$$
 
 setUp(){
   . $BIN_DIR/spindle_functions
+}
+
+tearDown() {
+  rm -f $tmp.?
+}
+
+suite() {
+  suite_addTest "testCmpActualToLoggedFileMissingFromLog"
+  suite_addTest "testCmpActualToLoggedMatch"
+  suite_addTest "testCmpActualToLoggedExtraLoggedFile"
+  suite_addTest "testFindMD5Command"
+  suite_addTest "testReturnsExpectedFilenameCode"
+}
+
+testCmpActualToLoggedFileMissingFromLog() {
+  content="file1 file2 file3 file4 file5"
+  actual=$tmp.1
+  logged=$tmp.2
+  for file in $content 
+  do
+    echo $file >> $actual 
+    echo $file >> $logged 
+  done
+  # add the extra file
+  echo file6 >> $actual
+  output=`cmpActualToLogged $actual $logged 2>&1`
+  assertMatch "$output" "NOT_LOGGED  *file6"
+}
+
+testCmpActualToLoggedMatch() {
+  content="file1 file2 file3 file4 file5"
+  actual=$tmp.1
+  logged=$tmp.2
+  for file in $content 
+  do
+    echo $file >> $actual 
+    echo $file >> $logged 
+  done
+  output=`cmpActualToLogged $actual $logged`
+  assertEquals "Exit status should be 0" 0 $?
+  assertMatch "output should say VALID: $output" "$output" "VALID"
+}
+
+testCmpActualToLoggedExtraLoggedFile() {
+  content="file1 file2 file3 file4 file5"
+  actual=$tmp.1
+  logged=$tmp.2
+  for file in $content 
+  do
+    echo $file >> $actual 
+    echo $file >> $logged 
+  done
+  # add the extra file
+  echo file6 >> $logged
+  output=`cmpActualToLogged $actual $logged 2>&1`
+  assertNotEquals "Exit status should not be 0; got $?" 0 $?
+  assertMatch "output should say 'NO_SUCH_FILE: $output" "$output" "NO_SUCH_FILE  *file6"
 }
 
 testFindMD5Command() {
@@ -24,5 +83,33 @@ testFindMD5Command() {
   fi
 }
 
+testReturnsExpectedFilenameCode() {
+  exec 9<&0 <<EOF
+BAD_SHOT_SEQ  data/0020_00.009_WCB_PCA_RGB_01.jpg
+BAD_PROCESSOR  data/0020_000009_W-B_PCA_RGB_01.jpg
+BAD_PROC_TYPE  data/0020_000009_WCB_PC(A_RGB_01.jpg
+BAD_MODIFIERS  data/0020_000009_WCB_PCA_RGB123j-01'.jpg
+BAD_MODIFIERS  data/0020_000009_WCB_PCA_RGB123_-badsection.jpg
+BAD_PROCESSOR  data/0020_000009_WCBA_PCA_RGB_01.jpg
+BAD_SHOOT_LIST  data/0A20_000009_WCB_PCA_RGB_01.jpg
+BAD_EXTENSION data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpeg
+BAD_FILE_TYPE data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.png
+BAD_PROC_TYPE data/0020_000011_KTK_sha'rpie_WBUVR25-MB625Rd.jpg
+VALID data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpg
+VALID data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd_xyz.jpg
+VALID data/0020_000011_WCB_PCA.jpg
+EOF
+  while read line
+  do
+    code=`echo "$line" | awk '{ print $1 }'`
+    file=`echo "$line" | awk '{ print $NF }'`
+    result=`validateFilename $file`
+    result_code=`echo $result | awk '{ print $1 }'`
+    assertEquals "Unexpected code for: $file" $code $result_code
+  done
+  exec 0<&0 0<&-
+}
 
-. $shunit
+
+# source shunit_helper
+. $shunit_helper

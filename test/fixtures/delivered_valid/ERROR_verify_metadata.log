@@ -1,0 +1,32 @@
+2013-01-26T11:22:55 [verify_metadata] data/0020_000009_WCB_PCA_RGB_01.jpg  REQ_MISSING  Creator
+2013-01-26T11:22:55 [verify_metadata] data/0020_000009_WCB_PCA_RGB_01.jpg  REQ_MISSING  Source
+2013-01-26T11:22:55 [verify_metadata] data/0020_000009_WCB_PCA_RGB_01.jpg  REQ_MISSING  Keywords
+2013-01-26T11:22:55 [verify_metadata] data/0020_000009_WCB_PCA_RGB_01.jpg  REQ_MISSING  ObjectName
+2013-01-26T11:22:55 [verify_metadata] data/0020_000009_WCB_PCA_RGB_01.jpg  REQ_MISSING  DAT_Bits_Per_Sample
+2013-01-26T11:22:55 [verify_metadata] data/0020_000009_WCB_PCA_RGB_01.jpg  REQ_MISSING  DAT_File_Processing
+2013-01-26T11:22:55 [verify_metadata] data/0020_000009_WCB_PCA_RGB_01.jpg  REQ_MISSING  DAT_File_Processing_Rotation
+2013-01-26T11:22:55 [verify_metadata] data/0020_000009_WCB_PCA_RGB_01.jpg  REQ_MISSING  DAT_Joining_Different_Parts_Of_Folio
+2013-01-26T11:22:55 [verify_metadata] data/0020_000009_WCB_PCA_RGB_01.jpg  REQ_MISSING  DAT_Joining_Same_Parts_of_Folio
+2013-01-26T11:22:55 [verify_metadata] data/0020_000009_WCB_PCA_RGB_01.jpg  REQ_MISSING  DAT_Processing_Program
+2013-01-26T11:22:55 [verify_metadata] data/0020_000009_WCB_PCA_RGB_01.jpg  REQ_MISSING  DAT_Samples_Per_Pixel
+2013-01-26T11:22:55 [verify_metadata] data/0020_000009_WCB_PCA_RGB_01.jpg  REQ_MISSING  DAT_Type_of_Contrast_Adjustment
+2013-01-26T11:22:55 [verify_metadata] data/0020_000009_WCB_PCA_RGB_01.jpg  REQ_MISSING  DAT_Type_of_Image_Processing
+2013-01-26T11:22:55 [verify_metadata] data/0020_000009_WCB_PCA_RGB_01.jpg  REQ_MISSING  ID_Parent_File
+2013-01-26T11:22:55 [verify_metadata] data/0020_000009_WCB_PCA_RGB_01.jpg  DAT_Software_Version should be "See DAT_Processing_Program"
+2013-01-26T11:22:55 [verify_metadata] data/0020_000009_WCB_PCA_RGB_01.jpg  DAT_File_Processing_Rotation  NON-NUMERIC: ''
+2013-01-26T11:22:55 [verify_metadata] data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpg  REQ_MISSING  Creator
+2013-01-26T11:22:55 [verify_metadata] data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpg  REQ_MISSING  Source
+2013-01-26T11:22:55 [verify_metadata] data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpg  REQ_MISSING  Keywords
+2013-01-26T11:22:55 [verify_metadata] data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpg  REQ_MISSING  ObjectName
+2013-01-26T11:22:55 [verify_metadata] data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpg  REQ_MISSING  DAT_Bits_Per_Sample
+2013-01-26T11:22:55 [verify_metadata] data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpg  REQ_MISSING  DAT_File_Processing
+2013-01-26T11:22:55 [verify_metadata] data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpg  REQ_MISSING  DAT_File_Processing_Rotation
+2013-01-26T11:22:55 [verify_metadata] data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpg  REQ_MISSING  DAT_Joining_Different_Parts_Of_Folio
+2013-01-26T11:22:55 [verify_metadata] data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpg  REQ_MISSING  DAT_Joining_Same_Parts_of_Folio
+2013-01-26T11:22:55 [verify_metadata] data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpg  REQ_MISSING  DAT_Processing_Program
+2013-01-26T11:22:55 [verify_metadata] data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpg  REQ_MISSING  DAT_Samples_Per_Pixel
+2013-01-26T11:22:55 [verify_metadata] data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpg  REQ_MISSING  DAT_Type_of_Contrast_Adjustment
+2013-01-26T11:22:55 [verify_metadata] data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpg  REQ_MISSING  DAT_Type_of_Image_Processing
+2013-01-26T11:22:55 [verify_metadata] data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpg  REQ_MISSING  ID_Parent_File
+2013-01-26T11:22:55 [verify_metadata] data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpg  DAT_Software_Version should be "See DAT_Processing_Program"
+2013-01-26T11:22:55 [verify_metadata] data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpg  DAT_File_Processing_Rotation  NON-NUMERIC: ''

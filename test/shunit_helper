@@ -1,0 +1,33 @@
+################################################################################
+#   Name: shunit_helper
+# Author: doug
+#   Date: Sun Jan 27 12:36:41 EST 2013
+#
+# Description:
+#-------------------------------------------------------------------------------
+#
+# This code contains custom matchers and loads the shunit2 library
+#
+################################################################################
+
+shunit=`dirname $0`/shunit2/src/shunit2
+
+assertMatch() {
+  msg='' 
+  if [ $# -eq 3 ]; then
+    msg=$1
+    shift
+  fi
+  string=$1
+  pattern=$2
+
+  # the default message
+  if [ "$msg" = "" ]; then
+    msg="Expected to find '$pattern' in: $string"
+  fi
+
+  match=`echo "$string" | grep "$pattern"`
+  assertNotNull "$msg" "$match"
+}
+
+. $shunit

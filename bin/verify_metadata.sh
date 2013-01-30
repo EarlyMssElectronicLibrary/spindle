@@ -91,7 +91,7 @@ Contributor"
 SW_VERSION_TAG="DAT_Software_Version"
 SW_VERSION_LITERAL="See DAT_Processing_Program"
 
-ROTATION_REGEX="^[0-9][0-9]*"
+ROTATION_REGEX="^[0-9][0-9]*$"
 
 ## METHODS
 get_tag_value() {
@@ -128,7 +128,6 @@ report_required_missing() {
   do
     msg="$file  REQ_MISSING  $tag"
     error_no_exit "$msg"
-    log_error "$msg"
   done
 }
 
@@ -293,11 +292,11 @@ message "$good of $checked files had no errors "
 if [ $good -ne $checked ]; then
   num=$(( $checked - $good ))
   error_no_exit "$num of $checked files had metadata errors"
-  message "Errors logged to `pwd`/$error_file"
+  log "ERRORS_FOUND"
   exit 1
 fi
 
-log "ALL VALID"
+log "ALL_VALID"
 message "Completion logged to `pwd`/$logfile"
 success "$good of $checked files had no errors"
 

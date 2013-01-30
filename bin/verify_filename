@@ -1,0 +1,137 @@
+#!/bin/sh
+
+read -r -d '' HELP <<-'EOF'
+Given a FILENAME determine if its name is valid according to Sinai Palimpsests
+Project rules.
+
+# VALID FILE NAME CHARACTERS
+
+Valid characters are:
+
+   ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_-+
+
+  * First order fields are divided by underscores: _
+
+  * Second order fields are divided by dashes: -
+
+  * Fields may not begin or end with: - or +
+
+For use of the plus sign '+' and dash '-' please see the Data Delivery
+Recommendations document.  Note that this is a valid field '..._GOOD-FIELD_...';
+while this is not: '..._+BAD-FIELD-_'.
+
+# VALID FILE NAME FORMAT
+
+The correct file names have these fields:
+
+    <SHOOT_LIST>_<SHOT_SEQ>_<PROCESSOR>_<PROCESSING_TYPE>_<MODIFIERS>.ext
+
+Where:
+
+  * SHOOT_LIST is a 4-digit string, right-padded with zeros: '0009'
+
+  * SHOT_SEQ is a 6-digit string, right-padded with zeros: '000123'
+
+  * PROCESSOR is  3-character string: 'WCB'; all characters must be alphabetic
+
+  * PROCESSING_TYPE is string composed of valid file name characters, except
+    the first-order field separator '_'; it may not begin or end with a + or -
+    character, (see below): 'sharpie'
+
+  * MODIFIERS is an optional series of fields; a string composed of valid file
+    name characters, and may be composed of multiple first-order fields:
+    'WBRBB47-MB625Rd'; the '-' and '+' may not be adjacent to '_' a character
+
+  * Extension is either 'tif' or 'jpg', all in lowercase characters; variations
+    in case or characters is not permitted; for example, 'TIFF' and 'JPG' are 
+    not allowed
+
+Sample:
+
+    0015_000012_KTK_sharpie_MB365UV-MB625Rd.jpg
+
+# VALID EXTENSIONS
+
+Files should have the following extensions:
+
+* TIFF files: lower case '.tif'; not valid: '.TIF .tiff .TIFF'
+* JPEG files: lower case '.jpg'; not valid: '.JPG .jpeg .JPEG'
+
+
+EOF
+
+### TEMPFILES
+# From:
+#   http://stackoverflow.com/questions/430078/shell-script-templates
+# create a default tmp file name
+tmp=${TMPDIR:-/tmp}/prog.$$
+# delete any existing temp files
+trap "rm -f $tmp.?; exit 1" 1 2 3 13 15
+# then do
+#   ...real work that creates temp files $tmp.1, $tmp.2, ...
+
+#### USAGE AND ERRORS
+cmd=`basename $0 .sh`
+export SPINDLE_COMMAND=$cmd
+source `dirname $0`/spindle_functions
+
+usage() {
+   echo "Usage: $cmd [-h] FILENAME"
+   echo ""
+   echo "OPTIONS"
+   echo ""
+   echo "   -h             Display help message"
+   echo "   -v             Display version"
+   echo ""
+}
+
+help() {
+  echo "$HELP"
+  echo ""
+}
+
+
+### OPTIONS
+while getopts ":hv" opt; do
+  case $opt in
+    h)
+      usage 
+      help
+      exit 0
+      ;;
+    v)
+      version $cmd
+      exit 0
+      ;;
+    \?)
+      echo "ERROR Invalid option: -$OPTARG" >&2
+      echo ""
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND-1))
+
+### THESCRIPT
+# this script calls the spindle_function verifyFilename()
+filename=$1
+if [ "$filename" = "" ]; then
+  error "Please provide a FILENAME"
+fi
+
+output=`validateFilename $filename`
+
+echo "$output"
+
+code=`echo "$output" | awk '{ print $1 }'`
+if [ "$code" != "VALID" ]; then
+  exit 1
+fi
+
+### EXIT
+# http://stackoverflow.com/questions/430078/shell-script-templates
+rm -f $tmp.?
+trap 0
+exit 0
