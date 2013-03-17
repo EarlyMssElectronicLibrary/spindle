@@ -83,6 +83,7 @@ usage() {
    echo "OPTIONS"
    echo ""
    echo "   -h             Display help message"
+   echo "   -v             Display Spindle version"
    echo ""
 }
 
@@ -116,11 +117,16 @@ NOT_LISTED=
 NOT_FOUND=
 
 ### OPTIONS
-while getopts ":hd:" opt; do
+while getopts ":hv" opt; do
   case $opt in
     h)
       usage 
+      version
       help
+      exit 1
+      ;;
+    v)
+      version
       exit 1
       ;;
     \?)

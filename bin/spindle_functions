@@ -27,7 +27,8 @@ print_message() {
 
 version() {
   prog=$1
-  echo "Spindle: $prog v$VERSION"
+  echo "Spindle version $VERSION"
+  echo 
 }
 
 message() {

@@ -122,6 +122,7 @@ usage() {
    echo "OPTIONS"
    echo ""
    echo "   -h             Display help message"
+   echo "   -v             Display Spindle version"
    echo "   -R             Run in Receipt mode"
    echo ""
 }
@@ -183,12 +184,17 @@ DELIVERY_LOG=DLVRY_filenames.log
 RECEIPT_LOG=RECPT_filenames.log
 
 ### OPTIONS
-while getopts ":hR" opt; do
+while getopts ":hvR" opt; do
   case $opt in
     h)
       usage 
+      version
       help
       exit 0
+      ;;
+    v)
+      version
+      exit 1
       ;;
     R)
       RECEIPT_MODE=true
