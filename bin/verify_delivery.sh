@@ -55,6 +55,8 @@ trap "rm -f $tmp.?; exit 1" 0 1 2 3 13 15
 
 #### USAGE AND ERRORS
 cmd=`basename $0 .sh`
+export SPINDLE_COMMAND=$cmd
+source `dirname $0`/spindle_functions
 
 usage() {
    echo "Usage: $cmd [-h] [INPUT_DIR]"
@@ -63,53 +65,6 @@ usage() {
    echo ""
    echo "   -h             Display help message"
    echo ""
-}
-
-help() {
-  echo "$HELP"
-  echo ""
-}
-
-message() {
-  echo "$cmd: INFO    - $1"
-}
-
-error_no_exit() {
-  echo "$cmd: ERROR   - $1" 1>&2
-}
-
-error() {
-  echo "$cmd: ERROR   - $1" 1>&2
-  echo ""
-  usage
-  exit 1
-}
-
-fail() {
-  echo "$cmd: INVALID - $1" 1>&2
-  exit 2
-}
-
-success() {
-  echo "$cmd: VALID   - $1" 1>&2
-  exit 0
-}
-
-warning() {
-  echo "$cmd: WARNING - $1" 1>&2
-}
-
-### LOGGING
-logfile=LOG_${cmd}.log
-
-log() {
-    echo "`date +%Y-%m-%dT%H:%M:%S` [$cmd] $1" >> $logfile
-}
-
-error_file=ERROR_${cmd}.log
-
-log_error() {
-  echo "`date +%Y-%m-%dT%H:%M:%S` [$cmd] $1" >> $error_file
 }
 
 ### CONSTANTS
