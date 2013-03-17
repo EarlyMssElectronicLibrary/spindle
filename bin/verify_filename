@@ -51,7 +51,7 @@ Where:
 
   * MODIFIERS is an optional series of fields; a string composed of valid file
     name characters, and may be composed of multiple first-order fields:
-    'WBRBB47-MB625Rd'; the '-' and '+' may not be adjacent to '_' a character
+    'WBRBB47-MB625Rd'; the '-' and '+' may not be adjacent to a '_' character
 
   * Extension is either 'tif' or 'jpg', all in lowercase characters; variations
     in case or characters is not permitted; for example, 'TIFF' and 'JPG' are 
