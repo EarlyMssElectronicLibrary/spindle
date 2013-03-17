@@ -4,6 +4,17 @@ read -r -d '' HELP <<-'EOF'
 Given a FILENAME determine if its name is valid according to Sinai Palimpsests
 Project rules.
 
+Processing stops on the first bad file name component encountered. This script
+outputs a code and the path of the file examined. For an error, the code is a
+specific error code plus an equals sign '=' followed by the offending file name
+section:
+
+    BAD_SHOT_SEQ=00.009        data/0020_00.009_WCB_PCA_RGB_01.jpg
+
+Valid filenames return the message VALID followed by the file path:
+
+    VALID                      data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpg
+
 # VALID FILE NAME CHARACTERS
 
 Valid characters are:
