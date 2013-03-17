@@ -69,6 +69,7 @@ while getopts ":hv" opt; do
   case $opt in
     h)
       usage 
+      version
       help
       exit 1
       ;;
