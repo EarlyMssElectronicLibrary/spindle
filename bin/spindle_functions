@@ -131,7 +131,8 @@ data_dir() {
   input=$1
   data_dir=$input/data
   if [ ! -d $data_dir ]; then
-    error "Data directory not found: $data_dir"
+    error_no_exit "Data directory not found: $data_dir"
+    return 1
   else
     echo $data_dir
   fi
