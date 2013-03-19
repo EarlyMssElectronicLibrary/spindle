@@ -127,11 +127,6 @@ usage() {
    echo ""
 }
 
-help() {
-  echo "$HELP"
-  echo ""
-}
-
 # usage: validateFilenames LIST_OF_FILES DELIVERY_LOG
 # 
 # Where LIST_OF_FILES is a file listing all filenames to validate; and DELIVERY_LOG
