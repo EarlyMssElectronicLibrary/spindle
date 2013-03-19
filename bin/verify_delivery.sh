@@ -77,6 +77,34 @@ DATA_DIR=
 DELIVERY_LOG=DLVRY_package.log
 RECEIPT_LOG=RECPT_package.log
 
+# METHODS
+check_required() {
+  reqd_file=$1
+  if [ -f $reqd_file ]; then
+    return 0
+  else
+    message "File not found: `pwd`/$reqd_file"
+  fi
+  return 1
+}
+
+check_uptodate() {
+  dir=$1
+  qfile=$2
+  qlist=`find $dir -type f -newer $qfile`
+  if [ -n "$qlist" ]; then
+    error_no_exit "Found files newer than `pwd`/$qfile"
+    for x in $qlist
+    do
+      error_no_exit "   - Newer file: $x"
+    done
+    return 1
+  else
+    message "Up-to-date: $qfile"
+  fi
+  return 0
+}
+
 ### OPTIONS
 while getopts ":hvR" opt; do
   case $opt in
@@ -106,24 +134,89 @@ shift $((OPTIND-1))
 
 ### THESCRIPT
 # grab input directoy and confirm it exists
-INPUT_DIR=$1
-if [ -z "$INPUT_DIR" ]; then
-  message "No INPUT_DIR provided. Using '.'"
-  INPUT_DIR=.
-elif [ ! -d $INPUT_DIR ]; then
-  error "INPUT_DIR not found: $INPUT_DIR"
+INPUT_DIR=`input_dir $1`
+if [ $? -ne 0 ]; then
+  error "Error finding input directory"
 fi
+message "INPUT_DIR is $INPUT_DIR"
 
 # make sure there's a data directory in INPUT_DIR
-DATA_DIR=$INPUT_DIR/data
-if [ ! -d $DATA_DIR ]; then
-  error "Data directory not found: $DATA_DIR"
+DATA_DIR=`data_dir $INPUT_DIR`
+if [ $? -ne 0 ]; then
+  error "Error finding data directory"
 fi
 
-# TODO Check for ERROR files
-# TODO Check for LOG_verify_filenames.log
-# TODO Check for LOG_verify_metadata.log
-# TODO Check manifest-md5s.txt date
+# change to the input dir
+if [ "$INPUT_DIR" != "." ]; then
+  cd $INPUT_DIR
+fi
+
+if [ "$RECEIPT_MODE" ]; then
+  message "Running in RECEIPT_MODE"
+  if [ ! -f "$DELIVERY_LOG" ]; then
+    error_no_exit "No delivery log found: $DELIVERY_LOG"
+    error "Delivery log required when running in RECEIPT_MODE"
+  fi
+  logfile=$RECEIPT_LOG
+else
+  message "Running in DELIVERY_MODE"
+  if [ -f $DELIVERY_LOG ]; then
+    error "DELIVERY MODE: will not overwrite $DELIVERY_LOG"
+  else
+    message "DELIVERY MODE: creating new log file $DELIVERY_LOG"
+    logfile=$DELIVERY_LOG
+  fi
+fi
+
+# Check DLVRY_filenames.log
+filename=DLVRY_filenames.log
+if  ! check_required $filename
+then
+  msg="Missing required file: $filename"
+  log_invalid "$msg"
+  log "ERRORS_FOUND"
+  fail "$msg"
+fi
+if ! check_uptodate data $filename
+then
+  msg="Out-of-date: $filename"
+  log_invalid "$msg"
+  log "ERRORS_FOUND"
+  fail "$msg"
+fi
+
+# TODO carry logging through all checks
+# Check DLVRY_metadata.log
+filename=DLVRY_metadata.log
+if  ! check_required $filename
+then
+  fail "Missing required file: $filename"
+fi
+if ! check_uptodate data $filename
+then
+  fail "Out-of-date: $filename"
+fi
+
+# Check manifest-md5s.txt 
+filename=manifest-md5s.txt
+if  ! check_required $filename 
+then
+  fail "Missing required file: $filename"
+fi
+if ! check_uptodate . $filename
+then
+  fail "Out-of-date: $filename"
+fi
+
+# Compare the manifest list with the file system
+if ! check_manifest_files $logfile ; then
+  log "ERRORS_FOUND"
+  error_no_exit "Manifest does not match data files"
+  fail "ERRORS_FOUND; errors written to `pwd`/$logfile"
+fi
+
+success ALL_VALID
+
 # TODO Check manifest-md5s.txt file lists
 # TODO confirm all data files younger than logs and manifest
 
