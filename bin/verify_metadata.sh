@@ -41,10 +41,11 @@ export SPINDLE_COMMAND=$cmd
 source `dirname $0`/spindle_functions
 
 usage() {
-   echo "Usage: $cmd [-h] [INPUT_DIR]"
+   echo "Usage: $cmd [-h] INPUT_DIR"
    echo ""
    echo "OPTIONS"
    echo ""
+   echo "   -R             Run in Receipt mode"
    echo "   -h             Display help message"
    echo "   -v             Display Spindle version"
    echo ""
@@ -66,6 +67,8 @@ STANDARD_EXTS="jpg tif"
 INPUT_DIR=
 # the data directory
 DATA_DIR=
+DELIVERY_LOG=DLVRY_metadata.log
+RECEIPT_LOG=RECPT_metadata.log
 # file types we'll look at
 FILE_TYPES="jpg JPG jpeg JPEG tiff TIFF tif TIF"
 file_types=$tmp.1
@@ -154,7 +157,7 @@ report_optional_missing() {
 }
 
 ### OPTIONS
-while getopts ":hv" opt; do
+while getopts ":hvR" opt; do
   case $opt in
     h)
       usage 
@@ -165,6 +168,9 @@ while getopts ":hv" opt; do
     v)
       version
       exit 1
+      ;;
+    R)
+      RECEIPT_MODE=true
       ;;
     \?)
       echo "ERROR Invalid option: -$OPTARG" >&2
