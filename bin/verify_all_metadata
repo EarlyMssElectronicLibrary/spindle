@@ -73,87 +73,8 @@ FILE_TYPES="jpg JPG jpeg JPEG tiff TIFF tif TIF"
 file_types=$tmp.1
 for x in $FILE_TYPES; do echo $x; done > $file_types
 # TAGS
-REQUIRED_TAGS="Creator
-Source
-Keywords
-ObjectName
-DAT_Bits_Per_Sample
-DAT_File_Processing
-DAT_File_Processing_Rotation
-DAT_Joining_Different_Parts_Of_Folio
-DAT_Joining_Same_Parts_of_Folio
-DAT_Processing_Program
-DAT_Samples_Per_Pixel
-DAT_Type_of_Contrast_Adjustment
-DAT_Type_of_Image_Processing
-ID_Parent_File"
-
-OPTIONAL_TAGS="DAT_Processing_Comments
-Contributor"
-
-SW_VERSION_TAG="DAT_Software_Version"
-SW_VERSION_LITERAL="See DAT_Processing_Program"
-
-ROTATION_REGEX="^[0-9][0-9]*$"
 
 ## METHODS
-get_tag_value() {
-  filex=$1
-  tagx=$2
-  grep "$tagx" $filex | awk -F"	" '{ print $2 }'
-}
-
-check_numeric() {
-  val=$1
-  if echo "$val" | grep "^[0-9.][0-9.]*$" > /dev/null 2>&1 ; then
-    echo true
-  else
-    echo false
-  fi
-}
-
-check_required() {
-  file=$1
-  for tag in $REQUIRED_TAGS
-  do
-    if ! grep "$tag" $file > /dev/null 2>&1 ; then
-      echo "$tag"
-    fi
-  done
-}
-
-# report required tags are missing
-report_required_missing() {
-  file=$1
-  shift
-  tags="$*"
-  for tag in $tags
-  do
-    msg="$file  REQ_MISSING  $tag"
-    error_no_exit "$msg"
-  done
-}
-
-check_optional() {
-  file=$1
-  for tag in $OPTIONAL_TAGS
-  do
-    if ! grep "$tag" $file > /dev/null 2>&1 ; then
-      echo "$tag"
-    fi
-  done
-}
-
-report_optional_missing() {
-  file=$1
-  width=$2
-  shift 2
-  tags="$*"
-  for tag in $tags
-  do
-    warning "`printf "%-${width}s" $file` OPT_MISSING  $tag"
-  done
-}
 
 ### OPTIONS
 while getopts ":hvR" opt; do
@@ -234,6 +155,7 @@ else
   export logfile=$DELIVERY_LOG
 fi
 
+# VERIFY_ALL_METADATA
 total=`wc -l $file_list | awk '{ print $1 }'`
 checked=$total
 count=0
@@ -265,19 +187,22 @@ do
 done < $file_list
 report_count $count $total 0
 
+# REPORT NUMBER OF FILE CHECED
 message "$checked of $total files were checked"
 if [ $total -ne $checked ]; then
   num=$(( $total - $checked ))
   warning "$num of $total files were SKIPPED"
 fi
 
+# NUMBER VALID
 good=`grep "^VALID" $logfile | awk '{ print $3 }' | sort | uniq | wc -l`
 good=`echo $good | sed 's! *!!g'`
 
+# REPORT INVALID COUNT
 if [ $good -ne $checked ]; then
   num=$(( $checked - $good ))
   msg="$num of $checked checked files had metadata errors"
-  warning "$msg"
+  invalid "$msg"
   log "$msg"
   log "ERRORS_FOUND"
   fail "ERRORS_FOUND see `pwd`/$logfile"
@@ -285,6 +210,7 @@ else
   message "0 of $total files had metadata errors"
 fi
 
+# SUCCESS !
 log "ALL_VALID"
 message "Completion logged to `pwd`/$logfile"
 success "$good of $checked files had no errors"
