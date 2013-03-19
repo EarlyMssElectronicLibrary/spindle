@@ -178,64 +178,92 @@ if [ "$RECEIPT_MODE" ]; then
     error_no_exit "No delivery log found: $DELIVERY_LOG"
     error "Delivery log required when running in RECEIPT_MODE"
   fi
-  logfile=$RECEIPT_LOG
+  export logfile=$RECEIPT_LOG
 else
   message "Running in DELIVERY_MODE"
   if [ -f $DELIVERY_LOG ]; then
     error "DELIVERY MODE: will not overwrite $DELIVERY_LOG"
   else
     message "DELIVERY MODE: creating new log file $DELIVERY_LOG"
-    logfile=$DELIVERY_LOG
+    export logfile=$DELIVERY_LOG
   fi
 fi
 
+# ----------------------------------------------------------------------
 # Check DLVRY_filenames.log
+# ----------------------------------------------------------------------
 filename=DLVRY_filenames.log
 if  ! check_required $filename
 then
-  msg="Missing required file: $filename"
-  log_invalid "$msg"
-  log "ERRORS_FOUND"
-  fail "$msg"
+  msg=`format_code_message MISSING $filename`
+  log_and_fail $logfile "$msg"
 fi
+log_valid $logfile "`format_code_message FILE_PRESENT $filename`"
+
+if ! check_allvalid $filename
+then
+  msg=`format_code_message MARKED_ERRORS_FOUND $filename`
+  log_and_fail $logfile "$msg"
+fi
+log_valid $logfile "`format_code_message MARKED_ALL_VALID $filename`"
+
 if ! check_uptodate data $filename
 then
   msg="Out-of-date: $filename"
-  log_invalid "$msg"
-  log "ERRORS_FOUND"
-  fail "$msg"
+  log_and_fail $logfile "$msg"
 fi
+log_valid $logfile "`format_code_message UP_TO_DATE $filename`"
 
-# TODO carry logging through all checks
-# Check DLVRY_metadata.log
+# ----------------------------------------------------------------------
+# CHECK DLVRY_metadata.log
+# ----------------------------------------------------------------------
 filename=DLVRY_metadata.log
 if  ! check_required $filename
 then
-  fail "Missing required file: $filename"
+  msg=`format_code_message MISSING $filename`
+  log_and_fail $logfile "$msg"
 fi
+log_valid $logfile "`format_code_message FILE_PRESENT $filename`"
+
+if ! check_allvalid $filename
+then
+  msg=`format_code_message MARKED_ERRORS_FOUND $filename`
+  log_and_fail $logfile "$msg"
+fi
+log_valid $logfile "`format_code_message MARKED_ALL_VALID $filename`"
+
 if ! check_uptodate data $filename
 then
-  fail "Out-of-date: $filename"
+  msg=`format_code_message OUT_OF_DATE $filename`
+  log_and_fail $logfile "$msg"
 fi
+log_valid $logfile "`format_code_message UP_TO_DATE $filename`"
 
+# ----------------------------------------------------------------------
 # Check manifest-md5s.txt 
+# ----------------------------------------------------------------------
 filename=manifest-md5s.txt
 if  ! check_required $filename 
 then
-  fail "Missing required file: $filename"
+  msg=`format_code_message MISSING $filename`
+  log_and_fail $logfile "$msg"
 fi
+log_valid $logfile "`format_code_message FILE_PRESENT $filename`"
 if ! check_uptodate . $filename
 then
-  fail "Out-of-date: $filename"
+  msg=`format_code_message OUT_OF_DATE $filename`
+  log_and_fail $logfile "$msg"
 fi
+log_valid $logfile "`format_code_message UP_TO_DATE $filename`"
 
 # Compare the manifest list with the file system
 if ! check_manifest_files $logfile ; then
-  log "ERRORS_FOUND"
-  error_no_exit "Manifest does not match data files"
-  fail "ERRORS_FOUND; errors written to `pwd`/$logfile"
+  msg=`format_code_message FILE_SYSTEM_MISMATCH $filename`
+  log_and_fail $logfile "$msg"
 fi
+log_valid $logfile "`format_code_message FILE_SYSTEM_MATCH $filename`"
 
+log "ALL_VALID"
 success ALL_VALID
 
 # TODO Check manifest-md5s.txt file lists
