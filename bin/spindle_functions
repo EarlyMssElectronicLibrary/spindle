@@ -77,6 +77,7 @@ help() {
 }
 
 ### LOGGING
+# the default log file
 logfile=LOG_${SPINDLE_COMMAND}.log
 
 log() {
