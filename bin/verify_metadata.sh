@@ -181,13 +181,11 @@ shift $((OPTIND-1))
 
 ### THESCRIPT
 # grab input directoy and confirm it exists
-INPUT_DIR=$1
-if [ -z "$INPUT_DIR" ]; then
-  message "No INPUT_DIR provided. Using '.'"
-  INPUT_DIR=.
-elif [ ! -d $INPUT_DIR ]; then
-  error "INPUT_DIR not found: $INPUT_DIR"
+INPUT_DIR=`input_dir $1`
+if [ $? -ne 0 ]; then
+  error "Error finding input directory"
 fi
+message "INPUT_DIR is $INPUT_DIR"
 
 # make sure there's a data directory in INPUT_DIR
 DATA_DIR=$INPUT_DIR/data
