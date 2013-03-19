@@ -144,7 +144,7 @@ validateFilenames() {
   curr=0
   total=`wc -l $file_list | awk '{ print $1 }'`
   status=0
-  message "`printf "%5d" $curr`/$total `$date_cmd`"
+  report_count $curr $total 1000
   while read file
   do
     curr=$(( $curr + 1))
@@ -158,8 +158,9 @@ validateFilenames() {
     else
       log_valid $working_log "$result"
     fi
+    report_count $curr $total 1000
   done < $file_list
-  message "`printf "%5d" $curr`/$total `$date_cmd`"
+  report_count $curr $total 0
 
   return $status
 }
