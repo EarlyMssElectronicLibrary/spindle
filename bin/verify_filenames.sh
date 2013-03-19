@@ -238,28 +238,30 @@ logged_files=$tmp.2
 date_cmd="date +%FT%T%z"
 
 if [ "$RECEIPT_MODE" ]; then
+  export logfile=$RECEIPT_LOG
   message "Running in RECEIPT MODE"
   # double check the file names
   message "Confirming filename validation"
-  if validateFilenames $file_list $RECEIPT_LOG ; then
-    echo "ALL_VALID" >> $RECEIPT_LOG
+  if validateFilenames $file_list $logfile ; then
+    echo "ALL_VALID" >> $logfile
     message "ALL_VALID"
   else
-    fail "ERRORS_FOUND see `pwd`/$RECEIPT_LOG"
+    fail "ERRORS_FOUND see `pwd`/$logfile"
   fi
 
 else
+  export logfile=$DELIVERY_LOG
   message "Running in DELIVERY MODE"
 
   find data -type f | sort > $file_list
   total=`wc -l $file_list | awk '{ print $1 }'`
-  if validateFilenames $file_list $DELIVERY_LOG ; then
-    echo "ALL_VALID  `$date_cmd`" >> $DELIVERY_LOG
+  if validateFilenames $file_list $logfile ; then
+    echo "ALL_VALID  `$date_cmd`" >> $logfile
   fi
  
 
   warnings=$tmp.5
-  grep WARNING $DELIVERY_LOG > $warnings
+  grep WARNING $logfile > $warnings
   if [ -s $warnings ]; then
     num=`wc -l $warnings | awk '{ print $1 }'`
     warning "there were $num WARNINGS"
@@ -270,7 +272,7 @@ else
   fi
 
   bad_file_names=$tmp.4
-  grep "BAD_" $DELIVERY_LOG > $bad_file_names
+  grep "BAD_" $logfile > $bad_file_names
   if [ -s $bad_file_names ]; then
     num=`wc -l $bad_file_names | awk '{ print $1 }'`
     while read line
@@ -280,14 +282,21 @@ else
     error_no_exit "$num of $total files had bad names"
   fi
 
-  good=`grep "^VALID" $DELIVERY_LOG | wc -l`
+  good=`grep "^VALID" $logfile | wc -l | sed 's! *!!g'`
   message "$good of $total files had VALID file names"
 
   if [ -s $bad_file_names ]; then
-    echo "ERRORS_FOUND" >> $DELIVERY_LOG
-    fail "ERRORS_FOUND"
+    echo "ERRORS_FOUND" >> $logfile
+    log "ERRORS_FOUND"
+    fail "ERRORS_FOUND; errors written to $logfile"
   fi
-fi
+
+  # if we get to here, there were no errors
+  # write "ALL_VALID" to $logfile
+  log "ALL_VALID"
+  message "Completion logged to `pwd`/$logfile"
+  success "No errors found"
+fi # if/else [ "$RECEIPT_MODE" ]
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
