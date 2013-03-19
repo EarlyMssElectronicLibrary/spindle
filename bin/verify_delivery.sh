@@ -59,6 +59,7 @@ usage() {
    echo ""
    echo "OPTIONS"
    echo ""
+   echo "   -R             Run in Receipt mode"
    echo "   -h             Display help message"
    echo "   -v             Display Spindle version"
    echo ""
@@ -73,13 +74,11 @@ MANIFEST_FILE=manifest-md5s.txt
 INPUT_DIR=
 # the data directory
 DATA_DIR=
-# files that are missing from the manifest
-NOT_LISTED=
-# files in the manifest not found in the directory
-NOT_FOUND=
+DELIVERY_LOG=DLVRY_package.log
+RECEIPT_LOG=RECPT_package.log
 
 ### OPTIONS
-while getopts ":hv" opt; do
+while getopts ":hvR" opt; do
   case $opt in
     h)
       usage 
@@ -90,6 +89,9 @@ while getopts ":hv" opt; do
     v)
       version
       exit 1
+      ;;
+    R)
+      RECEIPT_MODE=true
       ;;
     \?)
       echo "ERROR Invalid option: -$OPTARG" >&2
