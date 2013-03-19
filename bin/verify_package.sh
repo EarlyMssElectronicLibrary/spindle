@@ -88,10 +88,23 @@ check_required() {
   return 1
 }
 
+check_allvalid() {
+  cav_file=$1
+  last_line=`sed -n '$p' $cav_file`
+  if echo "$last_line" | grep "ALL_VALID" >/dev/null 2>&1 
+  then
+    return 0
+  else
+    return 1
+  fi
+}
+
 check_uptodate() {
   dir=$1
   qfile=$2
-  qlist=`find $dir -type f -newer $qfile`
+  # get a list of all files newer than qfile, but skip files named 
+  # DLVRY_package.log
+  qlist=`find $dir -type f -newer $qfile \( ! -iname DLVRY_package.log \)`
   if [ -n "$qlist" ]; then
     error_no_exit "Found files newer than `pwd`/$qfile"
     for x in $qlist
