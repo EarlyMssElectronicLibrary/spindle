@@ -95,7 +95,6 @@ log_error() {
   echo "`date +%Y-%m-%dT%H:%M:%S` [$SPINDLE_COMMAND] $1" >> $error_file
 }
 
-
 log_invalid() {
   the_log=$1
   msg="$2"
@@ -151,8 +150,9 @@ check_manifest_files() {
   find data -type f | sort > $zzfile_list 
 
   # get the manifest file list
+  zzmanifest=manifest-md5s.txt
   zzmanifest_files=$work.2
-  awk '{ print $2 }' manifest-md5s.txt | sed 's/\*//' | sort > $zzmanifest_files
+  awk '{ print $2 }' $zzmanifest | sed 's/\*//' | sort > $zzmanifest_files
 
   # compare the file system with the manifest
   zzdiff_file=$work.3
@@ -165,7 +165,7 @@ check_manifest_files() {
     grep "^<" $zzdiff_file | sed 's/<//' > $zznot_in_manifest
     while read x
     do
-      msg="NOT_IN_MANIFEST  $x"
+      msg=`format_code_message NOT_IN_MANIFEST=$x $zzmanifest`
       error_no_exit "$msg"
       log_invalid $zzthe_log "$msg"
     done < $zznot_in_manifest
@@ -176,7 +176,7 @@ check_manifest_files() {
     grep "^>" $zzdiff_file | sed 's/>//' > $zzno_such_files
     while read x
     do
-      msg="NO_SUCH_FILE  $x"
+      msg=`format_code_message NO_SUCH_FILE=$x $zzmanifest`
       error_no_exit "$msg"
       log_invalid $zzthe_log "$msg"
     done < $zzno_such_files
