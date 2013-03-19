@@ -128,6 +128,94 @@ input_dir() {
   return 0
 }
 
+# Compare the manifest file list with the files in the data directory. The two
+# must match exactly for the this function to return 0; otherwise, it returns 1.
+# The function also prints messages and logs data to LOG_FILE.
+#
+#     Usage: check_manifest_files LOG_FILE
+#
+# This function assumes the file manifest-md5s.txt and the `data` directory are
+# in current working directory.
+check_manifest_files() {
+  zzthe_log=$1
+  work=/tmp/spindle.$$
+  zzstatus=0
+
+  # get the actual files
+  zzfile_list=$work.1
+  find data -type f | sort > $zzfile_list 
+
+  # get the manifest file list
+  zzmanifest_files=$work.2
+  awk '{ print $2 }' manifest-md5s.txt | sed 's/\*//' | sort > $zzmanifest_files
+
+  # compare the file system with the manifest
+  zzdiff_file=$work.3
+  diff $zzfile_list $zzmanifest_files > $zzdiff_file
+  if [ $? -ne 0 ]; then
+    error_no_exit "Manifest does not match directory contents"
+
+    # files not in the manifest
+    zznot_in_manifest=$work.4
+    grep "^<" $zzdiff_file | sed 's/<//' > $zznot_in_manifest
+    while read x
+    do
+      msg="NOT_IN_MANIFEST  $x"
+      error_no_exit "$msg"
+      log_invalid $zzthe_log "$msg"
+    done < $zznot_in_manifest
+    x=
+
+    # files not in the file system
+    zzno_such_files=$work.5
+    grep "^>" $zzdiff_file | sed 's/>//' > $zzno_such_files
+    while read x
+    do
+      msg="NO_SUCH_FILE  $x"
+      error_no_exit "$msg"
+      log_invalid $zzthe_log "$msg"
+    done < $zzno_such_files
+    x=
+    message "Errors logged to `pwd`/$logfile"
+    zzstatus=1
+  fi
+  rm -f $work.*
+  return $zzstatus
+}
+
+# Report the current count of a file iteration.
+# The arguments are:
+#
+#     Usage: report_count COUNT TOTAL INTERVAL [FILE]
+# 
+#   COUNT     the count/index of the current file
+#   TOTAL     the total number of files
+#   INTERVAL  how often to report the count, an interval of 0 (zero)
+#             will force the count to be printed 
+#   FILE      optional file name to print with count
+#
+# Output is printed as an INFO message and includes a time stamp.
+report_count() {
+  count=$1
+  total=$2
+  cwidth=`echo $total | wc -c`
+  cwidth=$(( $cwidth - 1 ))
+  mark=`printf "%${cwidth}d/%d" $count $total`
+  interval=$3
+  cfile=$4
+  if [ $interval -eq 0 ]; then
+    dtime=`date +%Y-%m-%dT%H:%M:%S`
+    if [ -n "$cfile" ]; then
+      message "$mark  `printf "%-40s" $cfile` $dtime"
+    else 
+      message "$mark  $dtime"
+    fi
+  elif [ "$(( $count % $interval ))" -eq 0 ]; then
+    dtime=`date +%Y-%m-%dT%H:%M:%S`
+    message "$mark  $dtime"
+  fi
+}
+
 #usage data_dir INPUT_DIR
 data_dir() {
   input=$1
