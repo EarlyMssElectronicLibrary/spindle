@@ -145,7 +145,7 @@ fi
 
 validateFilenames() {
   files=$1
-  logfile=$2
+  working_log=$2
   curr=0
   total=`wc -l $file_list | awk '{ print $1 }'`
   status=0
@@ -158,15 +158,10 @@ validateFilenames() {
     code=`echo $result | awk '{ print $1 }'`
     # change the code to 1 if we get a bad file
     if echo "$code" | grep "^BAD_" >/dev/null 2>&1 ; then
-      log_invalid $logfile "$result"
+      log_invalid $working_log "$result"
       status=1
     else
-      log_valid $logfile "$result"
-    fi
-    # TODO make logging/message work for full validate_filename output
-    # print count and time every 1000 files
-    if [ $(( $curr % 1000 )) -eq 0 ]; then
-      message "`printf "%5d" $curr`/$total `$date_cmd`"
+      log_valid $working_log "$result"
     fi
   done < $file_list
   message "`printf "%5d" $curr`/$total `$date_cmd`"
