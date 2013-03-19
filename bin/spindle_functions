@@ -64,7 +64,6 @@ fail() {
 
 success() {
   print_message ALL_VALID "$1"
-  exit 0
 }
 
 warning() {
