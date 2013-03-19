@@ -57,6 +57,9 @@ usage() {
 # image file extensions
 FILE_TYPES="jpg JPG jpeg JPEG tiff TIFF tif TIF"
 STANDARD_EXTS="jpg tif"
+this_dir=`dirname $0`
+this_dir=`(cd $this_dir; pwd)`
+VERIFY_METADATA=$this_dir/verify_metadata
 
 ### VARIABLES
 # the input dir
@@ -193,113 +196,93 @@ if [ $? -ne 0 ]; then
   error "Error finding data directory"
 fi
 
-### VERIFY METADATA
 # change to the input dir
 if [ "$INPUT_DIR" != "." ]; then
   cd $INPUT_DIR
 fi
 
-# clean up the logs
-if [ -f $logfile ]; then
-  message "Deleting previous log file `pwd`/$logfile"
-  rm $logfile
-fi
-if [ -f $error_file ]; then
-  message "Deleting previous error file `pwd`/$error_file"
-  rm $error_file
+### VERIFY METADATA
+file_list=$tmp.2
+manifest=manifest-md5s.txt
+# check log file
+if [ "$RECEIPT_MODE" ]; then
+  if [ -f $manifest ]; then
+    if ! write_file_list $manifest $file_list ; then
+      error "Unable to get file list from $manifest"
+    fi
+  else
+    error "No manifest file found `pwd`/$manifest"
+  fi
+else
+  if [ -f $DELIVERY_LOG ]; then
+    error "DELIVERY MODE: will not overwrite $DELIVERY_LOG"
+  else
+    message "DELIVERY MODE: creating new log file $DELIVERY_LOG"
+  fi
+  find data -type f | sort > $file_list
 fi
 
-file_list=$tmp.2
-find data -type f > $file_list
 file_width=`awk '{ if (length($1) > max) { max = length($1) } } END { print max }' $file_list`
 skipped=$tmp.3
 metadata_file_tmp=$tmp.4
 metadata_file=$tmp.5
+results=$tmp.6
 
-curr=0
-good=0
-fails=
+if [ "$RECEIPT_MODE" ]; then
+  export logfile=$RECEIPT_LOG
+else
+  export logfile=$DELIVERY_LOG
+fi
+
 total=`wc -l $file_list | awk '{ print $1 }'`
 checked=$total
-width=`echo $total | wc -c`
-count=`printf "%${width}d" $curr`
+count=0
 while read file
 do
-  curr=$(( $curr + 1 ))
+  report_count $count $total 100
   ext=`echo $file | awk -F'.' '{ print $NF }'`
   if grep "$ext" $file_types >/dev/null 2>&1 ; then
-    if basename $file | grep "^[0-9][0-9][0-9][0-9]" >/dev/null 2>&1 ; then
-
-      # VALID FILES TO CHECK
-      exiftool -args $file | while read line
-      do
-        tag=`echo $line | awk -F'=' '{ print $1 }' | sed 's/^-//'`
-        value=`echo $line | sed "s/^-${tag}=//"`
-        echo "$tag	$value"
-      done > $metadata_file
-
-      # REQUIRED TAGS
-      required_missing=`check_required $metadata_file`
-      if [ -n "$required_missing" ]; then
-        fails="$fails $file"
-        report_required_missing $file $required_missing
-        error_flag="REQ"
+    $VERIFY_METADATA $file > $results
+    exit_status=$?
+    while read line
+    do
+      if [ $exit_status -eq $? ]; then
+        log_valid $logfile "$line"
+      else
+        log_invalid $logfile "$line"
       fi
-
-      # LITERALS
-      if ! grep "$SW_VERSION_TAG\s$SW_VERSION_LITERAL" $metadata_file >/dev/null 2>&1 ; then
-        msg="$file  $SW_VERSION_TAG should be \"$SW_VERSION_LITERAL\""
-        error_no_exit "$msg"
-        log_error "$msg"
-        error_flag="LIT"
-      fi
-
-      # DATA FORMAT
-      rotation=`get_tag_value $metadata_file "DAT_File_Processing_Rotation"`
-      numeric=`check_numeric "$rotation"`
-      if ! $numeric ; then
-        msg="$file  DAT_File_Processing_Rotation  NON-NUMERIC: '$rotation'"
-        error_no_exit "$msg"
-        log_error "$msg"
-        error_flag='NUM'
-      fi
-
-      # OPTIONAL TAGS
-      optional_missing=`check_optional $metadata_file`
-      if [ -n "$optional_missing" ]; then
-        report_optional_missing $file $file_width $optional_missing
-      fi
-
-      # if we've hit no errors, increment the good counter
-      if [ "$error_flag" = "" ]; then
-        good=$(( $good + 1 ))
-      fi
-    else
-      # FILE HAS A FUNNY NAME; SKIP IT
-      checked=$(( $checked - 1 ))
-      warning "`printf "%-${file_width}s" $file` UNEXPECTED NAME FORMAT SKIPPED" 
-    fi
+    done < $results
+    exit_status=
+    : > $results
   else
     # FILE DOESN'T HAVE THE RIGHT EXTESION; SKIP IT
     checked=$(( $checked - 1 ))
     warning "`printf "%-${file_width}s" $file` UKNOWN FILE TYPE" 
   fi
-  # always unset the error_flag to 
-  error_flag=
+  # # always unset the error_flag to 
+  # error_flag=
+  count=$(( $count + 1 ))
 done < $file_list
+report_count $count $total 0
 
+message "$checked of $total files were checked"
 if [ $total -ne $checked ]; then
   num=$(( $total - $checked ))
   warning "$num of $total files were SKIPPED"
 fi
 
-message "$good of $checked files had no errors "
+good=`grep "^VALID" $logfile | awk '{ print $3 }' | sort | uniq | wc -l`
+good=`echo $good | sed 's! *!!g'`
 
 if [ $good -ne $checked ]; then
   num=$(( $checked - $good ))
-  error_no_exit "$num of $checked files had metadata errors"
+  msg="$num of $checked checked files had metadata errors"
+  warning "$msg"
+  log "$msg"
   log "ERRORS_FOUND"
-  exit 1
+  fail "ERRORS_FOUND see `pwd`/$logfile"
+else
+  message "0 of $total files had metadata errors"
 fi
 
 log "ALL_VALID"
