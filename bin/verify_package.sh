@@ -118,6 +118,14 @@ check_uptodate() {
   return 0
 }
 
+log_and_fail() {
+  laf_log=$1
+  laf_msg="$2"
+  log_invalid $laf_log "$laf_msg"
+  log "ERRORS_FOUND"
+  fail "$laf_msg"
+}
+
 ### OPTIONS
 while getopts ":hvR" opt; do
   case $opt in
