@@ -9,8 +9,8 @@ delivery. INPUT_DIR must contain at its root a 'data' directory. and a manifest
 file 'manifest-md5s.txt'; thus,
 
       .
-      ├── LOG_verify_filenames.log
-      ├── LOG_verify_metadata.log
+      ├── DLVRY_filenames.log
+      ├── DLVRY_metadata.log
       ├── data
       │   ├── 0015_000013_DJK_ICA_01_2.jpeg
       │   ├── 0015_000013_DJK_ICA_01_2.tif
@@ -21,18 +21,14 @@ file 'manifest-md5s.txt'; thus,
 
 To be valid for delivery a directory must have the following:
 
- * a LOG_verify_filenames.log file, the last line of which contains "ALL VALID"
- * a LOG_verify_metadata.log file, the last line of which contains "ALL VALID"
- * a manifest-md5s.txt file that is newer than the log files, and all files in
+ * a DLVRY_filenames.log file, newer than all files in the data directory, the
+   last line of which contains "ALL VALID"
+ * a DLVRY_metadata.log file, newer than all files in the data directory, the
+   last line of which contains "ALL VALID"
+ * a manifest-md5s.txt file, newer than the log files, that lists all files in
    the data directory
  * addtionally, the list of files in the manifest must match the list of files
    in the data directory *exactly*
-
-The directory MUST NOT contain any of the following:
-
- * an ERROR_verify_filenames.log file
- * an ERROR_verify_metadata.log file
- * any other ERROR log file
 
 To ensure data retains its integrity for delivery, it is recommended you tar
 all data into a single archive:
