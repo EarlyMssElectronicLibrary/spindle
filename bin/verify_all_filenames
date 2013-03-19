@@ -204,9 +204,15 @@ shift $((OPTIND-1))
 ### THESCRIPT
 # grab input directoy and confirm it exists
 INPUT_DIR=`input_dir $1`
+if [ $? -ne 0 ]; then
+  error "Error finding input directory"
+fi
 message "INPUT_DIR is $INPUT_DIR"
 # make sure there's a data directory in INPUT_DIR
 DATA_DIR=`data_dir $INPUT_DIR`
+if [ $? -ne 0 ]; then
+  error "Error finding data directory"
+fi
 
 # change to the input dir
 if [ "$INPUT_DIR" != "." ]; then
