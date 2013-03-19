@@ -84,6 +84,15 @@ Position"
 
 # METHODS
 
+print_metadata_error() {
+  reason="$1"
+  bad_tag="$2"
+  file=$3
+
+  code="${reason}=${bad_tag}"
+  printf "%-50s %s\n" "$code" $file
+}
+
 get_tag_value() {
   metatada="$1"
   tagx=$2
@@ -129,8 +138,7 @@ report_required_missing() {
   tags="$*"
   for tag in $tags
   do
-    msg="$file  REQ_MISSING  $tag"
-    error_no_exit "$msg"
+    print_metadata_error MISSING $tag $file
   done
 }
 
@@ -211,7 +219,7 @@ status=0
 if [ -n "$missing" ]; then
   for field in $missing
   do
-    echo "MISSING  $field  $file"
+    print_metadata_error MISSING $field $file
   done
   status=1
 fi
@@ -219,14 +227,14 @@ fi
 echo "$EXPECTED_KEYWORDS" | while read keyword
 do
   if ! check_keyword "$keyword" "$metadata" ; then
-    echo "MISSING_KEYWORD  '$keyword'  $file"
+    print_metadata_error MISSING_KEYWORD "$keyword" $file
     status=1
   fi
 done
 
 sw_version=`get_tag_value "$metadata" $SW_VERSION_TAG`
 if [ "$sw_version" != "$SW_VERSION_LITERAL" ]; then
-  echo "BAD_LITERAL  DAT_Software_Version  $file"
+  print_metadata_error BAD_LITERAL DAT_Software_Version $file
   status=1
 fi
 
@@ -234,7 +242,7 @@ rotation=`get_tag_value "$metadata" DAT_File_Processing_Rotation`
 if check_numeric $rotation ; then
   :
 else
-  echo "BAD_NUMBER  DAT_File_Processing_Rotation  $file"
+  print_metadata_error BAD_NUMBER DAT_File_Processing_Rotation $file
   status=1
 fi
 
@@ -242,7 +250,7 @@ if [ $status -ne 0 ]; then
   exit 1
 fi
 
-echo "METADATA_VALID  $file"
+echo "VALID  $file"
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
