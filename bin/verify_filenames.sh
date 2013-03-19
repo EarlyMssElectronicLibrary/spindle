@@ -121,9 +121,9 @@ usage() {
    echo ""
    echo "OPTIONS"
    echo ""
+   echo "   -R             Run in Receipt mode"
    echo "   -h             Display help message"
    echo "   -v             Display Spindle version"
-   echo "   -R             Run in Receipt mode"
    echo ""
 }
 
