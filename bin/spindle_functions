@@ -120,7 +120,8 @@ input_dir() {
   if [ -z "$user_arg" ]; then
     user_arg=.
   elif [ ! -d $user_arg ]; then
-    error "INPUT_DIR not found: $user_arg"
+    error_no_exit "INPUT_DIR not found: $user_arg"
+    return 1
   fi
   echo $user_arg
   return 0
