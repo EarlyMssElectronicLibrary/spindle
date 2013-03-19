@@ -36,7 +36,7 @@ message() {
 }
 
 error_no_exit() {
-  echo "$SPINDLE_COMMAND: ERROR   - $1" 1>&2
+  print_message ERROR "$1"
 }
 
 error() {
