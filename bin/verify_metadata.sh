@@ -188,9 +188,9 @@ fi
 message "INPUT_DIR is $INPUT_DIR"
 
 # make sure there's a data directory in INPUT_DIR
-DATA_DIR=$INPUT_DIR/data
-if [ ! -d $DATA_DIR ]; then
-  error "Data directory not found: $DATA_DIR"
+DATA_DIR=`data_dir $INPUT_DIR`
+if [ $? -ne 0 ]; then
+  error "Error finding data directory"
 fi
 
 ### VERIFY METADATA
