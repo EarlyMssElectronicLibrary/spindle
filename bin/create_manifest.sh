@@ -149,18 +149,15 @@ find data -type f > $file_list
 
 curr=0
 total=`wc -l $file_list | awk '{ print $1 }'`
-width=`echo $total | wc -c`
 date_cmd="date +%FT%T%z"
-count=`printf "%${width}d" $curr`
-message "$count/$total `$date_cmd`"
+report_count $curr $total 0
 while read file
 do
   $MD5_CMD $file >> $MANIFEST_FILE
   curr=$(( $curr + 1))
-  count=`printf "%${width}d" $curr`
-  message "$count/$total  `$date_cmd`  $file"
+  report_count $curr $total 0 $file
 done < $file_list
-message "$count/$total `$date_cmd` $MANIFEST_FILE complete" 
+message "`pwd`/$MANIFEST_FILE complete" 
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
