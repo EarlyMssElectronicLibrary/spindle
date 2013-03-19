@@ -51,10 +51,6 @@ usage() {
    echo ""
 }
 
-help() {
-  echo "$HELP"
-  echo ""
-}
 
 ### CONSTANTS
 # the name of the manifest in each dir
