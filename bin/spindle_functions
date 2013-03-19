@@ -19,6 +19,12 @@
 VERSION=0.2.0
 
 # MESSAGE AND USAGE FUNCTIONS 
+format_code_message() {
+  fm_code=$1
+  fm_file=$2
+  printf "%-50s %s\n" "$fm_code" $fm_file
+}
+
 print_message() {
   msg_type=$1
   msg=$2
