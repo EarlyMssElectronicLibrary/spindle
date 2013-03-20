@@ -1,0 +1,268 @@
+#!/bin/sh
+
+read -r -d '' HELP <<-'EOF'
+For an INPUT_DIR of the correct structure, validate the data and prepare the
+delivery package.  The INPUT dir must contain at its root a 'data' directoy.
+All image files must be within the data diretory. No requirements are made as
+to the directory structure in which the files are stored.
+
+This command will run:
+
+  * `verify_all_filenames`
+  * `verify_all_metadata`
+  * `create_manifest`
+  * `verify_package`
+
+Execution ceases when the first error is encountered.
+
+The following shows a valid INPUT_DIR structure. The INPUT_DIR may not contain
+any log files or a manifest.
+
+      .
+      └── data
+          ├── Processed_Images
+          │   ├── 0015_000001_KTK_pseudo_MB365UV-MB625Rd.tif
+          │   ├── 0015_000001_KTK_pseudo_MB365UV-VIS.tif
+          │   ├── ...
+          │   ├── 0020_000018_KTK_txpseudo_WBRBB47-MB625Rd.tif
+          │   ├── 0020_000018_KTK_txratio_TX940IR-MB940IR.tif
+          │   └── 0020_000018_KTK_txsharpie_WBRBB47-MB625Rd.tif
+          └── Processed_Images_JPEG
+              ├── 0015_000001_KTK_pseudo_MB365UV-MB625Rd.jpg
+              ├── 0015_000001_KTK_pseudo_MB365UV-VIS.jpg
+              ├── ...
+              ├── 0020_000018_KTK_txpseudo_WBRBB47-MB625Rd.jpg
+              ├── 0020_000018_KTK_txratio_TX940IR-MB940IR.jpg
+              └── 0020_000018_KTK_txsharpie_WBRBB47-MB625Rd.jpg
+
+This script wll generate all delivery logs and, if any errors are found, the
+`ERRORS_FOUND.txt` file.  When this script is complete, a valid delivery
+package will have the following structure.  
+
+      .
+      ├── DLVRY_filenames.log
+      ├── DLVRY_metadata.log
+      ├── DLVRY_package.log
+      ├── data
+      │   ├── Processed_Images
+      │   │   ├── 0015_000001_KTK_pseudo_MB365UV-MB625Rd.tif
+      │   │   ├── 0015_000001_KTK_pseudo_MB365UV-VIS.tif
+      │   │   ├── ...
+      │   │   ├── 0020_000018_KTK_txpseudo_WBRBB47-MB625Rd.tif
+      │   │   ├── 0020_000018_KTK_txratio_TX940IR-MB940IR.tif
+      │   │   └── 0020_000018_KTK_txsharpie_WBRBB47-MB625Rd.tif
+      │   └── Processed_Images_JPEG
+      │       ├── 0015_000001_KTK_pseudo_MB365UV-MB625Rd.jpg
+      │       ├── 0015_000001_KTK_pseudo_MB365UV-VIS.jpg
+      │       ├── ...
+      │       ├── 0020_000018_KTK_txpseudo_WBRBB47-MB625Rd.jpg
+      │       ├── 0020_000018_KTK_txratio_TX940IR-MB940IR.jpg
+      │       └── 0020_000018_KTK_txsharpie_WBRBB47-MB625Rd.jpg
+      └── manifest-md5s.txt
+
+A non-valid package will contain the file `ERRORS_FOUND.txt`:
+
+      .
+      ├── DLVRY_filenames.log
+      ├── DLVRY_metadata.log
+      ├── DLVRY_package.log
+      ├── ERRORS_FOUND.txt
+      ├── data
+      │   ├── Processed_Images
+      │   │   ├── 0015_000001_KTK_pseudo_MB365UV-MB625Rd.tif
+      │   │   ├── 0015_000001_KTK_pseudo_MB365UV-VIS.tif
+      │   │   ├── ...
+      │   │   ├── 0020_000018_KTK_txpseudo_WBRBB47-MB625Rd.tif
+      │   │   ├── 0020_000018_KTK_txratio_TX940IR-MB940IR.tif
+      │   │   └── 0020_000018_KTK_txsharpie_WBRBB47-MB625Rd.tif
+      │   └── Processed_Images_JPEG
+      │       ├── 0015_000001_KTK_pseudo_MB365UV-MB625Rd.jpg
+      │       ├── 0015_000001_KTK_pseudo_MB365UV-VIS.jpg
+      │       ├── ...
+      │       ├── 0020_000018_KTK_txpseudo_WBRBB47-MB625Rd.jpg
+      │       ├── 0020_000018_KTK_txratio_TX940IR-MB940IR.jpg
+      │       └── 0020_000018_KTK_txsharpie_WBRBB47-MB625Rd.jpg
+      └── manifest-md5s.txt
+
+EOF
+
+### TEMPFILES
+# From:
+#   http://stackoverflow.com/questions/430078/shell-script-templates
+# create a default tmp file name
+tmp=${TMPDIR:-/tmp}/prog.$$
+# delete any existing temp files
+trap "rm -f $tmp.?; exit 1" 1 2 3 13 15
+# then do
+#   ...real work that creates temp files $tmp.1, $tmp.2, ...
+
+# FUNCTIONS
+
+# Function to clean and mark this package with errors
+# 
+#  Usage: delivery_failure VALIDATING_FLAG ERRORS_FLAG MESSAGE
+#
+# Deletes VALIDATING_FLAG; and write MESSAGE to ERRORS_FLAG
+delivery_failure() {
+  df_validating_flag=$1
+  df_errors_flag=$2
+  msg="$3"
+  rm -f $df_validating_flag
+  echo "$msg" > $df_errors_flag
+  fail "$msg"
+}
+
+# Function to clean up and print a success message
+delivery_success() {
+  ds_validating_flag=$1
+  msg="$2"
+  rm -f $df_validating_flag
+  success "$msg"
+}
+
+#### USAGE AND ERRORS
+cmd=`basename $0 .sh`
+export SPINDLE_COMMAND=$cmd
+source `dirname $0`/spindle_functions
+
+usage() {
+   echo "Usage: $cmd [options] INPUT_DIR"
+   echo ""
+   echo "OPTIONS"
+   echo ""
+   echo "   -C             Clean old logs"
+   echo "   -T             Tar the resulting archive"
+   echo "   -h             Display help message"
+   echo "   -v             Display Spindle version"
+   echo ""
+}
+
+this_dir=`dirname $0`
+this_dir=`(cd $this_dir; pwd)`
+# the scripts we'll run
+VERIFY_ALL_FILENAMES=$this_dir/verify_all_filenames
+VERIFY_ALL_METADATA=$this_dir/verify_all_metadata
+CREATE_MANIFEST=$this_dir/create_manifest
+VERIFY_PACKAGE=$this_dir/verify_package
+
+### CONSTANTS
+### VARIABLES
+# the input dir
+INPUT_DIR=
+# the data directory
+DATA_DIR=
+
+### OPTIONS
+while getopts ":hvCT" opt; do
+  case $opt in
+    h)
+      usage 
+      version
+      help
+      exit 0
+      ;;
+    v)
+      version
+      exit 0
+      ;;
+    C)
+      CLOBBER_LOGS=true
+      ;;
+    T)
+      TAR=true
+      ;;
+    \?)
+      echo "ERROR Invalid option: -$OPTARG" >&2
+      echo ""
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND-1))
+
+### THESCRIPT
+# grab input directoy and confirm it exists
+INPUT_DIR=`input_dir $1`
+if [ $? -ne 0 ]; then
+  error "Error finding input directory"
+fi
+message "INPUT_DIR is $INPUT_DIR"
+# make sure there's a data directory in INPUT_DIR
+DATA_DIR=`data_dir $INPUT_DIR`
+if [ $? -ne 0 ]; then
+  error "Error finding data directory"
+fi
+
+## ARTIFACTS OF PREVIOUS RUNS
+ARTIFACTS="DLVRY_filenames.log DLVRY_metadata.log DLVRY_package.log VALIDATING.txt ERRORS_FOUND.txt manifest-md5s.txt"
+
+# errors found file
+ERRORS_FOUND_FLAG=$INPUT_DIR/ERRORS_FOUND.txt
+
+# flag to show we started the process
+VALIDATING_FLAG=$INPUT_DIR/VALIDATING.txt
+
+# Before beginning, look for artifacts
+leftovers=
+for x in $ARTIFACTS
+do
+  test_file=$INPUT_DIR/$x
+  if [ -f $test_file ]; then
+    if [ "$CLOBBER_LOGS" ]; then
+      warning "Deleting old file $test_file"
+      rm -f $test_file
+    else
+      leftovers="$leftovers $x"
+    fi
+  fi
+done
+x=
+
+if [ "$leftovers" ]; then
+  for x in $leftovers
+  do
+    error_no_exit "`format_code_message OLD_FILE_FOUND $x`"
+  done
+  delivery_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "Stale files found"
+fi
+
+
+touch $VALIDATING_FLAG
+
+
+## RUN EACH SCRIPT
+# * `verify_all_filenames`
+$VERIFY_ALL_FILENAMES $INPUT_DIR
+if [ $? -ne 0 ]; then
+  delivery_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "filename validation failure"
+fi
+
+# * `verify_all_metadata`
+$VERIFY_ALL_METADATA $INPUT_DIR
+if [ $? -ne 0 ]; then
+  delivery_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "metadata validation failure"
+fi
+
+# * `create_manifest`
+$CREATE_MANIFEST $INPUT_DIR
+if [ $? -ne 0 ]; then
+  delivery_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "manifest generation failure"
+fi
+
+# * `verify_package`
+$VERIFY_PACKAGE $INPUT_DIR
+if [ $? -ne 0 ]; then
+  delivery_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "package validation failure"
+fi
+
+delivery_success $VALIDATING_FLAG "Package preparation complete"
+
+### EXIT
+# http://stackoverflow.com/questions/430078/shell-script-templates
+rm -f $tmp.?
+trap 0
+exit 0
+
+
