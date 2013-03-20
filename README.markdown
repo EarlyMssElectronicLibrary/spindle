@@ -4,6 +4,8 @@ Spindle is a set of scripts for the preparation and delivery of data to
 the Sinai Palimpsests Project repository and for validating data upon 
 its receipt.
 
+### Blather you can skip
+
 There are several parts to data handling. Once data has been completed via
 capture or processing, it must be compiled into an archive for delivery,
 received and verified upon receipt, and added to the project repository for
@@ -31,11 +33,74 @@ These are the steps and scripts to be used by scientists assembling data
 packages for delivery to the repository for storage and redistribution.
 They focus on ensuring that prepared data is complete and valid.
 
-For delivery preparation all data must be placed in an archive having a `data`
-folder, in which are placed all files to ingested. The following examples show
-this structure.
+## The scripts
 
-      DJK
+There are five basic *package* scripts to use for preparing data:
+
+ 1. `deliver` - a master script that runs all the others
+ 2. `verify_all_filenames` - script to validate all package file names
+ 3. `verify_all_metadata` - script to validate metadata in all package files
+ 4. `create_manifest` - script to generate a list of checksums for all package
+   files
+ 5. `verify_package` - script that checks the all other scripts have been run
+
+> Two additional scripts should be of interest. They are:
+> 
+>  * `verify_filename` - script to validate a single file name
+>  * `verify_metadata` - script to validate metadat for a single file
+
+Script #1, `deliver` runs scripts #2-5 and makes sure they have all run
+correctly.  All package scripts act on an entire set of data, called a package.
+A package has a simple, but specific structure that is described in the
+following section.
+
+Each package script has this basic usage:
+
+      $ script_name path/to/package
+
+For example, for a package directory `/home/john/packages/MS22`, thus:
+
+      MS22
+      └── data
+          ├── 0015_000013_JHS_ICA_01_2.jpg
+          ├── 0015_000013_JHS_pseudo.jpg
+          ├── ...
+          ├── 0015_000013_JHS_ICA_04_RGB.tif
+          └── 0015_000013_JHS_pseudo.tif
+
+The `deliver` script invocation would be:
+
+      $ deliver /home/john/packages/MS22
+
+The `deliver` script would then invoke each of script 2-5 above to validate
+the contents of the package. 
+
+#### Some general notes
+
+* Each script has a help `-h` option that displays detail information about its
+  use.
+
+* Each script returns an exit status: `0` on successful completion; `1`
+  otherwise. If any errors are found, exit status `1` is returned.
+
+* Each script generates an *artifact* file of some sort. Verifying scripts
+  create a DLVRY_<SOMENAME>.log file. On successful completion, the last line
+  of each log will contain `ALL_VALID`, and `ERRORS_FOUND` otherwise.
+
+* Scripts **will not overwrite log files**. The must be deleted manually.
+
+* The `delivere` has `-C` option that can be used to clobber `log` and other
+  process artifact files.
+
+## Package structure
+
+All Spindle scripts expect a common directory structure for delivered data.
+
+All files are delivered in a *package* folder, in which there is a `data`
+folder.  All files to be dlivered should be in the `data` directory.  The
+following examples show this structure.
+
+      MSS_15-13
       └── data
           ├── 0015_000013_DJK_ICA_01_2.jpg
           ├── ...
@@ -52,6 +117,9 @@ this structure.
               ├── ...
               └── 0020_000018_KTK_txsharpie_WBRBB47-MB625Rd.jpg
 
+The package folder may have any name, as long as it contains no spaces.  Large
+sets of data can be broken into multiple packages if convenient.
+
 The data folder must be spelled 'data', all in lower case characters.  Within
 the `data` directory files may be organized in any fashion. Please note the
 following:
@@ -65,11 +133,8 @@ following:
     characters; for example, '.tiff', '.TIF', '.jpeg', and '.jpg' will
     invalidate the package
 
-It may be helpful to split large sets of images into smaller packages and 
-validate them separately
-
-All the scripts below assume this structure and use it for the creation of 
-verification logs and checksum files.
+All scripts that work on a package assume this structure and use it for the
+creation of verification logs and checksum files.
 
 All delivery processes can be performed by running the script `deliver`. The
 `deliver` script will perform the following steps.
