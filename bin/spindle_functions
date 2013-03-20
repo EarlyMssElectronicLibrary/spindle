@@ -28,7 +28,7 @@ format_code_message() {
 print_message() {
   msg_type=$1
   msg=$2
-  echo "$SPINDLE_COMMAND `printf "%-12s" $msg_type`  $msg"
+  echo "`printf "%-23s" "[$SPINDLE_COMMAND]"` `printf "%-12s" $msg_type`  $msg"
 }
 
 version() {
