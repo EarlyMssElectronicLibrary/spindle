@@ -7,27 +7,26 @@ All image files must be within the data diretory. No requirements are made as
 to the directory structure in which the files are stored.
 
       .
-      ├── data
-      │   ├── Processed_Images
-      │   │   ├── 0015_000001_KTK_pseudo_MB365UV-MB625Rd.tif
-      │   │   ├── 0015_000001_KTK_pseudo_MB365UV-VIS.tif
-      │   │   ├── ...
-      │   │   ├── 0020_000018_KTK_txpseudo_WBRBB47-MB625Rd.tif
-      │   │   ├── 0020_000018_KTK_txratio_TX940IR-MB940IR.tif
-      │   │   └── 0020_000018_KTK_txsharpie_WBRBB47-MB625Rd.tif
-      │   └── Processed_Images_JPEG
-      │       ├── 0015_000001_KTK_pseudo_MB365UV-MB625Rd.jpg
-      │       ├── 0015_000001_KTK_pseudo_MB365UV-VIS.jpg
-      │       ├── ...
-      │       ├── 0020_000018_KTK_txpseudo_WBRBB47-MB625Rd.jpg
-      │       ├── 0020_000018_KTK_txratio_TX940IR-MB940IR.jpg
-      │       └── 0020_000018_KTK_txsharpie_WBRBB47-MB625Rd.jpg
-      └── manifest-md5s.txt
+      └── data
+          ├── Processed_Images
+          │   ├── 0015_000001_KTK_pseudo_MB365UV-MB625Rd.tif
+          │   ├── 0015_000001_KTK_pseudo_MB365UV-VIS.tif
+          │   ├── ...
+          │   ├── 0020_000018_KTK_txpseudo_WBRBB47-MB625Rd.tif
+          │   ├── 0020_000018_KTK_txratio_TX940IR-MB940IR.tif
+          │   └── 0020_000018_KTK_txsharpie_WBRBB47-MB625Rd.tif
+          └── Processed_Images_JPEG
+              ├── 0015_000001_KTK_pseudo_MB365UV-MB625Rd.jpg
+              ├── 0015_000001_KTK_pseudo_MB365UV-VIS.jpg
+              ├── ...
+              ├── 0020_000018_KTK_txpseudo_WBRBB47-MB625Rd.jpg
+              ├── 0020_000018_KTK_txratio_TX940IR-MB940IR.jpg
+              └── 0020_000018_KTK_txsharpie_WBRBB47-MB625Rd.jpg
 
 This command will verify:
 
- * that all file are of the correct type: JPEG, TIFF, DNG
- * that all file names have the correct extension: 'jpg', 'tif', or 'dng'
+ * that all files are of the correct type: JPEG, TIFF, DNG
+ * that all file names have the correct extensions: 'jpg', 'tif', or 'dng'
  * that all file names have the correct format
 
 In 'Delivery' mode (the default) this script wll generate a log file
