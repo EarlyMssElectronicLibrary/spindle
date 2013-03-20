@@ -8,7 +8,9 @@ Files are expected to have the following metadata values:
 
 * IPTC Source                        - required
 * IPTC Object name                   - required
-* IPTC Keywords                      - required
+* IPTC Keywords
+    - Resolution (PPI)               - required
+    - Postion                        - required
 * EXIF Creator                       - required
 * AP DAT Bits Per Sample             - required
 * AP DAT File Processing             - required
