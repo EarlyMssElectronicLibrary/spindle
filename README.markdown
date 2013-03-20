@@ -4,6 +4,23 @@ Spindle is a set of scripts for the preparation and delivery of data to
 the Sinai Palimpsests Project repository and for validating data upon 
 its receipt.
 
+### Installation
+
+Download or clone the repository:
+
+     $ git clone https://postertorn@bitbucket.org/postertorn/spindle.git
+
+or
+
+     $ git clone git@bitbucket.org:postertorn/spindle.git
+
+Add the spindle/bin directory to your path.  In `.bashrc`:
+
+     PATH=$PATH:path/to/spindle/bin
+     export $PATH
+
+Use the appropriate method for your shell.
+
 ### Blather you can skip
 
 There are several parts to data handling. Once data has been completed via
