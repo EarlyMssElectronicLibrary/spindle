@@ -146,6 +146,10 @@ usage() {
    echo "   -h             Display help message"
    echo "   -v             Display Spindle version"
    echo ""
+   echo "WARNING: Tar option '-T' will generate an archive the same size"
+   echo "         as the package directory. Make sure you have adequate"
+   echo "         free disk space."
+   echo ""
 }
 
 this_dir=`dirname $0`
