@@ -116,8 +116,19 @@ delivery_failure() {
 delivery_success() {
   ds_validating_flag=$1
   msg="$2"
-  rm -f $df_validating_flag
+  rm -f $ds_validating_flag
   success "$msg"
+}
+
+translate_bytes() {
+  tb_bytes=$1
+  if [ $tb_bytes -gt $GIGABYTE ]; then
+    echo "~$(( $tb_bytes / $GIGABYTE )) GB"
+  elif [ $tb_bytes -gt $MEGABYTE ]; then
+    echo "~$(( $tb_bytes / $MEGABYTE )) MB"
+  elif [ $tb_bytes -gt $KILOBYTE ]; then
+    echo "~$(( $tb_bytes / $KILOBYTE )) KB"
+  fi
 }
 
 #### USAGE AND ERRORS
@@ -145,7 +156,11 @@ VERIFY_ALL_METADATA=$this_dir/verify_all_metadata
 CREATE_MANIFEST=$this_dir/create_manifest
 VERIFY_PACKAGE=$this_dir/verify_package
 
+
 ### CONSTANTS
+KILOBYTE=1024
+MEGABYTE=$(( $KILOBYTE * 1024))
+GIGABYTE=$(( $MEGABYTE * 1024))
 ### VARIABLES
 # the input dir
 INPUT_DIR=
@@ -228,9 +243,7 @@ if [ "$leftovers" ]; then
   delivery_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "Stale files found"
 fi
 
-
 touch $VALIDATING_FLAG
-
 
 ## RUN EACH SCRIPT
 # * `verify_all_filenames`
@@ -258,6 +271,25 @@ if [ $? -ne 0 ]; then
 fi
 
 delivery_success $VALIDATING_FLAG "Package preparation complete"
+
+if [ "$TAR" ]; then
+  message "Tarring archive"
+  cd $INPUT_DIR
+  folder_name=`pwd`
+  folder_name=`basename $folder_name`
+  archive=$folder_name.tar
+  cd ..
+  tar cvf $archive $folder_name/**
+  archive_size=`ls -l $archive | awk '{ print $5 }'`
+  message "Generated `pwd`/$archive; $archive_size bytes (`translate_bytes $archive_size`)"
+  md5_command=`whichMd5`
+  if [ "$md5_command" ]; then
+    message "Generating md5 for $archive"
+    $md5_command $archive > $archive.md5
+    message "`cat $archive.md5`"
+    message "Generated `pwd`/$archive.md5"
+  fi
+fi
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
