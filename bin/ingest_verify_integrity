@@ -6,7 +6,7 @@
 # all files have been copied. This script should guarantee that.
 read -r -d '' HELP <<-'EOF'
 
-For INPUT_DIR, verify all files on destination and unchanged.
+For PACKAGE_DIR, verify all files on destination and unchanged.
 
       .
       ├── LOG_verify_filenames.log
@@ -38,7 +38,7 @@ export HELP
 source `dirname $0`/spindle_functions
 
 usage() {
-   echo "Usage: $cmd [-h] [INPUT_DIR]"
+   echo "Usage: $cmd [-h] [PACKAGE_DIR]"
    echo ""
    echo "OPTIONS"
    echo ""
@@ -55,8 +55,8 @@ date_cmd="date +%FT%T%z"
 INGEST_VERICATION_LOG=INGEST_VERICATION_`date +%Y%m%d-%H%M%S%z`.log
 
 ### VARIABLES
-# the input dir
-INPUT_DIR=
+# the package dir
+PACKAGE_DIR=
 # the data directory
 DATA_DIR=
 # files that are missing from the manifest
@@ -89,30 +89,30 @@ done
 shift $((OPTIND-1))
 
 ### THESCRIPT
-# grab input directoy and confirm it exists
-INPUT_DIR=$1
-if [ -z "$INPUT_DIR" ]; then
-  message "No INPUT_DIR provided. Using '.'"
-  INPUT_DIR=.
-elif [ ! -d $INPUT_DIR ]; then
-  error "INPUT_DIR not found: $INPUT_DIR"
+# grab package directoy and confirm it exists
+PACKAGE_DIR=$1
+if [ -z "$PACKAGE_DIR" ]; then
+  message "No PACKAGE_DIR provided. Using '.'"
+  PACKAGE_DIR=.
+elif [ ! -d $PACKAGE_DIR ]; then
+  error "PACKAGE_DIR not found: $PACKAGE_DIR"
 fi
 
-# make sure there's a data directory in INPUT_DIR
-DATA_DIR=$INPUT_DIR/data
+# make sure there's a data directory in PACKAGE_DIR
+DATA_DIR=$PACKAGE_DIR/data
 if [ ! -d $DATA_DIR ]; then
   error "Data directory not found: $DATA_DIR"
 fi
 
 # must have valid file names file to run
-if [ ! -f $INPUT_DIR/$VALID_FILES ]; then
-  error "Must have $INPUT_DIR/$VALID_FILES"
+if [ ! -f $PACKAGE_DIR/$VALID_FILES ]; then
+  error "Must have $PACKAGE_DIR/$VALID_FILES"
 fi
 
 ### INGEST FILES
-# change to the input dir
-if [ "$INPUT_DIR" != "." ]; then
-  cd $INPUT_DIR
+# change to the package dir
+if [ "$PACKAGE_DIR" != "." ]; then
+  cd $PACKAGE_DIR
 fi
 DATA_DIR=`pwd`
 INGEST_VERICATION_LOG=$DATA_DIR/$INGEST_VERICATION_LOG

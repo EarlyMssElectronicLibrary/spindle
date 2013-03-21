@@ -1,7 +1,7 @@
 #!/bin/sh
 
 read -r -d '' HELP <<-'EOF'
-For an INPUT_DIR of the correct structure, verify all image file have the
+For an PACKAGE_DIR of the correct structure, verify all image file have the
 corret metadata.
   
 Files are expected to have the following metadata values:
@@ -43,7 +43,7 @@ export SPINDLE_COMMAND=$cmd
 source `dirname $0`/spindle_functions
 
 usage() {
-   echo "Usage: $cmd [-h] INPUT_DIR"
+   echo "Usage: $cmd [-h] PACKAGE_DIR"
    echo ""
    echo "OPTIONS"
    echo ""
@@ -64,8 +64,8 @@ this_dir=`(cd $this_dir; pwd)`
 VERIFY_METADATA=$this_dir/verify_metadata
 
 ### VARIABLES
-# the input dir
-INPUT_DIR=
+# the package dir
+PACKAGE_DIR=
 # the data directory
 DATA_DIR=
 DELIVERY_LOG=DLVRY_metadata.log
@@ -106,22 +106,22 @@ done
 shift $((OPTIND-1))
 
 ### THESCRIPT
-# grab input directoy and confirm it exists
-INPUT_DIR=`input_dir $1`
+# grab package directoy and confirm it exists
+PACKAGE_DIR=`package_dir $1`
 if [ $? -ne 0 ]; then
-  error "Error finding input directory"
+  error "Error finding package directory"
 fi
-message "INPUT_DIR is $INPUT_DIR"
+message "PACKAGE_DIR is $PACKAGE_DIR"
 
-# make sure there's a data directory in INPUT_DIR
-DATA_DIR=`data_dir $INPUT_DIR`
+# make sure there's a data directory in PACKAGE_DIR
+DATA_DIR=`data_dir $PACKAGE_DIR`
 if [ $? -ne 0 ]; then
   error "Error finding data directory"
 fi
 
-# change to the input dir
-if [ "$INPUT_DIR" != "." ]; then
-  cd $INPUT_DIR
+# change to the package dir
+if [ "$PACKAGE_DIR" != "." ]; then
+  cd $PACKAGE_DIR
 fi
 
 ### VERIFY METADATA

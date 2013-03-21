@@ -118,14 +118,14 @@ log_code() {
 
 # utility commands
 
-# usage: input_dir $1
-# make sure the input dir exists; return '.' if $1 empty
-input_dir() {
+# usage: package_dir $1
+# make sure the package dir exists; return '.' if $1 empty
+package_dir() {
   user_arg=$1
   if [ -z "$user_arg" ]; then
     user_arg=.
   elif [ ! -d $user_arg ]; then
-    error_no_exit "INPUT_DIR not found: $user_arg"
+    error_no_exit "PACKAGE_DIR not found: $user_arg"
     return 1
   fi
   echo $user_arg
@@ -221,7 +221,7 @@ report_count() {
   fi
 }
 
-#usage data_dir INPUT_DIR
+#usage data_dir PACKAGE_DIR
 data_dir() {
   input=$1
   data_dir=$input/data

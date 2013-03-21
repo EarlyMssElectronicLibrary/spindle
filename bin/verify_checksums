@@ -15,7 +15,7 @@
 # TODO delete function 'log_error'
 
 read -r -d '' HELP <<-'EOF'
-For an INPUT_DIR of the correct structure, verify its integrity. INPUT_DIR must
+For an PACKAGE_DIR of the correct structure, verify its integrity. PACKAGE_DIR must
 contain at its root a 'data' directory and a manifest file 'manifest-md5s.txt';
 thus,
       .
@@ -78,7 +78,7 @@ export HELP
 source `dirname $0`/spindle_functions
 
 usage() {
-   echo "Usage: $cmd [-h] [INPUT_DIR]"
+   echo "Usage: $cmd [-h] [PACKAGE_DIR]"
    echo ""
    echo "OPTIONS"
    echo ""
@@ -107,8 +107,8 @@ MANIFEST_FILE=manifest-md5s.txt
 FILE_TYPES="jpg JPG jpeg JPEG tiff TIFF tif TIF"
 
 ### VARIABLES
-# the input dir
-INPUT_DIR=
+# the package dir
+PACKAGE_DIR=
 # the data directory
 DATA_DIR=
 # files that are missing from the manifest
@@ -154,39 +154,39 @@ else
 fi
 message "Using MD5 command: $MD5_CMD"
 
-# grab input directoy and confirm it exists
-INPUT_DIR=$1
-if [ -z "$INPUT_DIR" ]; then
-  message "No INPUT_DIR provided. Using '.'"
-  INPUT_DIR=.
-elif [ ! -d $INPUT_DIR ]; then
-  error "INPUT_DIR not found: $INPUT_DIR"
+# grab package directoy and confirm it exists
+PACKAGE_DIR=$1
+if [ -z "$PACKAGE_DIR" ]; then
+  message "No PACKAGE_DIR provided. Using '.'"
+  PACKAGE_DIR=.
+elif [ ! -d $PACKAGE_DIR ]; then
+  error "PACKAGE_DIR not found: $PACKAGE_DIR"
 fi
 
-# make sure there's a data directory in INPUT_DIR
-DATA_DIR=$INPUT_DIR/data
+# make sure there's a data directory in PACKAGE_DIR
+DATA_DIR=$PACKAGE_DIR/data
 if [ ! -d $DATA_DIR ]; then
   error "Data directory not found: $DATA_DIR"
 fi
 
 # make sure the manifest exists
-if [ ! -f $INPUT_DIR/$MANIFEST_FILE ]; then
-  error "No manifest found in $INPUT_DIR"
+if [ ! -f $PACKAGE_DIR/$MANIFEST_FILE ]; then
+  error "No manifest found in $PACKAGE_DIR"
 fi
 
 # make sure the md5 file is a valid format
 valid_format="[0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z] [ *]\?[0-9a-zA-Z_/.-][0-9a-zA-Z_/.-]*"
-if grep "^MD5" $INPUT_DIR/$MANIFEST_FILE > /dev/null 2>&1 ; then
+if grep "^MD5" $PACKAGE_DIR/$MANIFEST_FILE > /dev/null 2>&1 ; then
   error_no_exit "This looks like a Mac OS md5 command file; please use 'md5 -r'"
   error "manifest file format not valid"
-elif grep -v "$valid_format" $INPUT_DIR/$MANIFEST_FILE >/dev/null 2>&1 ; then
+elif grep -v "$valid_format" $PACKAGE_DIR/$MANIFEST_FILE >/dev/null 2>&1 ; then
   error "manifest file format not valid"
 fi
 
 ### VERIFY MANIFEST
-# change to the input dir
-if [ "$INPUT_DIR" != "." ]; then
-  cd $INPUT_DIR
+# change to the package dir
+if [ "$PACKAGE_DIR" != "." ]; then
+  cd $PACKAGE_DIR
 fi
 
 # clean up the logs
@@ -238,7 +238,7 @@ fi
 # see if we can find md5sum or gmd5sum
 
 if echo "$MD5_CMD" | grep "md5sum" >/dev/null 2>&1 ; then
-  message "Checking $INPUT_DIR/$MANIFEST_FILE with $MD5_CMD"
+  message "Checking $PACKAGE_DIR/$MANIFEST_FILE with $MD5_CMD"
   # run the command
   $MD5_CMD -c $MANIFEST_FILE
   if [ $? -eq 0 ]; then

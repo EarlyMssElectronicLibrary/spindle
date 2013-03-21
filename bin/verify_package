@@ -2,10 +2,10 @@
 
 
 read -r -d '' HELP <<-'EOF'
-Confirm image data INPUT_DIR is ready for delivery. INPUT_DIR defaults to '.'.
+Confirm image data PACKAGE_DIR is ready for delivery. PACKAGE_DIR defaults to '.'.
 
-For an INPUT_DIR of the correct structure, verify that it is ready for
-delivery. INPUT_DIR must contain at its root a 'data' directory. and a manifest
+For an PACKAGE_DIR of the correct structure, verify that it is ready for
+delivery. PACKAGE_DIR must contain at its root a 'data' directory. and a manifest
 file 'manifest-md5s.txt'; thus,
 
       .
@@ -33,9 +33,9 @@ To be valid for delivery a directory must have the following:
 To ensure data retains its integrity for delivery, it is recommended you tar
 all data into a single archive:
 
-   $ cd INPUT_DIR
+   $ cd PACKAGE_DIR
    $ cd ..
-   $ tar cf INPUT_DIR.tar INPUT_DIR/**
+   $ tar cf PACKAGE_DIR.tar PACKAGE_DIR/**
 
 EOF
 
@@ -55,7 +55,7 @@ export SPINDLE_COMMAND=$cmd
 source `dirname $0`/spindle_functions
 
 usage() {
-   echo "Usage: $cmd [-h] [INPUT_DIR]"
+   echo "Usage: $cmd [-h] [PACKAGE_DIR]"
    echo ""
    echo "OPTIONS"
    echo ""
@@ -70,8 +70,8 @@ usage() {
 MANIFEST_FILE=manifest-md5s.txt
 
 ### VARIABLES
-# the input dir
-INPUT_DIR=
+# the package dir
+PACKAGE_DIR=
 # the data directory
 DATA_DIR=
 DELIVERY_LOG=DLVRY_package.log
@@ -154,22 +154,22 @@ done
 shift $((OPTIND-1))
 
 ### THESCRIPT
-# grab input directoy and confirm it exists
-INPUT_DIR=`input_dir $1`
+# grab package directoy and confirm it exists
+PACKAGE_DIR=`package_dir $1`
 if [ $? -ne 0 ]; then
-  error "Error finding input directory"
+  error "Error finding package directory"
 fi
-message "INPUT_DIR is $INPUT_DIR"
+message "PACKAGE_DIR is $PACKAGE_DIR"
 
-# make sure there's a data directory in INPUT_DIR
-DATA_DIR=`data_dir $INPUT_DIR`
+# make sure there's a data directory in PACKAGE_DIR
+DATA_DIR=`data_dir $PACKAGE_DIR`
 if [ $? -ne 0 ]; then
   error "Error finding data directory"
 fi
 
-# change to the input dir
-if [ "$INPUT_DIR" != "." ]; then
-  cd $INPUT_DIR
+# change to the package dir
+if [ "$PACKAGE_DIR" != "." ]; then
+  cd $PACKAGE_DIR
 fi
 
 if [ "$RECEIPT_MODE" ]; then
