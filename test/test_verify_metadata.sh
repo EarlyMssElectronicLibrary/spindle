@@ -44,12 +44,12 @@ get_req_missing_line() {
 }
 
 testReqMissingMetadata() {
-  archive=$FIXTURES/metadata 
-  test_log=$archive/DLVRY_metadata.log
+  package=$FIXTURES/metadata 
+  test_log=$package/DLVRY_metadata.log
   rm -f $test_log
   output=$tmp.1
-  assertTrue "$archive not found" "[ -d $archive ]"
-  verify_all_metadata $archive > $output 2>&1
+  assertTrue "$package not found" "[ -d $package ]"
+  verify_all_metadata $package > $output 2>&1
   assertEquals "should exit with error" 1 $?
 
   match=`get_req_missing_line $test_log Source`

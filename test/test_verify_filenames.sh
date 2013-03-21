@@ -27,20 +27,20 @@ tearDown() {
 testDeliveryLogFileCreation() {
   # we should have a log file LOG_verify_filenames.log
   # the last line of the log should contain: ALL VALID
-  archive=$FIXTURES/names_valid
+  package=$FIXTURES/names_valid
   output=$tmp.1
-  verify_all_filenames $archive > $output 2>&1
-  assertTrue "File not found DLVRY_filenames.log" "[ -f $archive/DLVRY_filenames.log ]"
-  rm -f $archive/DLVRY_filenames.log
+  verify_all_filenames $package > $output 2>&1
+  assertTrue "File not found DLVRY_filenames.log" "[ -f $package/DLVRY_filenames.log ]"
+  rm -f $package/DLVRY_filenames.log
 }
 
 # in DELIVERY MODE bail if DLVRY_filenames.log found
 testDeliveryLogFileCheck() {
-  archive=$FIXTURES/names_valid
-  logfile=$archive/DLVRY_filenames.log
+  package=$FIXTURES/names_valid
+  logfile=$package/DLVRY_filenames.log
   # create log file
   touch $logfile
-  output=`verify_all_filenames $archive 2>&1`
+  output=`verify_all_filenames $package 2>&1`
 
   assertMatch "Expected overwrite error in $output" "$output" "ERROR.*overwrite"
   # clean up
@@ -51,10 +51,10 @@ testDeliveryLogFileCheck() {
 testDeliveryAllValid() {
   # we should have a log file DLVRY_filenames.log
   # the last line of the log should contain: ALL VALID
-  archive=$FIXTURES/names_valid
-  logfile=$archive/DLVRY_filenames.log
-  # verify_all_filenames $archive > $output 2>&1
-  verify_all_filenames $archive 2>&1
+  package=$FIXTURES/names_valid
+  logfile=$package/DLVRY_filenames.log
+  # verify_all_filenames $package > $output 2>&1
+  verify_all_filenames $package 2>&1
   assertEquals "verify_all_filenames should exit without error" 0 $? 
   last_line=`sed -n '$p' $logfile`
   assertMatch "Expect last line to contain ALL_VALID: $last_line" "ALL_VALID" $last_line
@@ -64,9 +64,9 @@ testDeliveryAllValid() {
 # DELIVERY_MODE log file test should report all types of errors
 testDeliveryBadFiles() {
   expected_errors="BAD_SHOT_SEQ BAD_PROCESSOR BAD_SHOOT_LIST BAD_PROC_TYPE BAD_MODIFIERS BAD_EXTENSION BAD_FILE_TYPE"
-  archive=$FIXTURES/names_invalid
-  logfile=$archive/DLVRY_filenames.log
-  output=`verify_all_filenames $archive 2>&1`
+  package=$FIXTURES/names_invalid
+  logfile=$package/DLVRY_filenames.log
+  output=`verify_all_filenames $package 2>&1`
   assertNotEquals "verify_all_filenames should exit with error" 0 $? 
   last_line=`sed -n '$p' $logfile`
   assertMatch "Expect last line to contain ERRORS_FOUND: $last_line" "ERRORS_FOUND" $last_line
