@@ -29,7 +29,7 @@ testDeliveryLogFileCreation() {
   # the last line of the log should contain: ALL VALID
   archive=$FIXTURES/names_valid
   output=$tmp.1
-  verify_filenames.sh $archive > $output 2>&1
+  verify_all_filenames $archive > $output 2>&1
   assertTrue "File not found DLVRY_filenames.log" "[ -f $archive/DLVRY_filenames.log ]"
   rm -f $archive/DLVRY_filenames.log
 }
@@ -40,7 +40,7 @@ testDeliveryLogFileCheck() {
   logfile=$archive/DLVRY_filenames.log
   # create log file
   touch $logfile
-  output=`verify_filenames.sh $archive 2>&1`
+  output=`verify_all_filenames $archive 2>&1`
 
   assertMatch "Expected overwrite error in $output" "$output" "ERROR.*overwrite"
   # clean up
@@ -53,11 +53,11 @@ testDeliveryAllValid() {
   # the last line of the log should contain: ALL VALID
   archive=$FIXTURES/names_valid
   logfile=$archive/DLVRY_filenames.log
-  # verify_filenames.sh $archive > $output 2>&1
-  verify_filenames.sh $archive >/dev/null 2>&1
-  assertEquals "verify_filenames.sh should exit without error" 0 $? 
-  last_code=`sed -n '$p' $logfile | awk '{ print $1 }'`
-  assertEquals "Unexpected last log line" "ALL_VALID" $last_code
+  # verify_all_filenames $archive > $output 2>&1
+  verify_all_filenames $archive 2>&1
+  assertEquals "verify_all_filenames should exit without error" 0 $? 
+  last_line=`sed -n '$p' $logfile`
+  assertMatch "Expect last line to contain ALL_VALID: $last_line" "ALL_VALID" $last_line
   rm -f $logfile
 }
 
@@ -66,10 +66,10 @@ testDeliveryBadFiles() {
   expected_errors="BAD_SHOT_SEQ BAD_PROCESSOR BAD_SHOOT_LIST BAD_PROC_TYPE BAD_MODIFIERS BAD_EXTENSION BAD_FILE_TYPE"
   archive=$FIXTURES/names_invalid
   logfile=$archive/DLVRY_filenames.log
-  output=`verify_filenames.sh $archive 2>&1`
-  assertNotEquals "verify_filenames.sh should exit with error" 0 $? 
-  last_code=`sed -n '$p' $logfile | awk '{ print $1 }'`
-  assertEquals "Unexpected last log line" "ERRORS_FOUND" "$last_code"
+  output=`verify_all_filenames $archive 2>&1`
+  assertNotEquals "verify_all_filenames should exit with error" 0 $? 
+  last_line=`sed -n '$p' $logfile`
+  assertMatch "Expect last line to contain ERRORS_FOUND: $last_line" "ERRORS_FOUND" $last_line
   for error in $expected_errors
   do
     count=`grep $error $logfile | wc -l`

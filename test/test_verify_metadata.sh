@@ -6,9 +6,9 @@ FIXTURES=`dirname $0`/fixtures
 # tmp files get names like $tmp.1, $tmp.2
 tmp=${TMPDIR:-/tmp}/prog.$$
 
-suite() {
-  suite_addTest "testOptMissingMetadata"
-}
+# suite() {
+#   suite_addTest "testOptMissingMetadata"
+# }
 
 tearDown() {
   rm -f $tmp.?
@@ -38,74 +38,63 @@ tearDown() {
 
 get_req_missing_line() {
   file=$1
-  type='REQ_MISSING'
+  type='MISSING'
   name=$2
-  grep "ERROR.*${type} *${name}" $file
-}
-
-testOptMissingMetadata() {
-  archive=$FIXTURES/metadata 
-  output=$tmp.1
-  assertTrue "$archive not found" "[ -d $archive ]"
-  verify_metadata.sh $archive > $output 2>&1
-
-  match=`grep "WARNING.*OPT_MISSING\s\+DAT_Processing_Comments" $output`
-  assertNotNull "DAT_Processing_Comments should generate a warning" "$match"
-
-  match=`grep "WARNING.*OPT_MISSING\s\+Contributor" $output`
-  assertNotNull "Contributor should generate a warning" "$match"
+  grep "INVALID *${type}=*${name}" $file
 }
 
 testReqMissingMetadata() {
   archive=$FIXTURES/metadata 
+  test_log=$archive/DLVRY_metadata.log
+  rm -f $test_log
   output=$tmp.1
   assertTrue "$archive not found" "[ -d $archive ]"
-  verify_metadata.sh $archive > $output 2>&1
+  verify_all_metadata $archive > $output 2>&1
   assertEquals "should exit with error" 1 $?
 
-  match=`get_req_missing_line $output Source`
+  match=`get_req_missing_line $test_log Source`
   assertNotNull "Source should generate an error" "$match"
 
-  match=`get_req_missing_line $output Keywords`
+  match=`get_req_missing_line $test_log Keywords`
   assertNotNull "Keywords should generate an error" "$match"
 
-  match=`get_req_missing_line $output ObjectName`
+  match=`get_req_missing_line $test_log ObjectName`
   assertNotNull "ObjectName should generate an error" "$match"
 
-  match=`get_req_missing_line $output DAT_Bits_Per_Sample`
+  match=`get_req_missing_line $test_log DAT_Bits_Per_Sample`
   assertNotNull "DAT_Bits_Per_Sample should generate an error" "$match"
 
-  match=`get_req_missing_line $output DAT_File_Processing`
+  match=`get_req_missing_line $test_log DAT_File_Processing`
   assertNotNull "DAT_File_Processing should generate an error" "$match"
 
-  match=`get_req_missing_line $output DAT_File_Processing_Rotation`
+  match=`get_req_missing_line $test_log DAT_File_Processing_Rotation`
   assertNotNull "DAT_File_Processing_Rotation should generate an error" "$match"
 
-  match=`get_req_missing_line $output DAT_Joining_Different_Parts_Of_Folio`
+  match=`get_req_missing_line $test_log DAT_Joining_Different_Parts_Of_Folio`
   assertNotNull "DAT_Joining_Different_Parts_Of_Folio should generate an error" "$match"
 
-  match=`get_req_missing_line $output DAT_Joining_Same_Parts_of_Folio`
+  match=`get_req_missing_line $test_log DAT_Joining_Same_Parts_of_Folio`
   assertNotNull "DAT_Joining_Same_Parts_of_Folio should generate an error" "$match"
 
-  match=`get_req_missing_line $output DAT_Processing_Program`
+  match=`get_req_missing_line $test_log DAT_Processing_Program`
   assertNotNull "DAT_Processing_Program should generate an error" "$match"
 
-  match=`get_req_missing_line $output DAT_Samples_Per_Pixel`
+  match=`get_req_missing_line $test_log DAT_Samples_Per_Pixel`
   assertNotNull "DAT_Samples_Per_Pixel should generate an error" "$match"
 
-  match=`get_req_missing_line $output DAT_Type_of_Contrast_Adjustment`
+  match=`get_req_missing_line $test_log DAT_Type_of_Contrast_Adjustment`
   assertNotNull "DAT_Type_of_Contrast_Adjustment should generate an error" "$match"
 
-  match=`get_req_missing_line $output DAT_Type_of_Image_Processing`
+  match=`get_req_missing_line $test_log DAT_Type_of_Image_Processing`
   assertNotNull "DAT_Type_of_Image_Processing should generate an error" "$match"
 
-  match=`get_req_missing_line $output ID_Parent_File`
+  match=`get_req_missing_line $test_log ID_Parent_File`
   assertNotNull "ID_Parent_File should generate an error" "$match"
 
-  match=`grep "ERROR.*DAT_Software_Version" $output | grep "should be"`
+  match=`grep "INVALID *BAD_LITERAL=DAT_Software_Version" $test_log`
   assertNotNull "DAT_Software_Version should generate an error" "$match"
 
-  match=`grep "ERROR.*DAT_File_Processing_Rotation" $output | grep "NON-NUMERIC"`
+  match=`grep "INVALID *BAD_NUMBER=DAT_File_Processing_Rotation" $test_log`
   assertNotNull "DAT_File_Processing_Rotation should generate an error" "$match"
 }
 

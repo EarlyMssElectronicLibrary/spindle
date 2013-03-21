@@ -18,7 +18,7 @@ tearDown() {
 
 testWriteManifest() {
   file_count=`find $ARCHIVE/data -type f | wc -l`
-  create_manifest.sh $ARCHIVE
+  create_manifest $ARCHIVE
   actual=`wc -l $ARCHIVE/manifest-md5s.txt | awk '{ print $1 }'`
   assertEquals "Num of checksums should match" $file_count $actual
 }
