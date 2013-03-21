@@ -34,7 +34,7 @@ export HELP
 source `dirname $0`/spindle_functions
 
 usage() {
-   echo "Usage: $cmd [-h] [PACKAGE_DIR]"
+   echo "Usage: $cmd [-h] PACKAGE_DIR"
    echo ""
    echo "OPTIONS"
    echo ""

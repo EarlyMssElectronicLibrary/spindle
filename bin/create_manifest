@@ -56,7 +56,7 @@ export SPINDLE_COMMAND=$cmd
 source `dirname $0`/spindle_functions
 
 usage() {
-   echo "usage: $cmd [-h] [PACKAGE_DIR]"
+   echo "usage: $cmd [-h] PACKAGE_DIR"
    echo ""
    echo "Create a manifest for all image files in PACKAGE_DIR/data."
    echo "PACKAGE_DIR defaults to '.'"
