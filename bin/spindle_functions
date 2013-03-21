@@ -123,7 +123,8 @@ log_code() {
 package_dir() {
   user_arg=$1
   if [ -z "$user_arg" ]; then
-    user_arg=.
+    error_no_exit "Please provide a PACKAGE_DIR"
+    return 1
   elif [ ! -d $user_arg ]; then
     error_no_exit "PACKAGE_DIR not found: $user_arg"
     return 1
