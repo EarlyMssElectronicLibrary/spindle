@@ -81,8 +81,7 @@ SW_VERSION_LITERAL="See DAT_Processing_Program"
 
 ROTATION_REGEX="^[0-9][0-9]*$"
 
-EXPECTED_KEYWORDS="Resolution (PPI)
-Position"
+EXPECTED_KEYWORDS="Resolution (PPI)"
 
 # METHODS
 
