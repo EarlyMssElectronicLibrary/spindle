@@ -4,7 +4,7 @@
 read -r -d '' HELP <<-'EOF'
 Confirm image data PACKAGE_DIR is ready for delivery. PACKAGE_DIR defaults to '.'.
 
-For an PACKAGE_DIR of the correct structure, verify that it is ready for
+For a PACKAGE_DIR of the correct structure, verify that it is ready for
 delivery. PACKAGE_DIR must contain at its root a 'data' directory. and a manifest
 file 'manifest-md5s.txt'; thus,
 
