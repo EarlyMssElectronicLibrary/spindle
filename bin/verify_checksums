@@ -15,7 +15,7 @@
 # TODO delete function 'log_error'
 
 read -r -d '' HELP <<-'EOF'
-For an PACKAGE_DIR of the correct structure, verify its integrity. PACKAGE_DIR must
+For a PACKAGE_DIR of the correct structure, verify its integrity. PACKAGE_DIR must
 contain at its root a 'data' directory and a manifest file 'manifest-md5s.txt';
 thus,
       .

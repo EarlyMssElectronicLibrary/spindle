@@ -1,7 +1,7 @@
 #!/bin/sh
 
 read -r -d '' HELP <<-'EOF'
-For an PACKAGE_DIR of the correct structure, verify all image file have the
+For a PACKAGE_DIR of the correct structure, verify all image file have the
 corret metadata.
   
 Files are expected to have the following metadata values:

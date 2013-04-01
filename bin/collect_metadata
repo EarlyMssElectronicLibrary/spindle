@@ -3,7 +3,7 @@
 read -r -d '' HELP <<-'EOF'
 Collect metadata for images files in PACKAGE_DIR to upload to the KatIkon system.
 
-For an PACKAGE_DIR of the correct structure, collect image file metadata for
+For a PACKAGE_DIR of the correct structure, collect image file metadata for
 upload to KatIkon delivery.  PACKAGE_DIR must contain at its root a 'data'
 directory.  Metadata will be collected for TIFF and JPEG image in the 'data'
 directory and its subdirectories.  All other directories will be ignored, and 

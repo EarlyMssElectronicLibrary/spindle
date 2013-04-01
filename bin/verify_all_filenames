@@ -1,7 +1,7 @@
 #!/bin/sh
 
 read -r -d '' HELP <<-'EOF'
-For an PACKAGE_DIR of the correct structure, verify all image file names for
+For a PACKAGE_DIR of the correct structure, verify all image file names for
 correct format. The INPUT dir must contain at its root a 'data' directoy. 
 All image files must be within the data diretory. No requirements are made as
 to the directory structure in which the files are stored.
