@@ -178,6 +178,9 @@ if [ "$RECEIPT_MODE" ]; then
     error_no_exit "No delivery log found: $DELIVERY_LOG"
     error "Delivery log required when running in RECEIPT_MODE"
   fi
+  if [ -f $RECEIPT_LOG ]; then
+    error "RECEIPT MODE: will not overwrite $RECEIPT_LOG"
+  fi
   export logfile=$RECEIPT_LOG
 else
   message "Running in DELIVERY_MODE"
