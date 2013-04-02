@@ -87,11 +87,6 @@ VERIFY_ALL_METADATA=$this_dir/verify_all_metadata
 CREATE_MANIFEST=$this_dir/create_manifest
 VERIFY_PACKAGE=$this_dir/verify_package
 
-
-### CONSTANTS
-KILOBYTE=1024
-MEGABYTE=$(( $KILOBYTE * 1024))
-GIGABYTE=$(( $MEGABYTE * 1024))
 ### VARIABLES
 # the package dir
 PACKAGE_DIR=
