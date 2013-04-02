@@ -218,6 +218,7 @@ if [ "$RECEIPT_MODE" ]; then
   fi
   log_valid $logfile "`format_code_message UP_TO_DATE $filename`"
 fi
+filename=
 
 # ----------------------------------------------------------------------
 # Check DLVRY_filenames.log
@@ -243,6 +244,7 @@ then
   log_and_fail $logfile "$msg"
 fi
 log_valid $logfile "`format_code_message UP_TO_DATE $filename`"
+filename=
 
 # ----------------------------------------------------------------------
 # CHECK DLVRY_metadata.log
@@ -268,6 +270,7 @@ then
   log_and_fail $logfile "$msg"
 fi
 log_valid $logfile "`format_code_message UP_TO_DATE $filename`"
+filename=
 
 # ----------------------------------------------------------------------
 # Check manifest-md5s.txt 
@@ -292,6 +295,7 @@ if ! check_manifest_files $logfile ; then
   log_and_fail $logfile "$msg"
 fi
 log_valid $logfile "`format_code_message FILE_SYSTEM_MATCH $filename`"
+filename=
 
 log "ALL_VALID"
 success ALL_VALID
