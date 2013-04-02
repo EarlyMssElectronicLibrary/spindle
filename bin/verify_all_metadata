@@ -129,6 +129,10 @@ file_list=$tmp.2
 manifest=manifest-md5s.txt
 # check log file
 if [ "$RECEIPT_MODE" ]; then
+  message "Running in RECEIPT MODE"
+  if [ -f $RECEIPT_LOG ]; then
+    error "RECEIPT MODE: will not overwrite $RECEIPT_LOG"
+  fi
   if [ -f $manifest ]; then
     if ! write_file_list $manifest $file_list ; then
       error "Unable to get file list from $manifest"
@@ -137,6 +141,7 @@ if [ "$RECEIPT_MODE" ]; then
     error "No manifest file found `pwd`/$manifest"
   fi
 else
+  message "Running in DELIVERY MODE"
   if [ -f $DELIVERY_LOG ]; then
     error "DELIVERY MODE: will not overwrite $DELIVERY_LOG"
   else
