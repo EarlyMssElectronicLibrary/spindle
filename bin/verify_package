@@ -103,8 +103,8 @@ check_uptodate() {
   dir=$1
   qfile=$2
   # get a list of all files newer than qfile, but skip files named 
-  # DLVRY_package.log
-  qlist=`find $dir -type f -newer $qfile \( ! -iname DLVRY_package.log \)`
+  # DLVRY_package.log and RECPT_*.log
+  qlist=`find $dir -type f -newer $qfile \( ! -iname DLVRY_package.log ! -name RECPT_\*.log \)`
   if [ -n "$qlist" ]; then
     error_no_exit "Found files newer than `pwd`/$qfile"
     for x in $qlist
