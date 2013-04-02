@@ -119,7 +119,7 @@ log_code() {
 # utility commands
 
 # usage: package_dir $1
-# make sure the package dir exists; return '.' if $1 empty
+# make sure the package dir exists; return error if $1 empty
 package_dir() {
   user_arg=$1
   if [ -z "$user_arg" ]; then
