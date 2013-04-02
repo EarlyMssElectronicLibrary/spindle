@@ -82,12 +82,13 @@ usage() {
 this_dir=`dirname $0`
 this_dir=`(cd $this_dir; pwd)`
 # the scripts we'll run
-VERIFY_ALL_FILENAMES=$this_dir/verify_all_filenames
-VERIFY_ALL_METADATA=$this_dir/verify_all_metadata
-CREATE_MANIFEST=$this_dir/create_manifest
-VERIFY_PACKAGE=$this_dir/verify_package
+VERIFY_ALL_FILENAMES="$this_dir/verify_all_filenames -R"
+VERIFY_ALL_METADATA="$this_dir/verify_all_metadata -R"
+VERIFY_CHECKSUMS=$this_dir/verify_checksums
+VERIFY_PACKAGE="$this_dir/verify_package -R"
 
 ### VARIABLES
+RECEIPT_APPROVED=RECEIPT_APPROVED.txt
 # the package dir
 PACKAGE_DIR=
 # the data directory
@@ -138,8 +139,6 @@ fi
 ## RECPT_ARTIFACTS OF PREVIOUS RUNS
 RECPT_ARTIFACTS="RECPT_filenames.log RECPT_metadata.log RECPT_package.log RECPT_VALIDATING.txt ERRORS_FOUND.txt"
 
-
-
 # errors found file
 ERRORS_FOUND_FLAG=$PACKAGE_DIR/ERRORS_FOUND.txt
 
@@ -173,29 +172,32 @@ fi
 touch $VALIDATING_FLAG
 
 ## RUN EACH SCRIPT
+# * `verify_package`
+$VERIFY_PACKAGE $PACKAGE_DIR
+if [ $? -ne 0 ]; then
+  receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "package validation failure"
+fi
+
+# * `verify_checksums`
+$VERIFY_CHECKSUMS $PACKAGE_DIR
+if [ $? -ne 0 ]; then
+  receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "checksum validation failure"
+fi
+
 # * `verify_all_filenames`
-# $VERIFY_ALL_FILENAMES $PACKAGE_DIR
-# if [ $? -ne 0 ]; then
-#   receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "filename validation failure"
-# fi
+$VERIFY_ALL_FILENAMES $PACKAGE_DIR
+if [ $? -ne 0 ]; then
+  receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "filename validation failure"
+fi
 
 # * `verify_all_metadata`
-# $VERIFY_ALL_METADATA $PACKAGE_DIR
-# if [ $? -ne 0 ]; then
-#   receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "metadata validation failure"
-# fi
+$VERIFY_ALL_METADATA $PACKAGE_DIR
+if [ $? -ne 0 ]; then
+  receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "metadata validation failure"
+fi
 
-# * `create_manifest`
-# $CREATE_MANIFEST $PACKAGE_DIR
-# if [ $? -ne 0 ]; then
-#   receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "manifest generation failure"
-# fi
-
-# * `verify_package`
-# $VERIFY_PACKAGE $PACKAGE_DIR
-# if [ $? -ne 0 ]; then
-#   receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "package validation failure"
-# fi
+# mark the package complete
+touch $PACKAGE_DIR/$RECEIPT_APPROVED
 
 receipt_success $VALIDATING_FLAG "Package preparation complete"
 
