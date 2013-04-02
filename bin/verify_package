@@ -193,6 +193,33 @@ else
 fi
 
 # ----------------------------------------------------------------------
+# Check DLVRY_package.log if RECEIPT_MODE
+# ----------------------------------------------------------------------
+if [ "$RECEIPT_MODE" ]; then
+  filename=DLVRY_package.log
+  if  ! check_required $filename
+  then
+    msg=`format_code_message MISSING $filename`
+    log_and_fail $logfile "$msg"
+  fi
+  log_valid $logfile "`format_code_message FILE_PRESENT $filename`"
+
+  if ! check_allvalid $filename
+  then
+    msg=`format_code_message MARKED_ERRORS_FOUND $filename`
+    log_and_fail $logfile "$msg"
+  fi
+  log_valid $logfile "`format_code_message MARKED_ALL_VALID $filename`"
+
+  if ! check_uptodate data $filename
+  then
+    msg="Out-of-date: $filename"
+    log_and_fail $logfile "$msg"
+  fi
+  log_valid $logfile "`format_code_message UP_TO_DATE $filename`"
+fi
+
+# ----------------------------------------------------------------------
 # Check DLVRY_filenames.log
 # ----------------------------------------------------------------------
 filename=DLVRY_filenames.log
