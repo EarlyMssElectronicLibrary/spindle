@@ -1,0 +1,213 @@
+#!/bin/sh
+
+read -r -d '' HELP <<-'EOF'
+For a delivered package check the data for validity.  The package directory
+must conform to the structure prescribed for a delivery package in the READ_ME
+file.  Additionally the root directory of the package must have the following 
+files:
+
+  * `DLVRY_filenames.log`
+  * `DLVRY_metadata.log`
+  * `DLVRY_package.log`
+  * `manifest-md5s.txt`
+  
+The last line of each of the delivery log file must contain the `ALL_VALID`
+code.
+
+This script will:
+
+1. Verify that each of the expected files is present and, if the file is log
+   file, has a final line containing `ALL_VALID`
+2. Verify that the files have the correct ages relative to the other files in
+   the package (see below)
+3. Validate the integriy of the package contents using the checksum manifest,
+   `manifest-md5s.txt`
+4. Verify that all the filenames are correct
+5. Verify that all the metadata is correct
+
+As it runs the script will create the following files:
+
+  * `RECPT_package.log`
+  * `RECPT_checksums.log`
+  * `RECPT_filenames.log`
+  * `RECPT_metadata.log`
+
+EOF
+
+### TEMPFILES
+# From:
+#   http://stackoverflow.com/questions/430078/shell-script-templates
+# create a default tmp file name
+tmp=${TMPDIR:-/tmp}/prog.$$
+# delete any existing temp files
+trap "rm -f $tmp.?; exit 1" 1 2 3 13 15
+# then do
+#   ...real work that creates temp files $tmp.1, $tmp.2, ...
+
+# FUNCTIONS
+
+receipt_failure() {
+  rf_validating_flag=$1
+  rf_errors_flag=$2
+  msg="$3"
+  rm -f $rf_validating_flag
+  echo "$msg" > $rf_errors_flag
+  fail "$msg"
+}
+
+# Function to clean up and print a success message
+receipt_success() {
+  rs_validating_flag=$1
+  msg="$2"
+  rm -f $rs_validating_flag
+  success "$msg"
+}
+
+#### USAGE AND ERRORS
+cmd=`basename $0 .sh`
+export SPINDLE_COMMAND=$cmd
+source `dirname $0`/spindle_functions
+
+usage() {
+   echo "Usage: $cmd [options] PACKAGE_DIR"
+   echo ""
+   echo "OPTIONS"
+   echo ""
+   echo "   -C             Clean old receipt logs"
+   echo "   -h             Display help message"
+   echo "   -v             Display Spindle version"
+   echo ""
+}
+
+this_dir=`dirname $0`
+this_dir=`(cd $this_dir; pwd)`
+# the scripts we'll run
+VERIFY_ALL_FILENAMES=$this_dir/verify_all_filenames
+VERIFY_ALL_METADATA=$this_dir/verify_all_metadata
+CREATE_MANIFEST=$this_dir/create_manifest
+VERIFY_PACKAGE=$this_dir/verify_package
+
+
+### CONSTANTS
+KILOBYTE=1024
+MEGABYTE=$(( $KILOBYTE * 1024))
+GIGABYTE=$(( $MEGABYTE * 1024))
+### VARIABLES
+# the package dir
+PACKAGE_DIR=
+# the data directory
+DATA_DIR=
+
+### OPTIONS
+while getopts ":hvC" opt; do
+  case $opt in
+    h)
+      usage 
+      version
+      help
+      exit 0
+      ;;
+    v)
+      version
+      exit 0
+      ;;
+    C)
+      CLOBBER_LOGS=true
+      ;;
+    \?)
+      echo "ERROR Invalid option: -$OPTARG" >&2
+      echo ""
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND-1))
+
+### THESCRIPT
+# grab package directoy and confirm it exists
+PACKAGE_DIR=`package_dir $1`
+if [ $? -ne 0 ]; then
+  error "Error finding package directory"
+fi
+message "PACKAGE_DIR is $PACKAGE_DIR"
+# make sure there's a data directory in PACKAGE_DIR
+DATA_DIR=`data_dir $PACKAGE_DIR`
+if [ $? -ne 0 ]; then
+  error "Error finding data directory"
+fi
+
+## DLVRY_ARTIFACTS EXPECTED PACKAGE
+
+## RECPT_ARTIFACTS OF PREVIOUS RUNS
+RECPT_ARTIFACTS="RECPT_filenames.log RECPT_metadata.log RECPT_package.log RECPT_VALIDATING.txt ERRORS_FOUND.txt"
+
+
+
+# errors found file
+ERRORS_FOUND_FLAG=$PACKAGE_DIR/ERRORS_FOUND.txt
+
+# flag to show we started the process
+VALIDATING_FLAG=$PACKAGE_DIR/VALIDATING.txt
+
+# Before beginning, look for artifacts
+leftovers=
+for x in $RECPT_ARTIFACTS
+do
+  test_file=$PACKAGE_DIR/$x
+  if [ -f $test_file ]; then
+    if [ "$CLOBBER_LOGS" ]; then
+      warning "Deleting old file $test_file"
+      rm -f $test_file
+    else
+      leftovers="$leftovers $x"
+    fi
+  fi
+done
+x=
+
+if [ "$leftovers" ]; then
+  for x in $leftovers
+  do
+    error_no_exit "`format_code_message OLD_FILE_FOUND $x`"
+  done
+  receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "Stale files found"
+fi
+
+touch $VALIDATING_FLAG
+
+## RUN EACH SCRIPT
+# * `verify_all_filenames`
+# $VERIFY_ALL_FILENAMES $PACKAGE_DIR
+# if [ $? -ne 0 ]; then
+#   receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "filename validation failure"
+# fi
+
+# * `verify_all_metadata`
+# $VERIFY_ALL_METADATA $PACKAGE_DIR
+# if [ $? -ne 0 ]; then
+#   receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "metadata validation failure"
+# fi
+
+# * `create_manifest`
+# $CREATE_MANIFEST $PACKAGE_DIR
+# if [ $? -ne 0 ]; then
+#   receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "manifest generation failure"
+# fi
+
+# * `verify_package`
+# $VERIFY_PACKAGE $PACKAGE_DIR
+# if [ $? -ne 0 ]; then
+#   receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "package validation failure"
+# fi
+
+receipt_success $VALIDATING_FLAG "Package preparation complete"
+
+### EXIT
+# http://stackoverflow.com/questions/430078/shell-script-templates
+rm -f $tmp.?
+trap 0
+exit 0
+
+
