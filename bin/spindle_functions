@@ -133,6 +133,22 @@ package_dir() {
   return 0
 }
 
+KILOBYTE=1024
+MEGABYTE=$(( $KILOBYTE * 1024))
+GIGABYTE=$(( $MEGABYTE * 1024))
+
+# convert bytes to KB, MB or GB
+translate_bytes() {
+  tb_bytes=$1
+  if [ $tb_bytes -gt $GIGABYTE ]; then
+    echo "~$(( $tb_bytes / $GIGABYTE )) GB"
+  elif [ $tb_bytes -gt $MEGABYTE ]; then
+    echo "~$(( $tb_bytes / $MEGABYTE )) MB"
+  elif [ $tb_bytes -gt $KILOBYTE ]; then
+    echo "~$(( $tb_bytes / $KILOBYTE )) KB"
+  fi
+}
+
 # Compare the manifest file list with the files in the data directory. The two
 # must match exactly for the this function to return 0; otherwise, it returns 1.
 # The function also prints messages and logs data to LOG_FILE.

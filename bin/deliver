@@ -120,17 +120,6 @@ delivery_success() {
   success "$msg"
 }
 
-translate_bytes() {
-  tb_bytes=$1
-  if [ $tb_bytes -gt $GIGABYTE ]; then
-    echo "~$(( $tb_bytes / $GIGABYTE )) GB"
-  elif [ $tb_bytes -gt $MEGABYTE ]; then
-    echo "~$(( $tb_bytes / $MEGABYTE )) MB"
-  elif [ $tb_bytes -gt $KILOBYTE ]; then
-    echo "~$(( $tb_bytes / $KILOBYTE )) KB"
-  fi
-}
-
 #### USAGE AND ERRORS
 cmd=`basename $0 .sh`
 export SPINDLE_COMMAND=$cmd
@@ -162,9 +151,6 @@ VERIFY_PACKAGE=$this_dir/verify_package
 
 
 ### CONSTANTS
-KILOBYTE=1024
-MEGABYTE=$(( $KILOBYTE * 1024))
-GIGABYTE=$(( $MEGABYTE * 1024))
 ### VARIABLES
 # the package dir
 PACKAGE_DIR=
