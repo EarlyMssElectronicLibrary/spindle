@@ -19,6 +19,12 @@
 VERSION=0.4.0
 
 # MESSAGE AND USAGE FUNCTIONS 
+
+# ISO date format YYYY-mm-ddTHH:MM:SS+-OFFSET
+iso_date() {
+  date +%FT%T%z
+}
+
 format_code_message() {
   fm_code=$1
   fm_file=$2
