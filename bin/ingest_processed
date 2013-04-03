@@ -34,7 +34,7 @@ export HELP
 source `dirname $0`/spindle_functions
 
 usage() {
-   echo "Usage: $cmd [-h] PACKAGE_DIR"
+   echo "Usage: $cmd [OPTIONS] PACKAGE_DIR REPOSITORY_DRIVE"
    echo ""
    echo "OPTIONS"
    echo ""
@@ -45,20 +45,21 @@ usage() {
 
 ### CONSTANTS
 # the list of valid files; don't run without it
-VALID_FILES=valid_file_names.txt
-VOLUME=/Volumes/EIT_MARGE
-REPO_FOLDER=$VOLUME/Repository/Processed
-INGEST_LOG=
+MANIFEST_FILE=manifest-md5s.txt
+REPO_PROC_DIR=Repository/Processed
+RECEIPT_APPROVED=RECEIPT_APPROVED.txt
 
 ### VARIABLES
 # the package dir
 PACKAGE_DIR=
 # the data directory
 DATA_DIR=
-# files that are missing from the manifest
-NOT_LISTED=
-# files in the manifest not found in the directory
-NOT_FOUND=
+# the log of what we've ingested
+INGEST_LOG=
+# the drive where the repo is
+REPO_VOLUME=
+# the full path to the processed file folder
+REPO_PATH=
 
 ### OPTIONS
 while getopts ":hv" opt; do
@@ -86,23 +87,41 @@ shift $((OPTIND-1))
 
 ### THESCRIPT
 # grab package directoy and confirm it exists
-PACKAGE_DIR=$1
-if [ -z "$PACKAGE_DIR" ]; then
-  message "No PACKAGE_DIR provided. Using '.'"
-  PACKAGE_DIR=.
-elif [ ! -d $PACKAGE_DIR ]; then
-  error "PACKAGE_DIR not found: $PACKAGE_DIR"
+PACKAGE_DIR=`package_dir $1`
+if [ $? -ne 0 ]; then
+  error "Error finding package directory"
 fi
 
 # make sure there's a data directory in PACKAGE_DIR
-DATA_DIR=$PACKAGE_DIR/data
-if [ ! -d $DATA_DIR ]; then
-  error "Data directory not found: $DATA_DIR"
+DATA_DIR=`data_dir $PACKAGE_DIR`
+if [ $? -ne 0 ]; then
+  error "Error finding data directory"
+fi
+
+REPO_VOLUME=`repo_volume $2`
+if [ $? -ne 0 ]; then
+  error "Error finding repository volume"
 fi
 
 # must have valid file names file to run
-if [ ! -f $PACKAGE_DIR/$VALID_FILES ]; then
-  error "Must have $PACKAGE_DIR/$VALID_FILES"
+if [ ! -f $PACKAGE_DIR/$MANIFEST_FILE ]; then
+  error "Must have $PACKAGE_DIR/$MANIFEST_FILE"
+fi
+
+# TODO: Must have RECEIPT_APPROVED
+if [ -f $PACKAGE_DIR/$RECEIPT_APPROVED ]; then
+  message "Package approved: `cat $PACKAGE_DIR/$RECEIPT_APPROVED`"
+else
+  error_no_exit "File not found: $PACKAGE_DIR/$RECEIPT_APPROVED"
+  error "Package has not been approved"
+fi
+
+REPO_PATH=$REPO_VOLUME/$REPO_PROC_DIR
+# TODO: REPO_VOLUME/REPO_PROC_DIR must exist
+if [ -d $REPO_PATH ]; then
+  message "Found repository directory: $REPO_PATH"
+else
+  error "Repository folder not found $REPO_PATH"
 fi
 
 ### INGEST FILES
@@ -112,23 +131,24 @@ if [ "$PACKAGE_DIR" != "." ]; then
 fi
 
 # name the ingest log
-first_file=`head -n1 $VALID_FILES`
+file_list=$tmp.1
+if  ! write_file_list $MANIFEST_FILE $file_list ; then
+  error "Unable to get file list from $MANIFEST_FILE"
+fi
+first_file=`head -n1 $file_list`
 processor=`basename $first_file | awk -F_ '{ print $3 }'`
 INGEST_LOG=${processor}_ingest_list_`date +%Y%m%dT%H%M%S%z`.log
 :>$INGEST_LOG
 
-curr=0
-total=`wc -l $VALID_FILES | awk '{ print $1 }'`
-width=`echo $total | wc -c`
-width=$(( $width - 1 ))
-count=`printf "%${width}d" $curr`
+count=0
+total=`wc -l $file_list | awk '{ print $1 }'`
 date_cmd="date +%FT%T%z"
-message "$count/$total `$date_cmd`"
+report_count $count $total 0
 while read file
 do
   base=`basename $file`
   shot_seq=`echo $base | awk -F_ '{ print $1 "_" $2 }'`
-  dest=$REPO_FOLDER/$shot_seq
+  dest=$REPO_PATH/$shot_seq
   if [ ! -d $dest ]; then
     mkdir $dest
   fi
@@ -136,7 +156,7 @@ do
   cp -v $file $dest >> $INGEST_LOG
   # copy the checksum
   # grep -F pattern is fixed string
-  line=`grep -F "$file" manifest-md5s.txt`
+  line=`grep -F "$file" $MANIFEST_FILE`
   checksum=`echo $line | awk '{ print $1 }'`
   md5_file=$dest/$base.md5
   if [ -f $md5_file ]; then
@@ -144,10 +164,9 @@ do
   fi
   echo "$checksum  $base" > $md5_file
   # COUNT AND REPORT
-  curr=$(( $curr + 1 ))
-  count=`printf "%${width}d" $curr`
-  message "$count/$total  `$date_cmd`  $file"
-done < $VALID_FILES
+  count=$(( $count + 1 ))
+  report_count $count $total 0 $file
+done < $file_list
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
