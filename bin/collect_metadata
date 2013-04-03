@@ -119,11 +119,10 @@ fi
 file_list=$tmp.1
 # get all non-hidden files
 find data -type f ! -name .\* > $file_list
-# get the processor code
-pattern="[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]_[a-zA-Z][a-zA-Z][a-zA-Z]"
-processor=`grep  "$pattern" $file_list | head -n1`
-processor=`basename $processor | awk -F_ '{ print $3 }'`
-json_base="${processor}_metadata_${approve_date}"
+# get the page directory name
+base_dir=`get_full_path $PACKAGE_DIR`
+base_dir=`basename $base_dir`
+json_base="${base_dir}_metadata_${approve_date}"
 json_tmp=$tmp.2
 
 # get file size in bytes, then make sure we get everything else
