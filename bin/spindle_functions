@@ -224,23 +224,23 @@ check_manifest_files() {
 #
 # Output is printed as an INFO message and includes a time stamp.
 report_count() {
-  count=$1
-  total=$2
-  cwidth=`echo $total | wc -c`
-  cwidth=$(( $cwidth - 1 ))
-  mark=`printf "%${cwidth}d/%d" $count $total`
-  interval=$3
-  cfile=$4
-  if [ $interval -eq 0 ]; then
-    dtime=`date +%Y-%m-%dT%H:%M:%S`
-    if [ -n "$cfile" ]; then
-      message "$mark  `printf "%-40s" $cfile` $dtime"
+  rc_count=$1
+  rc_total=$2
+  rc_width=`echo $rc_total | wc -c`
+  rc_width=$(( $rc_width - 1 ))
+  rc_mark=`printf "%${rc_width}d/%d" $rc_count $rc_total`
+  rc_interval=$3
+  rc_file=$4
+  if [ $rc_interval -eq 0 ]; then
+    rc_time=`date +%Y-%m-%dT%H:%M:%S`
+    if [ -n "$rc_file" ]; then
+      message "$rc_mark  `printf "%-40s" $rc_file` $rc_time"
     else 
-      message "$mark  $dtime"
+      message "$rc_mark  $rc_time"
     fi
-  elif [ "$(( $count % $interval ))" -eq 0 ]; then
-    dtime=`date +%Y-%m-%dT%H:%M:%S`
-    message "$mark  $dtime"
+  elif [ "$(( $rc_count % $rc_interval ))" -eq 0 ]; then
+    rc_time=`date +%Y-%m-%dT%H:%M:%S`
+    message "$rc_mark  $rc_time"
   fi
 }
 
