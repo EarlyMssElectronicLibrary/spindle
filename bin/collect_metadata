@@ -54,6 +54,7 @@ usage() {
 MANIFEST_FILE=manifest-md5s.txt
 
 ### VARIABLES
+RECEIPT_APPROVED=RECEIPT_APPROVED.txt
 # the package dir
 PACKAGE_DIR=
 # the data directory
@@ -89,18 +90,15 @@ shift $((OPTIND-1))
 
 ### THESCRIPT
 # grab package directoy and confirm it exists
-PACKAGE_DIR=$1
-if [ -z "$PACKAGE_DIR" ]; then
-  message "No PACKAGE_DIR provided. Using '.'"
-  PACKAGE_DIR=.
-elif [ ! -d $PACKAGE_DIR ]; then
-  error "PACKAGE_DIR not found: $PACKAGE_DIR"
+PACKAGE_DIR=`package_dir $1`
+if [ $? -ne 0 ]; then
+  error "Error finding package directory"
 fi
 
 # make sure there's a data directory in PACKAGE_DIR
-DATA_DIR=$PACKAGE_DIR/data
-if [ ! -d $DATA_DIR ]; then
-  error "Data directory not found: $DATA_DIR"
+DATA_DIR=`data_dir $PACKAGE_DIR`
+if [ $? -ne 0 ]; then
+  error "Error finding data directory"
 fi
 
 ### HARVEST METADATA
@@ -109,27 +107,33 @@ if [ "$PACKAGE_DIR" != "." ]; then
   cd $PACKAGE_DIR
 fi
 
+approve_date=
+if [ -f $RECEIPT_APPROVED ]; then
+  message "PACKAGE_APPROVED"
+  approve_date=`awk -F T '{ print  $1 }' $RECEIPT_APPROVED`
+  message "APPROVE_DATE=$approve_date"
+else
+  warning "PACKAGE_NOT_APPROVED"
+fi
+
 file_list=$tmp.1
 # get all non-hidden files
 find data -type f ! -name .\* > $file_list
 # get the processor code
-processor=`grep  "${SHOOT_LIST}_${SHOT_SEQ}_${PROCESSOR}_.*" $file_list | head -n1`
+pattern="[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]_[a-zA-Z][a-zA-Z][a-zA-Z]"
+processor=`grep  "$pattern" $file_list | head -n1`
 processor=`basename $processor | awk -F_ '{ print $3 }'`
-json_base="${processor}_metadata_`date +%Y%m%d`"
+json_base="${processor}_metadata_${approve_date}"
 json_tmp=$tmp.2
 
 # get file size in bytes, then make sure we get everything else
 exif_opts="-fileSize# -all"
 
-count=0  # which file we're one
+count=0  # which file we're on
 chunk=0  # chunk in to json files of 200 images ea.
 total=`wc -l $file_list | awk '{ print $1 }'`
-# width for printf; make the count line up
-width=`echo "$total" | wc -c`
-width=$(( $width - 1 ))
-# ISO date format YYYY-mm-ddTHH:MM:SS+-OFFSET
-date_cmd="date +%FT%T%z"
-message "`$date_cmd`  `printf "%${width}d" $count`/$total files read"
+message "Reading image files"
+report_count $count $total 100
 while read file
 do
   count=$(( $count + 1 ))
@@ -147,7 +151,7 @@ do
     # last line should be "}]"; make it so
     sed '$ s/,$/]/' $json_tmp > $json_file
     message "Wrote JSON file to: `pwd`/$json_file"
-    message "`$date_cmd`  `printf "%${width}d" $count`/$total files read"
+    report_count $count $total 0
     # empty the temp file
     : > $json_tmp
     chunk=$(( $chunk + 1 ))
