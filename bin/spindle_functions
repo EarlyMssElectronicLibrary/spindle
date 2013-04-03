@@ -139,6 +139,19 @@ package_dir() {
   return 0
 }
 
+repo_volume() {
+  rv_vol=$1
+  if [ -z "$rv_vol" ]; then
+    error_no_exit "Please provide a REPO_VOLUME"
+    return 1
+  elif [ ! -d $rv_vol ]; then
+    error_no_exit "REPO_VOLUME not found: $rv_vol"
+    return 1
+  fi
+  echo $rv_vol
+  return 0
+}
+
 KILOBYTE=1024
 MEGABYTE=$(( $KILOBYTE * 1024))
 GIGABYTE=$(( $MEGABYTE * 1024))
