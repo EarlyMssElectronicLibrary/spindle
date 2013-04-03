@@ -177,6 +177,12 @@ if [ $? -ne 0 ]; then
   error "Error finding data directory"
 fi
 
+# first see if RECEIPT_APPROVED file is present
+if [ -f $PACKAGE_DIR/$RECEIPT_APPROVED ]; then
+  message "This package has already been approved"
+  error "Package previously approved: `cat $PACKAGE_DIR/$RECEIPT_APPROVED`"
+fi
+
 ## DLVRY_ARTIFACTS EXPECTED PACKAGE
 
 ## RECPT_ARTIFACTS OF PREVIOUS RUNS
@@ -240,7 +246,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # mark the package complete
-touch $PACKAGE_DIR/$RECEIPT_APPROVED
+iso_date > $PACKAGE_DIR/$RECEIPT_APPROVED
 
 receipt_success $VALIDATING_FLAG "Package preparation complete"
 
