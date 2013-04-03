@@ -1,10 +1,10 @@
 #!/bin/sh
 
 read -r -d '' HELP <<-'EOF'
-For a delivered package check the data for validity.  The package directory
-must conform to the structure prescribed for a delivery package in the READ_ME
-file.  Additionally the root directory of the package must have the following 
-files:
+For a delivered package check the data for validity.  Input may be either
+a package directory or a package tar file.  The package must conform to the
+structure prescribed for a delivery package in the READ_ME file.  Additionally
+the root directory of the package must have the following files:
 
   * `DLVRY_filenames.log`
   * `DLVRY_metadata.log`
@@ -31,7 +31,10 @@ As it runs the script will create the following files:
   * `RECPT_checksums.log`
   * `RECPT_filenames.log`
   * `RECPT_metadata.log`
+  * `RECEIPT_APPROVED.txt`
 
+NOTE: Tar files will be extracted in their current directory by default.  If
+the ouput directory option `-o` is provided, that directory will be used.
 EOF
 
 ### TEMPFILES
@@ -69,11 +72,12 @@ export SPINDLE_COMMAND=$cmd
 source `dirname $0`/spindle_functions
 
 usage() {
-   echo "Usage: $cmd [options] PACKAGE_DIR"
+   echo "Usage: $cmd [options] PACKAGE_DIR|PACKAGE.tar"
    echo ""
    echo "OPTIONS"
    echo ""
    echo "   -C             Clean old receipt logs"
+   echo "   -o             Optional output directory for tar file"
    echo "   -h             Display help message"
    echo "   -v             Display Spindle version"
    echo ""
@@ -95,7 +99,7 @@ PACKAGE_DIR=
 DATA_DIR=
 
 ### OPTIONS
-while getopts ":hvC" opt; do
+while getopts ":hvCo:" opt; do
   case $opt in
     h)
       usage 
@@ -106,6 +110,9 @@ while getopts ":hvC" opt; do
     v)
       version
       exit 0
+      ;;
+    o)
+      OUTPUT_DIR=$OPTARG
       ;;
     C)
       CLOBBER_LOGS=true
@@ -123,7 +130,43 @@ shift $((OPTIND-1))
 
 ### THESCRIPT
 # grab package directoy and confirm it exists
-PACKAGE_DIR=`package_dir $1`
+PACK_TMP=$1
+if is_a_tar_file $PACK_TMP ; then
+  message "Input PACKAGE is tar archive: $PACK_TMP"
+  tar_full_path=`get_full_path $PACK_TMP`
+  tar_base=`basename "$tar_full_path"`
+  tar_dir=`dirname "$tar_full_path"`
+
+  if [ "$OUTPUT_DIR" ]; then
+    if [ -d $OUTPUT_DIR ]; then
+      cd "$OUTPUT_DIR"
+    else
+      error "Cannot find tar output directory: $OUTPUT_DIR"
+    fi
+  else
+    cd $tar_dir
+  fi
+  # get the current directory
+  out_dir=`pwd`
+  message "Extracting $PACK_TMP to $out_dir"
+
+  # get the package directory from the tar file by
+  # printing the path to the first log file
+  tar_package_dir=`tar tf $tar_full_path -q "*.log"`
+  if [ "$tar_package_dir" ]; then 
+    tar_package_dir=`dirname $tar_package_dir`
+  else
+    error "Cannot find log in tar file."
+  fi
+
+  # UNTAR THE FILE
+  if tar xvf $tar_full_path ; then
+    PACK_TMP=$out_dir/$tar_package_dir
+  else
+    error "Error untarring archive $tar_full_path"
+  fi
+fi
+PACKAGE_DIR=`package_dir $PACK_TMP`
 if [ $? -ne 0 ]; then
   error "Error finding package directory"
 fi
