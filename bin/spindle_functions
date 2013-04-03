@@ -337,6 +337,10 @@ matchesPattern() {
   return 1
 }
 
+is_a_tar_file() {
+  file $1 | grep " tar " > /dev/null 2>&1
+}
+
 get_full_path() {
   echo $( cd $(dirname "$1"); pwd)/$(basename "$1")
 }
