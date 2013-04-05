@@ -1,0 +1,60 @@
+#!/usr/bin/env ruby
+
+require 'getoptlong'
+require 'json'
+require 'zlib'
+require 'fog'
+
+require_relative 'spindle_functions'
+
+COMMAND = File.basename(__FILE__)
+
+def usage
+  "Usage: #{COMMAND} [OPTIONS] PACKAGE_DIR
+"
+end # def usage
+
+opts = GetoptLong.new(
+  [ '--help', '-h', GetoptLong::NO_ARGUMENT ]
+)
+
+opts.each do |opt, arg|
+  case opt
+    when '--help'
+      puts usage
+      puts "
+OPTIONS
+
+      -h, --help: show help
+
+Push *-prep.json.gz files in PACKAGE_DIR to AWS S3.
+"
+exit 0
+  end
+end
+
+package_dir = find_package_dir ARGV.shift
+
+if package_dir
+  message COMMAND, "Using package directory: #{package_dir}"
+else
+  puts usage
+  exit 1
+end
+
+# change to the package_dir
+Dir.chdir package_dir
+
+prep_files = Dir["*_metadata_*-prep.json.gz"]
+
+credentials =  {
+  provider:                'AWS',
+  aws_access_key_id:       ENV['AMAZON_ACCESS_KEY_ID'],
+  aws_secret_access_key:   ENV['AMAZON_SECRET_ACCESS_KEY']
+}
+
+connection = Fog::Storage.new(credentials)
+
+prep_files.each do |file|
+  connection.put_object 'katikon-dev.emeryit.com', file, File.read(file)
+end
