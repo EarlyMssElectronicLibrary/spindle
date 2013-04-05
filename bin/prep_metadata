@@ -1,0 +1,122 @@
+#!/usr/bin/env ruby
+
+require 'getoptlong'
+require 'json'
+require 'zlib'
+
+require_relative 'spindle_functions'
+
+COMMAND = File.basename(__FILE__)
+
+def usage
+  "Usage: #{COMMAND} [OPTIONS] PACKAGE_DIR
+"
+end # def usage
+
+opts = GetoptLong.new(
+  [ '--help', '-h', GetoptLong::NO_ARGUMENT ]
+)
+
+opts.each do |opt, arg|
+  case opt
+    when '--help'
+      puts usage
+      puts "
+OPTIONS
+
+      -h, --help: show help
+
+Prepare metadata found in given directory.  For all images in a package, this
+script joins EXIF metadata with repository location information.
+
+The script expects to find JSON metadata files containing EXIF data and a log
+of repository ingest for all images in a package.
+
+This script recognizes the correct files by the patterns of their names. For
+example, note these metadata file names:
+
+* Keith_IOC_metadata_2013-04-02_000.json
+* Keith_IOC_metadata_2013-04-02_001.json
+* Keith_IOC_metadata_2013-04-02_002.json
+* Keith_IOC_metadata_2013-04-02_003.json
+* Keith_IOC_metadata_2013-04-02_004.json
+
+The pattern is:
+
+    <DIRECTORY>_metadata_<INGEST_DATE>_<SERIAL_NUMBER>.json
+    
+The ingest log has a name like this:
+
+* KTK_ingest_list_20130403T010045-0400.log
+
+The pattern is:
+
+    <PROCESSOR>_ingest_list_<timestamp>.log
+
+NB: The ingest log file name may change to be more like the metadata file.
+"
+exit 0
+  end
+end
+
+# source the spindle_functions
+
+package_dir = find_package_dir ARGV.shift
+
+if package_dir
+  message COMMAND, "Using package directory: #{package_dir}"
+else
+  puts usage
+  exit 1
+end
+
+# change to the package_dir
+Dir.chdir package_dir
+
+# get the json files
+json_files = Dir["*_metadata_*.json"]
+
+ingest_files = Dir["*_ingest_list_*.log"]
+if ingest_files.size == 0 
+  error COMMAND, "No ingest file found: expected 1"
+  exit 1
+elsif ingest_files.size > 1
+  error COMMAND, "Wrong number of ingest logs; expected 1; found " + 
+    "#{ingest_files.size}:"
+
+  ingest_files.each do |file|
+    error COMMAND, "      #{file}"
+  end
+  exit 1
+end
+
+ingest_log = ingest_files.shift
+
+count = 0
+total = json_files.size
+interval = 0
+report_count COMMAND, total, count, interval 
+json_files.each_with_index do |file,index|
+  message COMMAND, "Reading #{file}"
+  json = JSON.parse IO.read(file)
+  out_file = file.sub /\.json/, '-prep.json.gz'
+  updates = []
+  json.each do |image| 
+    image_file = image['FileName']
+    cmd =  "grep \"/#{image_file}$\" #{ingest_log}"
+    log_line = `#{cmd}`
+    repo_path = log_line.strip.split.pop
+    repo_path.sub! /.*Repository\//, ''
+    image['repo_path'] = repo_path
+    updates << image
+  end
+
+  File.delete(out_file) if File.exists?(out_file)
+  
+  Zlib::GzipWriter.open(out_file) do |gz|
+    gz.write updates.to_json
+  end
+  message COMMAND, "    wrote #{out_file}"
+  report_count COMMAND, total, (index+1), interval
+end
+
