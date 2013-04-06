@@ -42,6 +42,19 @@ else
   exit 1
 end
 
+# make we have an AWS bucket
+if SPINDLE_AWS_BUCKET.nil? 
+  error COMMAND, "No SPINDLE_AWS_BUCKET found."
+  error "Please set up #{ENV['HOME'] + '/.spindle/init.rb'}"
+  exit 1
+elsif SPINDLE_AWS_BUCKET == 'REPLACE_ME'
+  error COMMAND, "SPINDLE_AWS_BUCKET value not valid: #{SPINDLE_AWS_BUCKET}."
+  error COMMAND, "Please edit #{ENV['HOME'] + '/.spindle/init.rb'}"
+  exit 1
+else
+  message COMMAND, "Using SPINDLE_AWS_BUCKET: #{SPINDLE_AWS_BUCKET}"
+end
+
 # change to the package_dir
 Dir.chdir package_dir
 
@@ -56,5 +69,5 @@ credentials =  {
 connection = Fog::Storage.new(credentials)
 
 prep_files.each do |file|
-  connection.put_object 'katikon-dev.emeryit.com', file, File.read(file)
+  connection.put_object SPINDLE_AWS_BUCKET, file, File.read(file)
 end
