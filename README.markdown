@@ -4,6 +4,27 @@ Spindle is a set of scripts for the preparation and delivery of data to
 the Sinai Palimpsests Project repository and for validating data upon 
 its receipt.
 
+### Software dependencies
+
+Most of these scripts are written in bash.
+
+Metadata scripts rely on Exiftool, version 8.47 or higher
+
+These two programs (Bash and Exiftool) are all that is needed for most
+functions.  This is the case for ALL DELIVERY and RECEIPT scripts for preparing
+and validating packages.
+
+Scripts for managing the ingestion of data and metadata do rely on other
+programs.  The following scripts rely on Ruby 1.9.2 or 1.9.3:
+
+- `bin/prep_metadata`
+- `bin/push_metadata`
+- `bin/read_metadata.rb`
+
+The script `lab_color_to_rgb_jpeg` relies on ImageMagick. It was written using
+ImageMagick version 6.7.6-9; and has not been tested on other versions. It is
+anticipated the script will work with ImageMagick v6.7.6-9 or later.
+
 ### Installation
 
 Download or clone the repository:
