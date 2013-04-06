@@ -1,3 +1,11 @@
+# load the init file if present
+init_file = File.absolute_path '.spindle/init.rb', ENV['HOME']
+if File.exist?  init_file
+  require init_file
+else
+  SPINDLE_AWS_BUCKET=nil
+end
+
 def print_message cmd, type, msg
   puts sprintf("%-23s  %-12s  %s", "[#{cmd}]", type, msg)
 end # def print_message cmd, type, msg
