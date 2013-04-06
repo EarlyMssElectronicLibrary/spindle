@@ -95,7 +95,7 @@ ingest_log = ingest_files.shift
 count = 0
 total = json_files.size
 interval = 0
-report_count COMMAND, total, count, interval 
+report_count COMMAND, count, total, interval 
 json_files.each_with_index do |file,index|
   message COMMAND, "Reading #{file}"
   json = JSON.parse IO.read(file)
@@ -116,7 +116,6 @@ json_files.each_with_index do |file,index|
   Zlib::GzipWriter.open(out_file) do |gz|
     gz.write updates.to_json
   end
-  message COMMAND, "    wrote #{out_file}"
-  report_count COMMAND, total, (index+1), interval
+  report_count COMMAND, (index+1), total, interval, out_file
 end
 
