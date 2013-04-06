@@ -42,6 +42,9 @@ Add the spindle/bin directory to your path.  In `.bashrc`:
 
 Use the appropriate method for your shell.
 
+If you're going to do metadata and data ingest, you'll need to set up the
+Spindle init.rb for your system.  See `doc/dot_spindle/README` for details.
+
 ### Blather you can skip
 
 There are several parts to data handling. Once data has been completed via
