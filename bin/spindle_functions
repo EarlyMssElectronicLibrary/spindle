@@ -364,6 +364,44 @@ get_full_path() {
   echo $( cd $(dirname "$1"); pwd)/$(basename "$1")
 }
 
+has_prep_json_files() {
+  hpjf_dir=$1
+  if [ -d "$hpjf_dir" ]; then
+    hpjf_files=`( cd $hpjf_dir; ls *-prep.json.gz 2>/dev/null )`
+    if [ "$hpjf_files" ]; then
+      for x in $hpjf_files 
+      do
+        warning "Found $x"
+      done
+      return 0
+    else
+      return 1
+    fi
+  else
+    error_no_exit "Dir not found: $hpjf_dir"
+    return 1
+  fi
+}
+
+has_exif_json_files() {
+  hejf_dir=$1
+  if [ -d "$hejf_dir" ]; then
+    hejf_files=`( cd $hejf_dir; ls *_metadata_*.json 2>/dev/null )`
+    if [ "$hejf_files" ]; then
+      for x in $hejf_files 
+      do
+        warning "Found $x"
+      done
+      return 0
+    else
+      return 1
+    fi
+  else
+    error_no_exit "Dir not found: $hejf_dir"
+    return 1
+  fi
+}
+
 validateFilename() {
   file=$1 
   if [ -z "$file" ]; then
