@@ -48,6 +48,7 @@ usage() {
 MANIFEST_FILE=manifest-md5s.txt
 REPO_PROC_DIR=Repository/Processed
 RECEIPT_APPROVED=RECEIPT_APPROVED.txt
+INGESTION_COMPLETE=IMAGE_INGESTION_COMPLETE.txt
 
 ### VARIABLES
 # the package dir
@@ -167,6 +168,8 @@ do
   count=$(( $count + 1 ))
   report_count $count $total 0 $file
 done < $file_list
+
+iso_date > $INGESTION_COMPLETE
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
