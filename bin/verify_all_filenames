@@ -143,7 +143,7 @@ validateFilenames() {
   curr=0
   total=`wc -l $vf_file_list | awk '{ print $1 }'`
   status=0
-  report_count $curr $total 1000
+  report_count $curr $total 200
   while read file
   do
     curr=$(( $curr + 1))
@@ -157,7 +157,7 @@ validateFilenames() {
     else
       log_valid $working_log "$result"
     fi
-    report_count $curr $total 1000
+    report_count $curr $total 200
   done < $vf_file_list
   report_count $curr $total 0
 
