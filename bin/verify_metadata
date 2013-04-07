@@ -182,6 +182,12 @@ check_keyword() {
   return $status
 }
 
+photoshoot_color_image() {
+  echo $1 | grep "_PSH_color\.\(jpg\|tif\)" >/dev/null
+}
+
+# TODO: Create metho to test for PhotoShoot color images.
+
 ### OPTIONS
 while getopts ":hv" opt; do
   case $opt in
@@ -214,38 +220,44 @@ elif [ ! -f $file ]; then
   error "No file found: $file"
 fi
 
-metadata=`exiftool -args $file` 
-missing=`check_required "$metadata"`
+if photoshoot_color_image $file
+then
+  status=0
+  warning "Not checking metadata for PhotoShoot color image"
+else
+  metadata=`exiftool -args $file` 
+  missing=`check_required "$metadata"`
 
-status=0
-if [ -n "$missing" ]; then
-  for field in $missing
-  do
-    print_metadata_error MISSING $field $file
-  done
-  status=1
-fi
-
-echo "$EXPECTED_KEYWORDS" | while read keyword
-do
-  if ! check_keyword "$keyword" "$metadata" ; then
-    print_metadata_error MISSING_KEYWORD "$keyword" $file
+  status=0
+  if [ -n "$missing" ]; then
+    for field in $missing
+    do
+      print_metadata_error MISSING $field $file
+    done
     status=1
   fi
-done
 
-sw_version=`get_tag_value "$metadata" $SW_VERSION_TAG`
-if [ "$sw_version" != "$SW_VERSION_LITERAL" ]; then
-  print_metadata_error BAD_LITERAL DAT_Software_Version $file
-  status=1
-fi
+  echo "$EXPECTED_KEYWORDS" | while read keyword
+  do
+    if ! check_keyword "$keyword" "$metadata" ; then
+      print_metadata_error MISSING_KEYWORD "$keyword" $file
+      status=1
+    fi
+  done
 
-rotation=`get_tag_value "$metadata" DAT_File_Processing_Rotation`
-if check_numeric $rotation ; then
-  :
-else
-  print_metadata_error BAD_NUMBER DAT_File_Processing_Rotation $file
-  status=1
+  sw_version=`get_tag_value "$metadata" $SW_VERSION_TAG`
+  if [ "$sw_version" != "$SW_VERSION_LITERAL" ]; then
+    print_metadata_error BAD_LITERAL DAT_Software_Version $file
+    status=1
+  fi
+
+  rotation=`get_tag_value "$metadata" DAT_File_Processing_Rotation`
+  if check_numeric $rotation ; then
+    :
+  else
+    print_metadata_error BAD_NUMBER DAT_File_Processing_Rotation $file
+    status=1
+  fi
 fi
 
 if [ $status -ne 0 ]; then
