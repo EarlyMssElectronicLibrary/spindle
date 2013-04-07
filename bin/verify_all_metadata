@@ -176,7 +176,11 @@ do
     while read line
     do
       if [ $exit_status -eq $? ]; then
-        log_valid $logfile "$line"
+        if echo "$line" | grep "^VALID" >/dev/null ; then
+          log_valid $logfile "$line"
+        else
+          log_info $logfile "$line"
+        fi
       else
         log_invalid $logfile "$line"
       fi
