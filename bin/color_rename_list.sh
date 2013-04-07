@@ -83,7 +83,7 @@ fi
 
 file_list=$tmp.1
 # get all non-hidden files
-find $DIR -type f -name \*_CCD_CCC-\*.tif | sort > $file_list
+find $DIR -type f -name \*_CCD_CCC\*.tif | sort > $file_list
 file_count=`wc -l $file_list | awk '{ print $1 }' | sed 's/ *//g'`
 # get the page directory name
 
