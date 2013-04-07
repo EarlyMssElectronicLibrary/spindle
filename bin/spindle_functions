@@ -113,6 +113,18 @@ log_valid() {
   echo "VALID    $msg" >> $the_log
 }
 
+log_warning() {
+  the_log=$1
+  msg="$2"
+  echo "WARNING  $msg" >> $the_log
+}
+
+log_info() {
+  the_log=$1
+  msg="$2"
+  echo "INFO     $msg" >> $the_log
+}
+
 # usage: log_code LOG_FILE CODE [FILE]
 log_code() {
   the_log=$1
