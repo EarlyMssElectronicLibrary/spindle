@@ -1,9 +1,9 @@
 #!/bin/sh
 
 read -r -d '' HELP <<-'EOF'
-For PACKAGE_DIR, collect, prepare, and push metadata to the KatIkon
-application.  The image data must have already been ingested and 
-there must be an ingest log in the PACKAGE_DIR.
+Checkin data in PACKAGE_DIR. Collect, prepare, and push metadata to the KatIkon
+application.  The image data must have already been ingested and there must be
+an ingest log in the PACKAGE_DIR.
 
 Specifically, the script has these prerequisites:
 
