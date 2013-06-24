@@ -28,7 +28,7 @@ This script will:
 As it runs the script will create the following files:
 
   * `RECPT_package.log`
-  * `RECPT_checksums.log`
+  * `RECPT_manifest.log`
   * `RECPT_filenames.log`
   * `RECPT_metadata.log`
   * `RECEIPT_APPROVED.txt`
@@ -88,7 +88,7 @@ this_dir=`(cd $this_dir; pwd)`
 # the scripts we'll run
 VERIFY_ALL_FILENAMES="$this_dir/verify_all_filenames -R"
 VERIFY_ALL_METADATA="$this_dir/verify_all_metadata -R"
-VERIFY_CHECKSUMS=$this_dir/verify_checksums
+VERIFY_CHECKSUMS=$this_dir/verify_manifest
 VERIFY_PACKAGE="$this_dir/verify_package -R"
 
 ### VARIABLES
@@ -227,10 +227,10 @@ if [ $? -ne 0 ]; then
   receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "package validation failure"
 fi
 
-# * `verify_checksums`
+# * `verify_manifest`
 $VERIFY_CHECKSUMS $PACKAGE_DIR
 if [ $? -ne 0 ]; then
-  receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "checksum validation failure"
+  receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "manifest validation failure"
 fi
 
 # * `verify_all_filenames`
