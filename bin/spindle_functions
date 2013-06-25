@@ -304,6 +304,23 @@ whichMd5() {
   echo $MD5_CMD
 }
 
+file_valid() {
+  fv_file=$1
+  fv_md5=$2
+  fv_md5cmd=`whichMd5`
+  if [ -n "$fv_md5cmd" ]; then
+    fv_actual=`$fv_md5cmd $fv_file | awk '{ print $1 }'`
+    if [ "$fv_actual" = "$fv_md5" ]; then
+      return 0
+    else
+      return 1
+    fi
+  else
+    echo "No MD5 command found" >&2
+    exit 2
+  fi
+}
+
 # FILENAMES
 # image file extensions
 FILE_TYPES="jpg JPG jpeg JPEG tiff TIFF tif TIF dng DNG"
