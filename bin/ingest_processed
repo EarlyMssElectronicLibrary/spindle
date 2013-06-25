@@ -140,7 +140,10 @@ first_file=`head -n1 $file_list`
 processor=`basename $first_file | awk -F_ '{ print $3 }'`
 INGEST_LOG=${processor}_ingest_list_`date +%Y%m%dT%H%M%S%z`.log
 :>$INGEST_LOG
+INGEST_ERRORS=${processor}_ingest_errors_`date +%Y%m%dT%H%M%S%z`.log
+:>$INGEST_ERRORS
 
+copy_line=$tmp.2
 count=0
 total=`wc -l $file_list | awk '{ print $1 }'`
 date_cmd="date +%FT%T%z"
@@ -154,7 +157,8 @@ do
     mkdir $dest
   fi
   # COPY
-  cp -v $file $dest >> $INGEST_LOG
+  cp -v $file $dest > $copy_line
+  dest_file=$dest/$base
   # copy the checksum
   # grep -F pattern is fixed string
   line=`grep -F "$file" $MANIFEST_FILE`
@@ -164,10 +168,32 @@ do
     warning "Overwriting existing md5 file $md5_file"
   fi
   echo "$checksum  $base" > $md5_file
+
+  # VERIFY THE COPY WAS CORRECT
+  md5=`awk '{ print $1 }' $md5_file`
+  if file_valid $dest_file $md5 ; then
+    valid $dest_file
+    cat $copy_line >> $INGEST_LOG
+  else
+    cat $copy_line >> $INGEST_ERRORS
+    invalid "Deleting  $dest_file"
+    rm $dest_file
+    invalid "Deleting  $md5_file"
+    rm $md5_file
+  fi
+  :>$copy_line
+
   # COUNT AND REPORT
   count=$(( $count + 1 ))
   report_count $count $total 0 $file
 done < $file_list
+
+if [ -s $INGEST_ERRORS ]; then
+  invalid "Copy errors; see $INGEST_ERRORS"
+else
+  valid "ALL files copied correctly"
+  rm $INGEST_ERRORS
+fi 
 
 iso_date > $INGESTION_COMPLETE
 
