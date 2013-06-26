@@ -45,7 +45,7 @@ end
 # make we have an AWS bucket
 if SPINDLE_AWS_BUCKET.nil? 
   error COMMAND, "No SPINDLE_AWS_BUCKET found."
-  error "Please set up #{ENV['HOME'] + '/.spindle/init.rb'}"
+  error COMMAND, "Please set up #{ENV['HOME'] + '/.spindle/init.rb'}"
   exit 1
 elsif SPINDLE_AWS_BUCKET == 'REPLACE_ME'
   error COMMAND, "SPINDLE_AWS_BUCKET value not valid: #{SPINDLE_AWS_BUCKET}."
