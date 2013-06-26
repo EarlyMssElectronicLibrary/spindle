@@ -3,9 +3,8 @@
 read -r -d '' HELP <<-'EOF'
 
 For REPO_DIRECTORY verify all files with checksums. Script checks each
-subdirectory, looking for *.md5 files. Each *.md5 file will be checked.
-
-
+subdirectory, looking for *.md5 files. Each file corresponding to an *.md5
+file will be verified.
 
 EOF
 
