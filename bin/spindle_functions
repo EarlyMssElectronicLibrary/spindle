@@ -151,6 +151,35 @@ package_dir() {
   return 0
 }
 
+file_exists() {
+  fe_file=$1
+  fe_name=$2
+  if [ -z "$fe_file" ]; then
+    error_no_exit "Please provide a ${fe_name}"
+    return 1
+  elif [ ! -f $fe_file ]; then
+    error_no_exit "${fe_name} not found: $fe_file"
+    return 1
+  fi
+  echo $fe_file
+  return 0
+
+}
+
+dir_exists() {
+  de_dir=$1
+  de_name=$2
+  if [ -z "$de_dir" ]; then
+    error_no_exit "Please provide a ${de_name}"
+    return 1
+  elif [ ! -d $de_dir ]; then
+    error_no_exit "${de_name} not found: $de_dir"
+    return 1
+  fi
+  echo $de_dir
+  return 0
+}
+
 repo_volume() {
   rv_vol=$1
   if [ -z "$rv_vol" ]; then
