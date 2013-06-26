@@ -68,6 +68,28 @@ credentials =  {
 
 connection = Fog::Storage.new(credentials)
 
+push_errors = []
 prep_files.each do |file|
-  connection.put_object SPINDLE_AWS_BUCKET, file, File.read(file)
+  begin
+    connection.put_object SPINDLE_AWS_BUCKET, file, File.read(file)
+    message COMMAND, "Pushed #{file} to bucket #{SPINDLE_AWS_BUCKET}"
+  rescue StandardError => e
+    error COMMAND, "Problem pushing #{file} to bucket #{SPINDLE_AWS_BUCKET}"
+    puts e.message
+    puts e.backtrace
+    push_errors << e   
+  end
 end
+
+status = 0
+if push_errors.empty?
+  message COMMAND, "All files successfully pushed"
+else
+  error COMMAND, "Errors pushing files: #{push_errors.size} of #{prep_files.size} had errors"
+  push_errors.each do |err|
+    error COMMAND, err.message
+  end
+  status = 1
+end
+
+exit status
