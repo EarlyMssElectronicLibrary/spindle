@@ -1,0 +1,138 @@
+#!/bin/sh
+
+read -r -d '' HELP <<-'EOF'
+
+Copy FILE with its CHECKSUM to the DESTINATION and verify accurate copy,
+printing the source and destination of the file. Exit status is 0 if copy is
+valid; 1 otherwise.
+
+
+
+EOF
+
+### TEMPFILES
+# From:
+#   http://stackoverflow.com/questions/430078/shell-script-templates
+# create a default tmp file name
+tmp=${TMPDIR:-/tmp}/prog.$$
+# delete any existing temp files
+trap "rm -f $tmp.?; exit 1" 0 1 2 3 13 15
+# then do
+#   ...real work that creates temp files $tmp.1, $tmp.2, ...
+
+#### USAGE AND ERRORS
+cmd=`basename $0 .sh`
+export SPINDLE_COMMAND=`basename $0`
+export HELP
+source `dirname $0`/spindle_functions
+
+usage() {
+   echo "Usage: $cmd [OPTIONS] FILE DESTINATION CHECKSUM"
+   echo ""
+   echo "OPTIONS"
+   echo ""
+   echo "   -h             Display help message"
+   echo "   -v             Display Spindle version"
+   echo ""
+}
+
+### CONSTANTS
+# the list of valid files; don't run without it
+# MANIFEST_FILE=manifest-md5s.txt
+# REPO_PROC_DIR=Repository/Processed
+# RECEIPT_APPROVED=RECEIPT_APPROVED.txt
+# INGESTION_COMPLETE=IMAGE_INGESTION_COMPLETE.txt
+
+### VARIABLES
+# the package dir
+# PACKAGE_DIR=
+# # the data directory
+# DATA_DIR=
+# # the log of what we've ingested
+# INGEST_LOG=
+# # the drive where the repo is
+# REPO_VOLUME=
+# # the full path to the processed file folder
+# REPO_PATH=
+
+### OPTIONS
+while getopts ":hv" opt; do
+  case $opt in
+    h)
+      usage 
+      version
+      help
+      exit 1
+      ;;
+    v)
+      version
+      exit 1
+      ;;
+    \?)
+      echo "ERROR Invalid option: -$OPTARG" >&2
+      echo ""
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND-1))
+
+### THESCRIPT
+# grab package directoy and confirm it exists
+# make sure file exists
+SOURCE_FILE=`file_exists $1 FILE`
+if [ $? -ne 0 ]; then
+  error "Error finding file"
+fi
+# make sure destination exists
+DEST_DIR=`dir_exists $2 DESTINATION`
+if [ $? -ne 0 ]; then
+  error "Error finding destination directory"
+fi
+# make sure checksum is valid
+CHECKSUM=$3
+if [ -z "$CHECKSUM" ]; then
+  error "Please provide a CHECKSUM"
+fi 
+if echo "$CHECKSUM" | egrep "^[[:alnum:]]{32}$" >/dev/null ; then
+  :
+else
+  error "Invalid checksum format; should be 32 alphanumeric characters: $CHECKSUM"
+fi
+
+
+
+copy_line=$tmp.1
+base=`basename $SOURCE_FILE`
+# COPY
+dest_file=$DEST_DIR/$base
+if [ -f $dest_file ]; then
+  echo "WARNING: Overwriting $dest_file" >&2
+fi
+cp -v $SOURCE_FILE $DEST_DIR > $copy_line
+
+# copy the checksum
+# grep -F pattern is fixed string
+md5_file=$DEST_DIR/$base.md5
+if [ -f $md5_file ]; then
+  echo "WARNING: Overwriting existing md5 file $md5_file" >&2
+fi
+echo "$checksum  $base" > $md5_file
+
+cat $copy_line
+# VERIFY THE COPY WAS CORRECT
+if ! file_valid $dest_file $CHECKSUM ; then
+  echo "INVALID COPY: checksum does not match" >&2
+  echo "Deleting $dest_file" >&2
+  exit 1
+fi
+
+### EXIT
+# http://stackoverflow.com/questions/430078/shell-script-templates
+rm -f $tmp.?
+trap 0
+exit 0
+
+
