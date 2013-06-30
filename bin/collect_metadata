@@ -128,6 +128,10 @@ json_tmp=$tmp.2
 # get file size in bytes, then make sure we get everything else
 exif_opts="-fileSize# -all"
 
+
+# TODO Divvy up JSON files by SHOT SEQUENCE
+# Sometimes a shot sequence will have problems loading into KI; it's easier to
+# handle if each JSON file is just for one shot sequence
 count=0  # which file we're on
 chunk=0  # chunk in to json files of 200 images ea.
 total=`wc -l $file_list | awk '{ print $1 }'`
