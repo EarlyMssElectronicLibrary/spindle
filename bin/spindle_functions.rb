@@ -42,3 +42,27 @@ def find_package_dir arg
     STDERR.puts "Error: no PACKAGE_DIR provided"
   end
 end # def package_dir arg
+
+def has_dir? name, arg
+  if arg
+    if Dir.exist? arg
+      File.absolute_path arg
+    else
+      STDERR.puts "Error #{name} not found #{arg}"
+    end
+  else
+    STDERR.puts "Error: no #{name} provided"
+  end
+end
+
+def has_file? name, arg
+  if arg
+    if File.exist? arg
+      File.absolute_path arg
+    else
+      STDERR.puts "Error #{name} not found #{arg}"
+    end
+  else
+    STDERR.puts "Error: no #{name} provided"
+  end
+end
