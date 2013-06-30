@@ -143,7 +143,6 @@ INGEST_LOG=${processor}_ingest_list_`date +%Y%m%dT%H%M%S%z`.log
 INGEST_ERRORS=${processor}_ingest_errors_`date +%Y%m%dT%H%M%S%z`.log
 :>$INGEST_ERRORS
 
-copy_line=$tmp.2
 count=0
 total=`wc -l $file_list | awk '{ print $1 }'`
 date_cmd="date +%FT%T%z"
@@ -156,32 +155,20 @@ do
   if [ ! -d $dest ]; then
     mkdir $dest
   fi
-  # COPY
-  cp -v $file $dest > $copy_line
-  dest_file=$dest/$base
-  # copy the checksum
-  # grep -F pattern is fixed string
-  line=`grep -F "$file" $MANIFEST_FILE`
-  checksum=`echo $line | awk '{ print $1 }'`
-  md5_file=$dest/$base.md5
-  if [ -f $md5_file ]; then
-    warning "Overwriting existing md5 file $md5_file"
-  fi
-  echo "$checksum  $base" > $md5_file
 
-  # VERIFY THE COPY WAS CORRECT
-  md5=`awk '{ print $1 }' $md5_file`
-  if file_valid $dest_file $md5 ; then
+  # find the checksum
+  checksum=`grep -F "$file" $MANIFEST_FILE | awk '{ print $1 }'`
+  # copy the file
+  # COPY
+  copy_line=`ingest_file $file $dest $checksum`
+  if [ $? -eq 0 ]; then
     valid $dest_file
-    cat $copy_line >> $INGEST_LOG
+    echo $copy_line >> $INGEST_LOG
   else
-    cat $copy_line >> $INGEST_ERRORS
     invalid "Deleting  $dest_file"
-    rm $dest_file
-    invalid "Deleting  $md5_file"
-    rm $md5_file
+    echo $copy_line >> $INGEST_ERRORS
   fi
-  :>$copy_line
+  copy_line=
 
   # COUNT AND REPORT
   count=$(( $count + 1 ))
