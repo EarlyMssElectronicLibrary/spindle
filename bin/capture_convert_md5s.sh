@@ -4,6 +4,16 @@ read -r -d '' HELP <<-'EOF'
 For the input CAPTURE_DIR locate the md5s_v2.txt file and create and md5s.txt
 file. If an existing md5s.txt file is found, this script will back it up.
 
+Format of md5s_v2.txt file:
+
+    0054_000081+MB365UV_001.dng;100890321;2013-05-20 17:04:49 +0200;cde31091283c72c9f1a903763e3f1c44
+    0054_000081+MB455RB_002.dng;100890341;2013-05-20 17:09:56 +0200;9e542105efd8f327ccc7aadab45b3c38
+
+Format of md5s.txt file:
+
+    cde31091283c72c9f1a903763e3f1c44  0054_000081+MB365UV_001.dng
+    54fb0e653f16e5bfd786cb4823fb0699  0054_000081+MB700IR_008.dng
+
 EOF
 
 ### TEMPFILES
@@ -73,16 +83,37 @@ else
 fi
 
 dir_list=$tmp.1
+find $CAPTURE_DIR -type d -name "[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]" > $dir_list
+cat $dir_list
 count=0
 total=`wc -l $dir_list | awk '{ print $1 }'`
 date_cmd="date +%FT%T%z"
+tstamp=`date +%FT%H%M%z`
 report_count $count $total 0
 while read dir
 do
+  md5_file=$dir/md5s.txt
+  v2_file=$dir/md5s_v2.txt
+
+  # back up any existing md5s.txt file
+  if [ -f $dir/md5s.txt ]; then
+    cp $md5_file $md5_file.$tstamp
+    warning "Backed up md5s.txt"
+    warning "     from $md5_file"
+    warning "       to $md5_file.$tstamp"
+  fi
+
+  if [ -f $v2_file ]; then
+    # 0054_000081+MB365UV_001.dng;100890321;2013-05-20 17:04:49 +0200;cde31091283c72c9f1a903763e3f1c44
+    # cde31091283c72c9f1a903763e3f1c44  0054_000081+MB365UV_001.dng
+    awk -F ';' '{ print $4  "  " $1 }' $v2_file
+  else
+    error_no_exit "File not found: $v2_file"
+  fi
 
   # COUNT AND REPORT
   count=$(( $count + 1 ))
-  report_count $count $total 0 $file
+  report_count $count $total 1
 done < $dir_list
 
 
