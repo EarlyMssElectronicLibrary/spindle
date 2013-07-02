@@ -342,8 +342,7 @@ whichMd5() {
 extract_checksum() {
   exs_target_file="$1"
   exs_md5s_file="$2"
-  grep "[* ]${exs_target_file}$" "$exs_md5s_file" | \
-    awk '{ print $2 }' | sed 's/\*//'
+  grep "[* ]${exs_target_file}$" "$exs_md5s_file" | awk '{ print $1 }'
 }
 
 file_valid() {
