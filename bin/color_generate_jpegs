@@ -78,7 +78,7 @@ fi
 
 file_list=$tmp.1
 find $IN_DIR -name \*_PSH_color.tif -print -o \
-  -name \*_CCD_CCC-\*.tif -print | sort > $file_list
+  -name \*_CCD_CCC-\*.tif -print -o -name \*PSC.tif | sort > $file_list
 
 if [ ! -s $file_list ]; then
   error "No PhotoShoot color TIFF's found under $IN_DIR"
