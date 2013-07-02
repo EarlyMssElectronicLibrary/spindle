@@ -333,6 +333,19 @@ whichMd5() {
   echo $MD5_CMD
 }
 
+# Extract the MD5 checksum for TARGET_FILE from MD5S_TXT.
+# 
+# Usage: extract_checksum TARGET_FILE MD5S_TXT
+#
+# Note that this function calls `grep "[* ]TARGET_FILE$" $MD5S_TXT`. The value
+# of TARGET_FILE must match the name of the file in md5s.txt exactly.
+extract_checksum() {
+  exs_target_file="$1"
+  exs_md5s_file="$2"
+  grep "[* ]${exs_target_file}$" "$exs_md5s_file" | \
+    awk '{ print $2 }' | sed 's/\*//'
+}
+
 file_valid() {
   fv_file=$1
   fv_md5=$2
