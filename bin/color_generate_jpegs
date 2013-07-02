@@ -65,7 +65,6 @@ done
 shift $((OPTIND-1))
 
 ### THESCRIPT
-# grab package directoy and confirm it exists
 IN_DIR=`package_dir $1`
 if [ $? -ne 0 ]; then
   error "Error finding IN_DIR"
