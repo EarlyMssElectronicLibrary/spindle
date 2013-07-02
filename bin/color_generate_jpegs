@@ -75,8 +75,6 @@ if [ $? -ne 0 ]; then
   error "Error finding OUT_DIR"
 fi
 
-### HARVEST METADATA
-# change to the package dir
 
 file_list=$tmp.1
 find $IN_DIR -name \*_PSH_color.tif -print -o \
