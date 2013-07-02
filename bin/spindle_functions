@@ -345,6 +345,10 @@ extract_checksum() {
   grep "[* ]${exs_target_file}$" "$exs_md5s_file" | awk '{ print $1 }'
 }
 
+# Verify that the MD5 checksum of FILE matches CHECKSUM.
+#
+# Usage: file_valid FILE CHECKSUM
+#
 file_valid() {
   fv_file=$1
   fv_md5=$2
