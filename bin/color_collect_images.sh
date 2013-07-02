@@ -126,6 +126,8 @@ do
         message "Checking source file: $file"
         if file_valid "$file" $checksum ; then
           VALID "$file"
+          echo "$checksum  $base" > ${outfile}.md5
+          message "Wrote "${outfile}.md5"
         else
           INVALID "$file"
         fi # if ! file_valid $file (the source)
