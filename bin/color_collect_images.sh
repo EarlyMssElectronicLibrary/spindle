@@ -113,6 +113,29 @@ do
   else
     error_no_exit "Error copying $file"
   fi
+
+  source_dir=`dirname $file`
+  md5s_txt=$source_dir/md5s.txt
+  if [ -f $md5s_txt ]; then
+    checksum=`extract_checksum "$base" $md5s_txt`
+    if [ -n  "$checksum" ]; then
+      # Usage: file_valid FILE CHECKSUM
+      if ! file_valid "$outfile" $checksum ; then
+        invalid "removing $outfile"
+        rm $outfile
+        message "Checking source file: $file"
+        if file_valid "$file" $checksum ; then
+          VALID "$file"
+        else
+          INVALID "$file"
+        fi # if ! file_valid $file (the source)
+      fi # if ! file_valid $outfile ;...
+    else
+      warning "No checksum found for $base in $md5s_txt"
+    fi # if [ -n "$checksum"]; ...
+  else
+    warning "No checksum file found: $md5s_txt"
+  fi # if [ -f $md5s_txt ]; ...
   
   # COUNT AND REPORT
   count=$(( $count + 1 ))
