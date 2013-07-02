@@ -1,15 +1,30 @@
 #!/bin/sh
 
 read -r -d '' HELP <<-'EOF'
-Create a list of new names for the color images in DIR. 
+Create a command file to rename color images in PAGKAGE_DIR. The command file
+will be created as 
+
+    PAGKAGE_DIR/color_rename-`date +%F`.sh
+
+This command file should be run to rename color files to standard format.
 
 A color file like 
 
-* 0030_000076+MB365UV_CCD_CCC-RC0905.tif
+    0030_000076+MB365UV_CCD_CCC-RC0905.tif
 
 Will be give a new name of:
 
-* 0030_000076_PSH_color.tif
+    0030_000076_PSH_color.tif
+
+NOTE: This script will quit with an error if it is determined that two of the
+sources files would be given the same name. For example, these two files:
+
+    0016_000013_PSC.tif
+    0016_000013+MB365UV_CCD_CCC-RC0905.tif
+
+Would both be renamed to:
+
+    0016_000013_PSH_color.tif    
 
 EOF
 # functions
@@ -34,7 +49,7 @@ export SPINDLE_COMMAND=$cmd
 source `dirname $0`/spindle_functions
 
 usage() {
-   echo "Usage: $cmd [-h] DIR"
+   echo "Usage: $cmd [-h] PAGKAGE_DIR"
    echo ""
    echo "OPTIONS"
    echo ""
@@ -73,9 +88,13 @@ shift $((OPTIND-1))
 
 ### THESCRIPT
 # grab package directoy and confirm it exists
-DIR=`package_dir $1`
+PAGKAGE_DIR=`package_dir $1`
 if [ $? -ne 0 ]; then
   error "Error finding directory"
+fi
+DATA_DIR=$PAGKAGE_DIR/data
+if [[ ! -d $DATA_DIR ]]; then
+  error "Expected $DATA_DIR"
 fi
 
 ### HARVEST METADATA
@@ -83,7 +102,7 @@ fi
 
 file_list=$tmp.1
 # get all non-hidden files
-find $DIR -type f -name \*_CCD_CCC\*.tif | sort > $file_list
+find $DATA_DIR -type f -name \*_CCD_CCC\*.tif -o -name \*_PSC.tif | sort > $file_list
 file_count=`wc -l $file_list | awk '{ print $1 }' | sed 's/ *//g'`
 # get the page directory name
 
@@ -94,7 +113,7 @@ do
   base=`basename $file`
   dir=`dirname $file`
   ext=`getExtension $base`
-  sequence=`echo $base | awk -F '+' '{ print $1 }'`
+  sequence=`echo $base | awk -F '+' '{ print $1 }' | awk -F '_' '{ print $1 "_" $2 }'`
   if valid_shot_sequence $sequence
   then
     newname=${sequence}_PSH_color.${ext}
@@ -111,8 +130,7 @@ do
   fi
 done < $file_list
 
-dir_base=`basename $DIR`
-command_file=$dir_base-`date +%F`.sh
+command_file=$PAGKAGE_DIR/color_rename-`date +%F`.sh
 cp $copy_script $command_file
 message "Wrote $command_file"
 message "Sample: "
