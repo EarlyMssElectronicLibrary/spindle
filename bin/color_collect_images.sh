@@ -81,6 +81,7 @@ then
 else
   error "CAPTURE_DIR not found"
 fi
+# the package dir
 PACKAGE_DIR=$2
 if dir_exists $PACKAGE_DIR
 then
