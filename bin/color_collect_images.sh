@@ -2,9 +2,17 @@
 
 read -r -d '' HELP <<-'EOF'
 
-For the input CAPTURE_DIR find all color imgage and copy them to
-a `data` directoy in PACKAGE_DIR. This script will create the `data` 
-directoy in PACKAGE_DIR.
+For the input CAPTURE_DIR find all color imgage and copy them to a `data`
+directoy in PACKAGE_DIR. This script will create the `data`  directoy in
+PACKAGE_DIR.
+
+This script will also verify each copy using the source md5 checksum  if there
+is one. If the file is verified, a temporary md5 file will be  created for it:
+`filename.tif.md5`.
+
+If the copy fails verification, the file is removed, and the original file the
+script attempts to verify it against the checksum, and reports success or
+failure.
 
 EOF
 
@@ -101,6 +109,7 @@ tstamp=`date +%FT%H%M%z`
 report_count $count $total 0
 while read file
 do
+  VALID_COPY=false
   base=`basename $file`
   outfile=$DATA_DIR/$base
   if [ -f $outfile ]; then
