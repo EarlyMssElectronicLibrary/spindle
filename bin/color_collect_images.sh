@@ -136,8 +136,10 @@ do
         message "Checking source file: $file"
         if file_valid "$file" $checksum ; then
           VALID "$file"
+          # Create a temporary MD5 file for $outfile
           echo "$checksum  $base" > ${outfile}.md5
-          message "Wrote "${outfile}.md5"
+          message "Wrote ${outfile}.md5"
+          VALID_COPY=true
         else
           INVALID "$file"
         fi # if ! file_valid $file (the source)
@@ -148,6 +150,14 @@ do
   else
     warning "No checksum file found: $md5s_txt"
   fi # if [ -f $md5s_txt ]; ...
+
+  # if the copy was good; get the metadata from the corresponding UV image
+  if $VALID_COPY ; then
+    shot_seq=`extract_shot_sequence $file`
+    # Usage: locate_uv_dng SHOT_SEQUENCE CAPTURE_DIR
+    uv_dng=`locate_uv_dng $shot_seq $CAPTURE_DIR`
+    exiftool -a $uv_dng > ${shot_seq}_uv_exif.txt
+  fi
   
   # COUNT AND REPORT
   count=$(( $count + 1 ))
