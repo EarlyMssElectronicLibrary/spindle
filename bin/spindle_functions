@@ -438,6 +438,12 @@ get_full_path() {
   echo $( cd $(dirname "$1"); pwd)/$(basename "$1")
 }
 
+extract_shot_sequence() {
+  ess_file=$1
+  ess_base=`basename $ess_file`
+  echo "$ess_base" | awk -F '+' '{ print $1 }' | awk -F '_' '{ print $1 "_" $2 }'
+}
+
 has_prep_json_files() {
   hpjf_dir=$1
   if [ -d "$hpjf_dir" ]; then
@@ -453,6 +459,24 @@ has_prep_json_files() {
     fi
   else
     error_no_exit "Dir not found: $hpjf_dir"
+    return 1
+  fi
+}
+
+# For SHOT_SEQUENCE (e.g., 0001_000123), find the corresponding
+# UV DNG in CAPTURE_DIR.
+#
+# Usage: locate_uv_dng SHOT_SEQUENCE CAPTURE_DIR
+locate_uv_dng() {
+  lud_seq=$1
+  lud_cap_dir=$2
+  lud_file=`find $lud_cap_dir -name "${lud_seq}[+_]*_001.dng"`
+  lud_count=`echo "$lud_file" | wc -w | sed 's/ //g'`
+  echo lud_file
+  if [ $lud_count -eq 1 ]; then
+    return 0
+  else
+    echo "Expected 1 file; found $lud_count" >&2
     return 1
   fi
 }
