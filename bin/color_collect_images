@@ -3,11 +3,11 @@
 read -r -d '' HELP <<-'EOF'
 
 For the input CAPTURE_DIR find all color imgage and copy them to a `data`
-directoy in PACKAGE_DIR. This script will create the `data`  directoy in
+directoy in PACKAGE_DIR. This script will create the `data` directoy in
 PACKAGE_DIR.
 
-This script will also verify each copy using the source md5 checksum  if there
-is one. If the file is verified, a temporary md5 file will be  created for it:
+This script will also verify each copy using the source md5 checksum if there
+is one. If the file is verified, a temporary md5 file will be created for it:
 `filename.tif.md5`.
 
 If the copy fails verification, the file is removed, and the original file the
@@ -52,7 +52,7 @@ CAPTURE_DIR=
 while getopts ":hv" opt; do
   case $opt in
     h)
-      usage 
+      usage
       version
       help
       exit 1
@@ -87,7 +87,7 @@ if dir_exists $PACKAGE_DIR
 then
   message "Using PACKAGE_DIR $PACKAGE_DIR"
 else
-  error "PACKAGE_DIR not found"  
+  error "PACKAGE_DIR not found"
 fi
 
 # CREATE data if needed.
@@ -158,7 +158,7 @@ do
     uv_dng=`locate_uv_dng $shot_seq $CAPTURE_DIR`
     exiftool -a $uv_dng > ${shot_seq}_uv_exif.txt
   fi
-  
+
   # COUNT AND REPORT
   count=$(( $count + 1 ))
   report_count $count $total 1
