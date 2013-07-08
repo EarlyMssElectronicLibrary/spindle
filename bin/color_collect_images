@@ -96,13 +96,13 @@ if [ -d $DATA_DIR ]; then
   message "Copying to $DATA_DIR"
 else
   message "Create data directoy: $DATA_DIR"
-  if mkdir $DATA_DIR ; then
+  if ! mkdir $DATA_DIR ; then
     error "Error creating $DATA_DIR"
   fi
 fi
 
 color_files=$tmp.1
-find $CAPTURE_DIR -type f -name "\*_PSC.tif" -o -name "\*+_CCD_CCC\*.tif"  > $color_files
+find $CAPTURE_DIR -type f -name "*_PSC.tif" -o -name "*_CCD_CCC*.tif"  > $color_files
 count=0
 total=`wc -l $color_files | awk '{ print $1 }'`
 date_cmd="date +%FT%T%z"
@@ -118,7 +118,7 @@ do
     warning "Not coping: $file"
   fi
 
-  if cp $file $PACKAGE_DIR ; then
+  if cp $file $DATA_DIR ; then
     message "Added $outfile"
   else
     error_no_exit "Error copying $file"
@@ -127,21 +127,25 @@ do
   source_dir=`dirname $file`
   md5s_txt=$source_dir/md5s.txt
   if [ -f $md5s_txt ]; then
+    message "Found md5s.txt; validating copy: $md5s_txt"
     checksum=`extract_checksum "$base" $md5s_txt`
+    message "Got checksum ${checksum}"
     if [ -n  "$checksum" ]; then
       # Usage: file_valid FILE CHECKSUM
-      if ! file_valid "$outfile" $checksum ; then
+      if file_valid "$outfile" $checksum ; then
+        message "File valid: $outfile"
+        VALID_COPY=true
+        # Create a temporary MD5 file for $outfile
+        echo "$checksum  $base" > ${outfile}.md5
+        message "Wrote ${outfile}.md5"
+      else
         invalid "removing $outfile"
         rm $outfile
         message "Checking source file: $file"
         if file_valid "$file" $checksum ; then
-          VALID "$file"
-          # Create a temporary MD5 file for $outfile
-          echo "$checksum  $base" > ${outfile}.md5
-          message "Wrote ${outfile}.md5"
-          VALID_COPY=true
+          valid "Source file is valid: $file"
         else
-          INVALID "$file"
+          invalid "Source file is invalid: $file"
         fi # if ! file_valid $file (the source)
       fi # if ! file_valid $outfile ;...
     else
@@ -156,7 +160,9 @@ do
     shot_seq=`extract_shot_sequence $file`
     # Usage: locate_uv_dng SHOT_SEQUENCE CAPTURE_DIR
     uv_dng=`locate_uv_dng $shot_seq $CAPTURE_DIR`
-    exiftool -a $uv_dng > ${shot_seq}_uv_exif.txt
+    exif_file=$DATA_DIR/${shot_seq}_uv_exif.txt
+    exiftool -a $uv_dng > $exif_file
+    message "Wrote UV exif data to $exif_file"
   fi
 
   # COUNT AND REPORT
