@@ -73,16 +73,36 @@ else
 fi
 
 dir_list=$tmp.1
+find $CAPTURE_DIR -type d -name "[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]" > $dir_list
+# cat $dir_list
 count=0
 total=`wc -l $dir_list | awk '{ print $1 }'`
+tstamp=`date +%Y%m%d-%H%M%z`
 date_cmd="date +%FT%T%z"
 report_count $count $total 0
 while read dir
 do
+  v2_file=$dir/md5s_v2.txt
+  md5s_file=$dir/md5s.txt
+  if [ -f $v2_file ]; then
+    echo $v2_file
+    
+    if [ -f $md5s_file ]; then
+      md5s_bak=$md5s_file.$tstamp
+      warning "Backing up md5s.txt file"
+      warning "        from: $md5s_file"
+      warning "          to: $md5s_bak"
+      cp $md5s_file $md5s_bak
+    fi
+    awk -F';' '{ print $4 "  " $1 }' $v2_file > $md5s_file
+    message "Wrote: $md5s_file"
+  else
+    warning "Not found: $v2_file"
+  fi
 
   # COUNT AND REPORT
   count=$(( $count + 1 ))
-  report_count $count $total 0 $file
+  report_count $count $total 0
 done < $dir_list
 
 
