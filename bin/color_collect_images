@@ -161,7 +161,7 @@ do
     shot_seq=`extract_shot_sequence $file`
     # TODO also get list of image files in shot_seq_dir
     tiff_dir=`locate_tiff_dir $shot_seq $CAPTURE_DIR`
-    ls $tiff_dir/*_F.tif > ${shot_seq}_tiff_list.txt
+    ls $tiff_dir/*_F.tif > $DATA_DIR/${shot_seq}_tiff_list.txt
     # Usage: locate_uv_dng SHOT_SEQUENCE CAPTURE_DIR
     exif_file=$DATA_DIR/${shot_seq}_uv_exif.txt
     exiftool -a $uv_dng > $exif_file
