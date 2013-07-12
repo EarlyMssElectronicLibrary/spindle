@@ -540,7 +540,7 @@ locate_uv_tiff() {
   # but not too risky.
   lut_file=`find $lut_cap_dir -name "${lut_seq}[+_]*_001_F.tif"`
   lut_count=`echo "$lut_file" | wc -w | sed 's/ //g'`
-  echo lut_file
+  echo $lut_file
   if [ $lut_count -eq 1 ]; then
     return 0
   else
