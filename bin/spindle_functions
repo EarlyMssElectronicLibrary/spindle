@@ -499,6 +499,8 @@ locate_tiff_dir() {
   # let's just find the UV TIFF for the SHOT_SEQUENCE and use its folder.
   ltd_uv_tiff=`locate_uv_tiff $ltd_seq $ltd_cap_dir`
   if [ $? -eq 0 ]; then
+    echo "tiff is $ltd_uv_tiff" >&2
+    echo "tiff dir is `dirname $ltd_uv_tiff`" >&2
     dirname $ltd_uv_tiff
     return 0
   else
@@ -538,8 +540,6 @@ locate_uv_tiff() {
   # but not too risky.
   lut_file=`find $lut_cap_dir -name "${lut_seq}[+_]*_001_F.tif"`
   lut_count=`echo "$lut_file" | wc -w | sed 's/ //g'`
-  echo "************************************************************"
-  echo "lut_file is $lut_file" >&2
   echo lut_file
   if [ $lut_count -eq 1 ]; then
     return 0
