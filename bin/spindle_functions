@@ -518,7 +518,7 @@ locate_uv_dng() {
   # but not too risky.
   lud_file=`find $lud_cap_dir -name "${lud_seq}[+_]*_001.dng"`
   lud_count=`echo "$lud_file" | wc -w | sed 's/ //g'`
-  echo lud_file
+  echo $lud_file
   if [ $lud_count -eq 1 ]; then
     return 0
   else
