@@ -477,7 +477,7 @@ locate_dng_dir() {
   # let's just find the UV DNG for the SHOT_SEQUENCE and use its folder.
   ldd_uv_dng=`locate_uv_dng $ldd_seq $ldd_cap_dir`
   if [ $? -eq 0 ]; then
-    basename $ldd_uv_dng
+    dirname $ldd_uv_dng
     return 0
   else
     echo "Could not locate DNG dir for $ldd_seq" >&2
@@ -497,9 +497,9 @@ locate_tiff_dir() {
   # almost always correct; *but* I don't trust that they won't name the FLATTENED
   # folder `Flattened` or `TIFFS` or some other thing in the future. To be safe(?)
   # let's just find the UV TIFF for the SHOT_SEQUENCE and use its folder.
-  ltd_uv_dng=`locate_uv_dng $ltd_seq $ltd_cap_dir`
+  ltd_uv_tiff=`locate_uv_tiff $ltd_seq $ltd_cap_dir`
   if [ $? -eq 0 ]; then
-    basename $ltd_uv_dng
+    dirname $ltd_uv_tiff
     return 0
   else
     echo "Could not locate TIFF dir for $ltd_seq" >&2
@@ -709,7 +709,7 @@ parent_files() {
     echo "Could not find color TIFF file: $pf_color_tiff" >&2
     return 1
   fi
-}
+
 
 MANIFEST_FILE=manifest-md5s.txt
 VALID_FILES=valid_file_names.txt
