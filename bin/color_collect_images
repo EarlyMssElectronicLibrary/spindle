@@ -96,13 +96,15 @@ if [ -d $DATA_DIR ]; then
   message "Copying to $DATA_DIR"
 else
   message "Create data directoy: $DATA_DIR"
-  if mkdir $DATA_DIR ; then
+  if ! mkdir $DATA_DIR ; then
     error "Error creating $DATA_DIR"
   fi
 fi
 
 color_files=$tmp.1
 find $CAPTURE_DIR -type f -name "\*_PSC.tif" -o -name "\*+_CCD_CCC\*.tif"  > $color_files
+cat $color_files
+exit
 count=0
 total=`wc -l $color_files | awk '{ print $1 }'`
 date_cmd="date +%FT%T%z"
@@ -151,12 +153,16 @@ do
     warning "No checksum file found: $md5s_txt"
   fi # if [ -f $md5s_txt ]; ...
 
+  ## TODO: IMPORTANT: USE FLATTEND TIFFS NOT DNGS
   # if the copy was good; get the metadata from the corresponding UV image
   if $VALID_COPY ; then
     shot_seq=`extract_shot_sequence $file`
     # Usage: locate_uv_dng SHOT_SEQUENCE CAPTURE_DIR
     uv_dng=`locate_uv_dng $shot_seq $CAPTURE_DIR`
     exiftool -a $uv_dng > ${shot_seq}_uv_exif.txt
+    # TODO also get list of image files in shot_seq_dir
+    tiff_dir=`locate_tiff_dir $shot_seq $CAPTURE_DIR`
+    ls $tiff_dir/*_F.tif > ${shot_seq}_tiff_list.txt
   fi
 
   # COUNT AND REPORT
