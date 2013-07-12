@@ -1,0 +1,37 @@
+// AP DAT Bits Per Sample             - required
+// AP DAT File Processing             - required
+// AP DAT File Processing Rotation    - required
+// AP DAT Joining Different Parts Of  - required
+// AP DAT Joining Same Parts of Folio - required
+// AP DAT Processing Comments         - optional
+// AP DAT Processing Program          - required
+// AP DAT Software Version            - required; `See DAT_Processing_Program`
+// AP DAT Type of Contrast Adjustment - required
+// AP DAT Type of Image Processing    - required
+// AP ID Parent File                  - required
+// 
+// DAT_Bits_Per_Sample => { },
+// DAT_Samples_Per_Pixel => { },
+// DAT_File_Processing_Rotation   => { Writable => 'integer' },
+// DAT_Joining_Same_Parts_of_Folio  => { Writable => 'boolean' },
+// DAT_Joining_Different_Parts_Of_Folio   => { Writable => 'boolean' },
+// DAT_Processing_Comments => { },
+// DAT_Processing_Program => { List => 'Seq' },
+// DAT_Software_Version  => {},
+// DAT_Type_of_Contrast_Adjustment => { },
+// DAT_Type_of_Image_Processing => { },
+// ID_Parent_File  => { List => 'Bag' },
+[{
+    "SourceFile": "SOURCE_FILE",
+    "DAT_Bits_Per_Sample" : 3,
+    "DAT_Samples_Per_Pixel": 8,
+    "DAT_File_Processing_Rotation": FILE_PROCESSING_ROTATION,
+    "DAT_Joining_Same_Parts_of_Folio": true,
+    "DAT_Joining_Different_Parts_Of_Folio": false,
+    "DAT_Processing_Comments": "",
+    "DAT_Processing_Program": [ "PROCESSING_PROGRAM" ],
+    "DAT_Software_Version": "See DAT_Processing_Program",
+    "DAT_Type_of_Contrast_Adjustment": "None",
+    "DAT_Type_of_Image_Processing": "Multispectral Color Developing",
+    "ID_Parent_File": [ ID_PARENT_FILE ]
+}]
