@@ -175,7 +175,7 @@ fi
 
 
 file_list=$tmp.1
-find $DATA_DIR -name \*_color.tif > $file_list
+find $DATA_DIR -name \*.tif > $file_list
 
 # Extract the following from <PACKAGE_DIR>/data/<SHOT_SEQ>_uv_exif.txt
 #    IPTC Source                        - required
