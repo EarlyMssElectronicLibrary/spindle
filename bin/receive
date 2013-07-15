@@ -133,6 +133,15 @@ shift $((OPTIND-1))
 ### THESCRIPT
 # grab package directoy and confirm it exists
 PACK_TMP=$1
+if [ -n "$PACK_TMP" ]; then
+  if [ -e $PACK_TMP ]; then
+    message "Using package: $PACK_TMP"
+  else
+    error "Could not find PACKAGE_DIR: $PACK_TMP"
+  fi
+else
+  error "Please provide a PACKAGE_DIR"
+fi
 if is_a_tar_file $PACK_TMP ; then
   message "Input PACKAGE is tar archive: $PACK_TMP"
   tar_full_path=`get_full_path $PACK_TMP`
