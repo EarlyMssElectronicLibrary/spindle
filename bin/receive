@@ -1,41 +1,43 @@
 #!/bin/sh
 
-read -r -d '' HELP <<-'EOF'
+HELP=`cat<<-EOF
+
 For a delivered package check the data for validity.  Input may be either
 a package directory or a package tar file.  The package must conform to the
 structure prescribed for a delivery package in the READ_ME file.  Additionally
 the root directory of the package must have the following files:
 
-  * `DLVRY_filenames.log`
-  * `DLVRY_metadata.log`
-  * `DLVRY_package.log`
-  * `manifest-md5s.txt`
-  
-The last line of each of the delivery log file must contain the `ALL_VALID`
+  * 'DLVRY_filenames.log'
+  * 'DLVRY_metadata.log'
+  * 'DLVRY_package.log'
+  * 'manifest-md5s.txt'
+
+The last line of each of the delivery log file must contain the 'ALL_VALID'
 code.
 
 This script will:
 
 1. Verify that each of the expected files is present and, if the file is log
-   file, has a final line containing `ALL_VALID`
+   file, has a final line containing 'ALL_VALID'
 2. Verify that the files have the correct ages relative to the other files in
    the package (see below)
 3. Validate the integriy of the package contents using the checksum manifest,
-   `manifest-md5s.txt`
+   'manifest-md5s.txt'
 4. Verify that all the filenames are correct
 5. Verify that all the metadata is correct
 
 As it runs the script will create the following files:
 
-  * `RECPT_package.log`
-  * `RECPT_manifest.log`
-  * `RECPT_filenames.log`
-  * `RECPT_metadata.log`
-  * `RECEIPT_APPROVED.txt`
+  * 'RECPT_package.log'
+  * 'RECPT_manifest.log'
+  * 'RECPT_filenames.log'
+  * 'RECPT_metadata.log'
+  * 'RECEIPT_APPROVED.txt'
 
 NOTE: Tar files will be extracted in their current directory by default.  If
-the ouput directory option `-o` is provided, that directory will be used.
-EOF
+the ouput directory option '-o' is provided, that directory will be used.
+
+EOF`
 
 ### TEMPFILES
 # From:
