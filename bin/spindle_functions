@@ -675,43 +675,43 @@ cmpActualToLogged() {
 # MB535Gr_005
 # MB570Am_006
 # MB625Rd_007
-WAVELENGTHS=`cat<<EOF
-455 002
-470 003
-505 004
-535 005
-570 006
-625 007
-EOF`
 parent_files() {
   pf_color_tiff=$1
   if [ -f $pf_color_tiff ]; then
     pf_shot_seq=`extract_shot_sequence $pf_color_tiff`
     
-    pf_tiffs=
-    pf_tiff_list=`basename $pf_color_tiff`/${pf_shot_seq}_tiff_list.txt
+    pf_tiff_list=`dirname $pf_color_tiff`/${pf_shot_seq}_tiff_list.txt
     if [ -f $pf_tiff_list ]; then
-      echo $WAVELENGTHS | while read pair
+      PF_TIFFS=
+      while read pair
       do
         pf_wave=`echo $pair | awk '{ print $1 }'`
         pf_index=`echo $pair | awk '{ print $2 }'`
         pf_next_tiff=`grep "_${pf_index}_F.tif" $pf_tiff_list`
-        if echo "$pf_next_tiff" | grep "$pf_wave" >/dev/null ; then
-          pf_tiffs="${pf_tiffs} `basename $pf_next_tiff`
+        if echo "$pf_next_tiff" | grep "$pf_wave" >/dev/null ; then          
+          PF_TIFFS="$PF_TIFFS `basename $pf_next_tiff`"
+          # echo $pf_tiffs
         else
           invalid "Expected wave/index pair: ${pf_wave}/${pf_index}; found $pf_next_tiff"
         fi
-      done
+      done <<EOF
+455 002
+470 003
+505 004
+535 005
+570 006      
+EOF
     else
       echo "Expected TIFF list not found: $pf_tiff_list" >&2
       return 1
     fi
+    echo $PF_TIFFS
     return 0
   else
     echo "Could not find color TIFF file: $pf_color_tiff" >&2
     return 1
   fi
-
+}
 
 MANIFEST_FILE=manifest-md5s.txt
 VALID_FILES=valid_file_names.txt
