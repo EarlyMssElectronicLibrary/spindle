@@ -185,21 +185,26 @@ find $DATA_DIR -name \*.tif > $file_list
 #        - Postion                      - required
 
 sedscr=$tmp.2
+json_tmp=$tmp.3
 while read file
 do
+  echo $file
   # create a sed script
   :> $sedscr
-  echo "s/SOURCE_FILE/$file/" >> $sedscr
+
+  full_path=`get_full_path $file`
+  echo "s/SOURCE_FILE/$full_path/" >> $sedscr
   shot_seq=`extract_shot_sequence $file`
-  exif_file=`basename $file`/${shot_seq}_uv_exif.txt
+  exif_file=`dirname $file`/${shot_seq}_uv_exif.txt
   rotation=`image_rotation $exif_file`
   echo "s/FILE_PROCESSING_ROTATION/$rotation/" >> $sedscr
   prog=`processing_program $file`
   echo "s/PROCESSING_PROGRAM/$prog/" >> $sedscr
   parents=`parent_files $file`
-  parents=`json_array "$parent_files"`
-  echo "s/ID_PARENT_FILE/${parent_files}/" >> $sedscr
-  cat $sedscr
+  parents=`json_array "$parents"`
+  echo "s/ID_PARENT_FILE/${parents}/" >> $sedscr
+  sed -f $sedscr $JSON_TEMPLATE > $json_tmp
+  cat $json_tmp
 
   # generate the json file
 done < $file_list
