@@ -92,43 +92,6 @@ image_rotation() {
 # MB535Gr_005
 # MB570Am_006
 # MB625Rd_007
-WAVELENGTHS=`cat<<EOF
-455 002
-470 003
-505 004
-535 005
-570 006
-625 007
-EOF`
-parent_files() {
-  pf_color_tiff=$1
-  if [ -f $pf_color_tiff ]; then
-    pf_shot_seq=`extract_shot_sequence $pf_color_tiff`
-    
-    pf_tiffs=
-    pf_tiff_list=`basename $pf_color_tiff`/${pf_shot_seq}_tiff_list.txt
-    if [ -f $pf_tiff_list ]; then
-      echo $WAVELENGTHS | while read pair
-      do
-        pf_wave=`echo $pair | awk '{ print $1 }'`
-        pf_index=`echo $pair | awk '{ print $2 }'`
-        pf_next_tiff=`grep "_${pf_index}_F.tif" $pf_tiff_list`
-        if echo "$pf_next_tiff" | grep "$pf_wave" >/dev/null ; then
-          pf_tiffs="${pf_tiffs} `basename $pf_next_tiff`
-        else
-          invalid "Expected wave/index pair: ${pf_wave}/${pf_index}; found $pf_next_tiff"
-        fi
-      done
-    else
-      echo "Expected TIFF list not found: $pf_tiff_list" >&2
-      return 1
-    fi
-    return 0
-  else
-    echo "Could not find color TIFF file: $pf_color_tiff" >&2
-    return 1
-  fi
-}
 
 ### VARIABLES
 # AP DAT Bits Per Sample - '8'
@@ -233,8 +196,10 @@ do
   echo "s/FILE_PROCESSING_ROTATION/$rotation/" >> $sedscr
   prog=`processing_program $file`
   echo "s/PROCESSING_PROGRAM/$prog/" >> $sedscr
-  parent_files=
-
+  parents=`parent_files $file`
+  parents=`json_array "$parent_files"`
+  echo "s/ID_PARENT_FILE/${parent_files}/" >> $sedscr
+  cat $sedscr
 
   # generate the json file
 done < $file_list
