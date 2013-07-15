@@ -713,5 +713,13 @@ EOF
   fi
 }
 
+json_array() {
+  ja_list="$1"
+  echo "$ja_list" | sed -e 's/^/"/g' -e 's/$/"/' \
+    -e 's/[[:space:]][[:space:]]*/", "/g' 
+
+}
+
+
 MANIFEST_FILE=manifest-md5s.txt
 VALID_FILES=valid_file_names.txt
