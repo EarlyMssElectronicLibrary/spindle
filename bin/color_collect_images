@@ -162,9 +162,10 @@ do
     # TODO also get list of image files in shot_seq_dir
     tiff_dir=`locate_tiff_dir $shot_seq $CAPTURE_DIR`
     ls $tiff_dir/*_F.tif > $DATA_DIR/${shot_seq}_tiff_list.txt
-    # Usage: locate_uv_dng SHOT_SEQUENCE CAPTURE_DIR
+    # Usage: locate_uv_tiff SHOT_SEQUENCE CAPTURE_DIR
+    uv_tiff=`locate_uv_tiff $shot_seq $CAPTURE_DIR`
     exif_file=$DATA_DIR/${shot_seq}_uv_exif.txt
-    exiftool -a $uv_dng > $exif_file
+    exiftool -a $uv_tiff > $exif_file
     message "Wrote UV exif data to $exif_file"
   fi
 
