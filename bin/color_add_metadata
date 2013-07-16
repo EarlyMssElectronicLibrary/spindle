@@ -193,7 +193,7 @@ do
   :> $sedscr
 
   full_path=`get_full_path $file`
-  echo "s/SOURCE_FILE/$full_path/" >> $sedscr
+  echo "s!SOURCE_FILE!$full_path!" >> $sedscr
   shot_seq=`extract_shot_sequence $file`
   exif_file=`dirname $file`/${shot_seq}_uv_exif.txt
   rotation=`image_rotation $exif_file`
