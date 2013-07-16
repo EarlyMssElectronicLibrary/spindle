@@ -9,19 +9,8 @@
 // AP DAT Type of Contrast Adjustment - required
 // AP DAT Type of Image Processing    - required
 // AP ID Parent File                  - required
-// 
-// DAT_Bits_Per_Sample => { },
-// DAT_Samples_Per_Pixel => { },
-// DAT_File_Processing_Rotation   => { Writable => 'integer' },
-// DAT_Joining_Same_Parts_of_Folio  => { Writable => 'boolean' },
-// DAT_Joining_Different_Parts_Of_Folio   => { Writable => 'boolean' },
-// DAT_Processing_Comments => { },
-// DAT_Processing_Program => { List => 'Seq' },
-// DAT_Software_Version  => {},
-// DAT_Type_of_Contrast_Adjustment => { },
-// DAT_Type_of_Image_Processing => { },
-// ID_Parent_File  => { List => 'Bag' },
 [{
+    "Creator": [ CREATORS ],
     "SourceFile": "SOURCE_FILE",
     "DAT_Bits_Per_Sample" : 3,
     "DAT_Samples_Per_Pixel": 8,
