@@ -124,7 +124,7 @@ TYPE_OF_IMAGE_PROCESSING="Multispectral Color Developing"
 
 # Get the following as described
 #
-CREATORS = "\"Damianos Kasotakis\", \"Evangelos Theodorou\""
+CREATORS="\"Damianos Kasotakis\", \"Evangelos Theodorou\""
 
 JSON_TEMPLATE=`dirname $0`/../data/color_metadata_template.json
 
