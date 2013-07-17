@@ -730,6 +730,14 @@ json_array() {
 
 }
 
+keywords_to_array() {
+  kta_list=$1
+  kta_vals=`echo "$kta_list" | awk 'BEGIN { FS = ", " }
+    { for(i = 1; i < NF; i++) if ( $i ~ "[a-zA-Z0-9]") \
+    print "\"" $i "\", " }'`
+  echo $kta_vals | sed 's/,$//'
+}
+
 
 MANIFEST_FILE=manifest-md5s.txt
 VALID_FILES=valid_file_names.txt
