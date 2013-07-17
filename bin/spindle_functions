@@ -713,6 +713,16 @@ EOF
   fi
 }
 
+get_exif_tag() {
+  gxt_tag=$1
+  gxt_exif_file=$2
+  if [ ! -f $gxt_exif_file ]; then
+    echo "ERROR: get_exif_tag: could not find EXIF_FILE: $gxt_exif_file" >&2
+    return 1
+  fi
+  grep -i "^-${gxt_tag}=" $gxt_exif_file | awk -F '=' '{ print $2 }'
+}
+
 json_array() {
   ja_list="$1"
   echo "$ja_list" | sed -e 's/^/"/g' -e 's/$/"/' \
