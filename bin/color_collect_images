@@ -165,7 +165,7 @@ do
     # Usage: locate_uv_tiff SHOT_SEQUENCE CAPTURE_DIR
     uv_tiff=`locate_uv_tiff $shot_seq $CAPTURE_DIR`
     exif_file=$DATA_DIR/${shot_seq}_uv_exif.txt
-    exiftool -a $uv_tiff > $exif_file
+    exiftool -args -a $uv_tiff > $exif_file
     message "Wrote UV exif data to $exif_file"
   fi
 
