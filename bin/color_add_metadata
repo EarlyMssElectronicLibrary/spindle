@@ -184,6 +184,8 @@ find $DATA_DIR -name \*.tif > $file_list
 #        - Resolution (PPI)             - required
 #        - Postion                      - required
 
+
+
 sedscr=$tmp.2
 json_tmp=$tmp.3
 while read file
@@ -192,18 +194,36 @@ do
   # create a sed script
   :> $sedscr
 
-  full_path=`get_full_path $file`
   echo "s/CREATORS/$CREATORS/" >> $sedscr
+
+  full_path=`get_full_path $file`
   echo "s!SOURCE_FILE!$full_path!" >> $sedscr
+
   shot_seq=`extract_shot_sequence $file`
   exif_file=`dirname $file`/${shot_seq}_uv_exif.txt
   rotation=`image_rotation $exif_file`
   echo "s/FILE_PROCESSING_ROTATION/$rotation/" >> $sedscr
+
   prog=`processing_program $file`
   echo "s/PROCESSING_PROGRAM/$prog/" >> $sedscr
+
   parents=`parent_files $file`
   parents=`json_array "$parents"`
   echo "s/ID_PARENT_FILE/${parents}/" >> $sedscr
+
+  # Source
+  iptc_source=`get_exif_tag Source $exif_file`
+  echo "s/IPTC_SOURCE/$iptc_source/" >> $sedscr
+
+  # ObjectNmae
+  object_name=`get_exif_tag ObjectName $exif_file`
+  echo "s/OBJECT_NAME/$object_name/" >> $sedscr
+
+  # Keywords
+  keywords=`get_exif_tag Keywords $exif_file`
+  keywords=`keywords_to_array "$keywords"`
+  echo "s/KEYWORDS/$keywords/" >> $sedscr
+
   sed -f $sedscr $JSON_TEMPLATE > $json_tmp
   cat $json_tmp
 

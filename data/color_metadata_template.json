@@ -10,8 +10,11 @@
 // AP DAT Type of Image Processing    - required
 // AP ID Parent File                  - required
 [{
-    "Creator": [ CREATORS ],
     "SourceFile": "SOURCE_FILE",
+    "Creator": [ CREATORS ],
+    "Source": "IPTC_SOURCE",
+    "ObjectName": "OBJECT_NAME",
+    "Keywords": [ KEYWORDS ],
     "DAT_Bits_Per_Sample" : 3,
     "DAT_Samples_Per_Pixel": 8,
     "DAT_File_Processing_Rotation": FILE_PROCESSING_ROTATION,
