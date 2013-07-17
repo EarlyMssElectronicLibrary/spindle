@@ -225,7 +225,7 @@ do
   echo "s/KEYWORDS/$keywords/" >> $sedscr
 
   sed -f $sedscr $JSON_TEMPLATE > $json_tmp
-  cat $json_tmp
+  exiftool -json=$json_tmp $file
 
   # generate the json file
 done < $file_list
