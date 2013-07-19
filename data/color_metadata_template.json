@@ -1,14 +1,3 @@
-// AP DAT Bits Per Sample             - required
-// AP DAT File Processing             - required
-// AP DAT File Processing Rotation    - required
-// AP DAT Joining Different Parts Of  - required
-// AP DAT Joining Same Parts of Folio - required
-// AP DAT Processing Comments         - optional
-// AP DAT Processing Program          - required
-// AP DAT Software Version            - required; `See DAT_Processing_Program`
-// AP DAT Type of Contrast Adjustment - required
-// AP DAT Type of Image Processing    - required
-// AP ID Parent File                  - required
 [{
     "SourceFile": "SOURCE_FILE",
     "Creator": [ CREATORS ],
