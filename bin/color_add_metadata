@@ -57,11 +57,13 @@ usage() {
    echo ""
 }
 
+# AP DAT Processing Program          - required
+PROCESSING_PROGRAM="PhotoShoot 4"
 processing_program() {
   pp_color_tif=$1
   # Now this can't be done dynamically, we're using PhotoShoot 4 pre
   # Ken Boydston email message to Doug Emery 2013-07-10
-  echo "PhotoShoot 4"
+  echo "$PROCESSING_PROGRAM"
 }
 
 image_rotation() {
@@ -95,35 +97,24 @@ image_rotation() {
 
 ### VARIABLES
 # AP DAT Bits Per Sample - '8'
-BITS_PER_SAMPLE=8
-
+BITS_PER_SAMPLE="8"
 # AP DAT Samples Per Pixel - '3'
-SAMPLES_PER_BIT=3
-
+SAMPLES_PER_PIXEL="3"
+# AP DAT Joining Same Parts of Folio - 'true'
+JOINING_SAME_PARTS="true"
+# AP DAT Joining Different Parts Of Folio - 'false'
+JOINING_DIFF_PARTS="false"
+# AP DAT Processing Comments - [blank]
+PROCESSING_COMMENTS=""
 # AP DAT File Processing - PROCESSING_DESCRIPTION
 PROCESSING_DESCRIPTION="Each color image is created using registered, 16-bit flattened TIFF images captured under six visible illuminant bands, 625 nm (red), 570 nm (amber), 535 nm (green), 505 nm (cyan), 470 nm (blue) and 455 nm (royal blue). A set of linear formulae is used to calculate calibrated color values from the five bands at each pixel position, and each image is output using a CIE L*a*b color space."
-
-# AP DAT Joining Different Parts Of Folio - 'false'
-JOIN_DIFF_PARTS="false"
-
-# AP DAT Joining Same Parts of Folio - 'true'
-JOIN_SAME_PARTS="true"
-
-# AP DAT Processing Comments - [blank]
-PROCESSING_COMMENTS=
-
-# AP DAT Processing Program - Get from Ken (color file header?)
-# AP DAT Software Version - Get from Ken (color file header?)
-PROCESSING_PROGRAM="PhotoShoot 4"
-
-# AP DAT Type of Contrast Adjustment - 'none'
-TYPE_OF_CONTRAST_ADJUSTMENT="none"
-
-# AP DAT Type of Image Processing - Get from Ken
+# AP DAT Software Version            - required; `See DAT_Processing Program`
+SOFTWARE_VERSION="See DAT_Processing_Program"
+# AP DAT Type of Contrast Adjustment - required
+CONTRAST_ADJUSTMENT="None"
+# AP DAT Type of Image Processing    - required
 TYPE_OF_IMAGE_PROCESSING="Multispectral Color Developing"
-
-# Get the following as described
-#
+# CREATORS
 CREATORS="\"Damianos Kasotakis\", \"Evangelos Theodorou\""
 
 JSON_TEMPLATE=`dirname $0`/../data/color_metadata_template.json
@@ -177,58 +168,80 @@ fi
 file_list=$tmp.1
 find $DATA_DIR -name \*.tif > $file_list
 
-# Extract the following from <PACKAGE_DIR>/data/<SHOT_SEQ>_uv_exif.txt
-#    IPTC Source                        - required
-#    IPTC Object name                   - required
-#    IPTC Keywords
-#        - Resolution (PPI)             - required
-#        - Postion                      - required
-
-
-
 sedscr=$tmp.2
-json_tmp=$tmp.3
+json_tmp=$tmp.3.json
+errors_found=
 while read file
 do
   echo $file
   # create a sed script
   :> $sedscr
 
-  echo "s/CREATORS/$CREATORS/" >> $sedscr
-
+  # FILES WE'LL WORK WITH
   full_path=`get_full_path $file`
-  echo "s!SOURCE_FILE!$full_path!" >> $sedscr
-
   shot_seq=`extract_shot_sequence $file`
   exif_file=`dirname $file`/${shot_seq}_uv_exif.txt
+  tiff_list=`dirname $file`/${shot_seq}_tiff_list.txt
+
+  # AP DAT File Processing Rotation    - required
   rotation=`image_rotation $exif_file`
-  echo "s/FILE_PROCESSING_ROTATION/$rotation/" >> $sedscr
-
+  # AP DAT Processing Program          - required
   prog=`processing_program $file`
-  echo "s/PROCESSING_PROGRAM/$prog/" >> $sedscr
-
+  # AP ID Parent File                  - required
   parents=`parent_files $file`
   parents=`json_array "$parents"`
-  echo "s/ID_PARENT_FILE/${parents}/" >> $sedscr
-
-  # Source
+  # IPTC Source                        - required
   iptc_source=`get_exif_tag Source $exif_file`
-  echo "s/IPTC_SOURCE/$iptc_source/" >> $sedscr
-
-  # ObjectNmae
+  # IPTC Object name                   - required
   object_name=`get_exif_tag ObjectName $exif_file`
-  echo "s/OBJECT_NAME/$object_name/" >> $sedscr
-
-  # Keywords
+  # IPTC Keywords
+  #     - Resolution (PPI)               - required
+  #     - Postion                        - required
   keywords=`get_exif_tag Keywords $exif_file`
   keywords=`keywords_to_array "$keywords"`
+
+  # GENERATE THE SED SCRIPT
+  echo "s!SOURCE_FILE!$full_path!" >> $sedscr
+  echo "s/CREATORS/$CREATORS/" >> $sedscr
+  echo "s/IPTC_SOURCE/$iptc_source/" >> $sedscr
+  echo "s/OBJECT_NAME/$object_name/" >> $sedscr
   echo "s/KEYWORDS/$keywords/" >> $sedscr
-
+  echo "s/BITS_PER_SAMPLE/$BITS_PER_SAMPLE/" >> $sedscr
+  echo "s/SAMPLES_PER_PIXEL/$SAMPLES_PER_PIXEL/" >> $sedscr
+  echo "s/FILE_PROCESSING_ROTATION/$rotation/" >> $sedscr
+  echo "s/JOINING_SAME_PARTS/$JOINING_SAME_PARTS/" >> $sedscr
+  echo "s/JOINING_DIFF_PARTS/$JOINING_DIFF_PARTS/" >> $sedscr 
+  echo "s/PROCESSING_DESCRIPTION/$PROCESSING_DESCRIPTION/" >>$sedscr
+  echo "s/PROCESSING_COMMENTS/$PROCESSING_COMMENTS/" >> $sedscr  
+  echo "s/PROCESSING_PROGRAM/$PROCESSING_PROGRAM/" >> $sedscr
+  echo "s/SOFTWARE_VERSION/$SOFTWARE_VERSION/" >> $sedscr
+  echo "s/CONTRAST_ADJUSTMENT/$CONTRAST_ADJUSTMENT/" >> $sedscr
+  echo "s/TYPE_OF_IMAGE_PROCESSING/$TYPE_OF_IMAGE_PROCESSING/" >> $sedscr
+  echo "s/ID_PARENT_FILE/${parents}/" >> $sedscr
+  
+  # CREATE THE JSON FILE
   sed -f $sedscr $JSON_TEMPLATE > $json_tmp
-  exiftool -json=$json_tmp $file
-
+  
+  # APPLY THE METADATA
+  if exiftool -overwrite_original -json=$json_tmp $file ; then
+    message "Added metadata to $file"
+    rm -f $file.md5 $exif_file $tiff_list
+  else
+    invalid "Error applying metdata to $file"
+    erors_found="$erors_found $file"
+  fi
+  
   # generate the json file
 done < $file_list
+
+if [ -n "$errors_found" ]; then
+  invalid "Errors found with the following files"
+  for f in $errors_found
+  do
+    invalid $f
+  done
+  exit 1
+fi
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
