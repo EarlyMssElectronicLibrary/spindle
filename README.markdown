@@ -74,6 +74,30 @@ These are the steps and scripts to be used by scientists assembling data
 packages for delivery to the repository for storage and redistribution.
 They focus on ensuring that prepared data is complete and valid.
 
+## For the impatient
+
+Create a package directory for your files.
+
+      $ mkdir Kelbe-2013-08
+
+Create a `data` directory in that directory
+
+      $ mkdir Kelbe-2013-08/data
+
+Move (or copy) all your image files into that directory:
+
+      $ mv path/to/images/* Kelbe-2013-08/data
+
+Or
+
+      $ cp -r path/to/images Kelbe-2013-08/data
+
+Run `deliver` on the package:
+
+      $ deliver Kelbe-2013-08
+
+NB You must give `deliver` the package directory, NOT the data directory in it.
+
 ## The scripts
 
 There are five basic *package* scripts to use for preparing data:
@@ -320,5 +344,56 @@ It has this structure:
 
       Greek_NF_MG_99/
         data/
+
+# The handling of color images
+
+Color images received wih capture data are in fact processed images. They may
+must be prepared for receipt and received, just like processed images. This
+section  describes how to do this.
+
+## For the impatient
+
+After a Capture set has been verified, the color images must be collected, 
+prepared for delivery, delivered (via the `deliver` script), received,
+ingested, and checked in.
+
+* Do color prep
+
+* `deliver`
+
+* `receive`
+
+* `ingest_processed`
+
+* `checkin`
+
+## Details
+
+Color images are generated at the time of Capture and are delivered with the
+Capture data in the `Capture/Developed` folder. They are created by PhotoShoot
+by combining the flattened TIFF's of the visible wavelength images. Thus, the
+color images, as secondary products of the capture data, are processed images.
+
+Since the color images are processed images, they need to be received,
+ingested,  and cheked in as processed images. To be received, color images
+must be put into  processed delivery packages, and conform with processed
+image metadata and file naming requirements. The `color_-` scripts prepare
+color images from a Capture data set for delivery.
+
+The scripts/steps are:
+
+1. `collect_color_images` - copy color files from Capture directory to package
+    directory; verify copy; get EXIF metadata from corresonding UV DNG (UV exif
+    will    be used to get folio #, reolution, position, cube name)
+
+2. `color_rename_list` - generate a command file to rename all the color TIFFs 
+   to the standard format of `0000_000000_PSC_color.tif`; command file should 
+   be run before other steps are taken
+
+3. `color_generate_jpegs` - for each color TIFF, generate a JPEG
+
+4. `color_add_metadata` - for each image, input the metadata requireed to 
+   create a procesed image delivery package.
+
                      
 
