@@ -18,7 +18,7 @@ Scripts for managing the ingestion of data and metadata do rely on other
 programs.  The following scripts rely on Ruby 1.9.2 or 1.9.3:
 
 - `bin/checkin_prep_metadata`
-- `bin/push_metadata`
+- `bin/checkin_push_metadata`
 - `bin/read_metadata.rb`
 
 The script `lab_color_to_rgb_jpeg` relies on ImageMagick. It was written using
@@ -348,7 +348,7 @@ Run `ingest_processed` on the package directory:
 This script will copy all files to repository, verify the copy was completed
 successfully, and create a record of each copy. NB: This record is used by the
 check in process and must not be deleted.
-
+  
 ### The scripts
 
 The primary script is `ingest_processed` it relies on one other script:

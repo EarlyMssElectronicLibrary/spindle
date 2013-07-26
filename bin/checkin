@@ -16,7 +16,7 @@ It runs the following scripts:
 
   * checkin_collect_metadata
   * checkin_prep_metadata
-  * push_metadata
+  * checkin_push_metadata
 
 This script will do the the following:
 
@@ -80,7 +80,7 @@ THIS_DIR=`dirname $0`
 THIS_DIR=`( cd $THIS_DIR; pwd)`
 COLLECT_METADATA=$THIS_DIR/checkin_collect_metadata
 PREP_METADATA=$THIS_DIR/checkin_prep_metadata
-PUSH_METADATA=$THIS_DIR/push_metadata
+PUSH_METADATA=$THIS_DIR/checkin_push_metadata
 
 
 ### VARIABLES
