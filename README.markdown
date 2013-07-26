@@ -154,8 +154,8 @@ the contents of the package.
 
 * Scripts **will not overwrite log files**. The must be deleted manually.
 
-* The `delivere` has `-C` option that can be used to clobber `log` and other
-  process artifact files.
+* The `deliver` script has `-C` option that can be used to clobber `log` and
+  other   process artifact files.
 
 ## Package structure
 
@@ -294,22 +294,86 @@ Files are expected to have the following metadata values:
 * AP DAT Type of Image Processing    - required
 * AP ID Parent File                  - required
 
+# Handling of processed images
 
-# Receipt of processed images
+Processed images are handled in three steps:
 
-The ingest of delivered processed images has the following steps:
+1. Receipt - validation of received package
+2. Ingest - adding images to the repository
+3. Checkin - uploading information about ingested images to KatIkon
 
-* Untarring of data to staging
+## Package receipt
 
-* Verification of readiness for delivery -- `verify_package`
+Processed image package receipt is the validation of delivered processed
+images.
 
-* Verification of checksums for all files -- `verify_checksums`
+### For the impatient
 
-* Verification of correct file name formats -- `verify_filenames`
+Copy processed file to a staging area; for example, to 
 
-* Verification of the presence of expected metadata -- `verify_metadata`
+  * `/Volumes/SPP-Stagin/Processed/KTK_2013-08`
 
-# Ingest of processed images
+The image PACKAGE_DIR should contain a `data` directory:
+
+  * `/Volumes/SPP-Stagin/Processed/KTK_2013-08/data`
+
+Run the `receive` script on the package directory:
+
+      $ receive /Volumes/SPP-Stagin/Processed/KTK_2013-08
+
+### The scripts
+
+The `receive` script runs the following scripts:
+
+  * `verify_package` - confirm delivery has been performed successfully
+
+  * `verify_checksums` - validate delivery manifest
+
+  * `verify_all_filenames` - check all image file names
+
+  * `verify_all_metadata` - check metadata for all images
+
+
+## Image ingest
+
+Processed image ingest is the process of adding received images to  the
+repository.
+
+### For the impatient
+
+Run `ingest_processed` on the package directory:
+
+      $ ingest_processed /Volumes/SPP-Stagin/Processed/KTK_2013-08
+
+This script will copy all files to repository, verify the copy was completed
+successfully, and create a record of each copy. NB: This record is used by the
+check in process and must not be deleted.
+
+### The scripts
+
+The primary script is `ingest_processed` it relies on one other script:
+`ingest_file`. 
+
+The `ingest_file` script takes as its arguments a file, a destination
+direcoty, anda  checksum. It copies the file to the destination, and verifies
+that it was copied correctly using the checksum.
+
+## Package checkin
+
+For each delivered image the checkin process collects metadaa and information
+about the file's location in the repository and uploads that data to KatIkon.
+
+### For the impatient
+
+Run `checkin` on the package directory and, from the KatIkon application, add
+the uploaded checkin data to the KatIkon database.
+
+      $ checkin /Volumes/SPP-Stagin/Processed/KTK_2013-08
+
+This will script will collect and assemble all the metadata and push it up
+to KatIkon.
+
+From within the KatIkon application, go to the 
 
 * Collection of metadata for ingest -- `collect_metadata.sh`
 
