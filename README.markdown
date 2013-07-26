@@ -17,7 +17,7 @@ and validating packages.
 Scripts for managing the ingestion of data and metadata do rely on other
 programs.  The following scripts rely on Ruby 1.9.2 or 1.9.3:
 
-- `bin/prep_metadata`
+- `bin/checkin_prep_metadata`
 - `bin/push_metadata`
 - `bin/read_metadata.rb`
 
