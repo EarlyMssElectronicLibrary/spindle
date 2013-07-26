@@ -373,15 +373,14 @@ the uploaded checkin data to the KatIkon database.
 This will script will collect and assemble all the metadata and push it up
 to KatIkon.
 
-From within the KatIkon application, go to the 
+From within the KatIkon application, go to the Repository Incoming page (link
+not yet formalized), and load the metadata. This process will take some time.
 
-* Collection of metadata for ingest -- `collect_metadata.sh`
+### The scripts
 
-* Upload of ingest metadata
+The `checkin` script calls the following scripts:
 
-* Copying of data to repository -- `ingest_processed.sh`
 
-* Verification of copy -- `ingest_verify_integrity.sh`
 
 # Publication of data to scholars
 

@@ -14,7 +14,7 @@ Specifically, the script has these prerequisites:
 
 It runs the following scripts:
 
-  * collect_metadata
+  * checkin_collect_metadata
   * prep_metadata
   * push_metadata
 
@@ -78,7 +78,7 @@ METADATA_UPLOAD_ERRORS=METADATA_UPLOAD_ERRORS.txt
 # COMMANDS
 THIS_DIR=`dirname $0`
 THIS_DIR=`( cd $THIS_DIR; pwd)`
-COLLECT_METADATA=$THIS_DIR/collect_metadata
+COLLECT_METADATA=$THIS_DIR/checkin_collect_metadata
 PREP_METADATA=$THIS_DIR/prep_metadata
 PUSH_METADATA=$THIS_DIR/push_metadata
 
