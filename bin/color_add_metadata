@@ -253,7 +253,7 @@ do
     fi
     
     if $success ; then
-      rm -f ${shot_seq}*.tif.md5 $exif_file $tiff_list
+      rm -f `dirname $file`/${shot_seq}*.tif.md5 $exif_file $tiff_list
     fi
   done
 
