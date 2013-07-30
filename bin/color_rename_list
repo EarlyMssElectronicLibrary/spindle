@@ -12,7 +12,7 @@ A color file like
 
     0030_000076+MB365UV_CCD_CCC-RC0905.tif
 
-Will be give a new name of:
+will be give a new name of:
 
     0030_000076_PSH_color.tif
 
@@ -101,8 +101,9 @@ fi
 # change to the package dir
 
 file_list=$tmp.1
-# get all non-hidden files
-find $DATA_DIR -type f -name \*_CCD_CCC\*.tif -o -name \*_PSC.tif | sort > $file_list
+# get all color TIFFs and JPEGs
+find $DATA_DIR -type f -name \*_CCD_CCC\*.tif -o -name \*_PSC.tif \
+-o -name \*_CCD_CCC\*.jpg -o -name \*_PSC.jpg | sort > $file_list
 file_count=`wc -l $file_list | awk '{ print $1 }' | sed 's/ *//g'`
 # get the page directory name
 
