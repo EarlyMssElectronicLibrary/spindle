@@ -142,9 +142,9 @@ fi
 rename_output=$tmp.1
 $COLOR_RENAME_LIST $PACKAGE_DIR > $rename_output
 if [ $? -eq 0 ]; then
-  script_line=`grep "^  *sh " $rename_output`
+  script_line=`grep " sh color_rename*.sh" $rename_output | awk '{ print NF }'`
   if [ -n "$script_line" ]; then
-    if ! $script_line ; then
+    if ! sh $script_line ; then
       msg="Error renaming color files"
       color_setup_failure $ERRORS_FILE "$msg"
     fi
