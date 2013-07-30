@@ -149,7 +149,7 @@ if [ $? -eq 0 ]; then
       color_setup_failure $ERRORS_FILE "$msg"
     fi
   else
-    msg="Error finding rename script in \n`cat $rename_output`
+    msg="Error finding rename script in \n`cat $rename_output`"
     color_setup_failure $ERRORS_FILE "$msg"
   fi
 else
