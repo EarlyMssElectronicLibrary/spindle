@@ -228,7 +228,7 @@ do
 
 
   files=
-  jpeg=`echo "$file" | sed 's/\.tif$/.jpg/'
+  jpeg=`echo "$file" | sed 's/\.tif$/.jpg/'`
   if [ -f $jpeg ]; then
     files="$file $jpeg"
   else
@@ -253,7 +253,7 @@ do
     fi
     
     if $success ; then
-      rm -f ${shot_seq}_PSH_color.tif.md5 $exif_file $tiff_list
+      rm -f ${shot_seq}*.tif.md5 $exif_file $tiff_list
     fi
   done
 
