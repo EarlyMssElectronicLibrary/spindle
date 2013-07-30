@@ -53,7 +53,7 @@ color_setup_failure() {
 }
 
 # Function to clean up and print a success message
-color_setup_success() {
+color_setup_success() { 
   css_file=$1
   css_msg="$2"
   echo "`iso_date` $css_msg" > $css_file
