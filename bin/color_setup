@@ -1,0 +1,169 @@
+#!/bin/sh
+
+read -r -d '' HELP <<-'EOF'
+
+For the input CAPTURE_DIR find all color images and setup a color data set 
+in PACKAGE_DIR.
+
+This script will run the following color scripts in order:
+
+* `color_collect_images`
+* `color_generate_jpegs`
+* `color_rename_list` 
+* `color_add_metadata`
+
+The script `color_rename_list` generates a file renaming script. If
+`color_rename_list` exits without an error status, the renaming script will be
+run.
+
+EOF
+
+### TEMPFILES
+# From:
+#   http://stackoverflow.com/questions/430078/shell-script-templates
+# create a default tmp file name
+tmp=${TMPDIR:-/tmp}/prog.$$
+# delete any existing temp files
+trap "rm -f $tmp.?; exit 1" 0 1 2 3 13 15
+# then do
+#   ...real work that creates temp files $tmp.1, $tmp.2, ...
+
+#### USAGE AND ERRORS
+cmd=`basename $0 .sh`
+export SPINDLE_COMMAND=`basename $0`
+export HELP
+source `dirname $0`/spindle_functions
+
+usage() {
+   echo "Usage: $cmd [OPTIONS] CAPTURE_DIR PACKAGE_DIR"
+   echo ""
+   echo "OPTIONS"
+   echo ""
+   echo "   -h             Display help message"
+   echo "   -v             Display Spindle version"
+   echo ""
+}
+
+# Function to note errors and quit the script
+color_setup_failure() {
+  csf_errors_file=$1
+  csf_msg="$2"
+  echo "$csf_msg" > $csf_errors_file
+  fail "$csf_msg"
+}
+
+# Function to clean up and print a success message
+color_setup_success() {
+  css_file=$1
+  css_msg="$2"
+  echo "`iso_date` $css_msg" > $css_file
+  success "$css_msg"
+}
+
+### CONSTANTS
+# the scripts
+this_dir=`dirname $0`
+this_dir=`(cd $this_dir; pwd)`
+# the scripts we'll run
+COLOR_COLLECT_IMAGES=$this_dir/color_collect_images
+COLOR_GENERATE_JPEGS=$this_dir/color_generate_jpegs
+COLOR_RENAME_LIST=$this_dir/color_rename_list
+COLOR_ADD_METADATA=$this_dir/color_add_metadata
+
+
+
+
+### VARIABLES
+# the package dir
+CAPTURE_DIR=
+
+### OPTIONS
+while getopts ":hv" opt; do
+  case $opt in
+    h)
+      usage
+      version
+      help
+      exit 1
+      ;;
+    v)
+      version
+      exit 1
+      ;;
+    \?)
+      echo "ERROR Invalid option: -$OPTARG" >&2
+      echo ""
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND-1))
+
+# Scripts
+
+
+### THESCRIPT
+# grab package directoy and confirm it exists
+CAPTURE_DIR=$1
+if dir_exists $CAPTURE_DIR
+then
+  message "Using CAPTURE_DIR $CAPTURE_DIR"
+else
+  error "CAPTURE_DIR not found"
+fi
+# the package dir
+PACKAGE_DIR=$2
+if dir_exists $PACKAGE_DIR
+then
+  message "Using PACKAGE_DIR $PACKAGE_DIR"
+else
+  error "PACKAGE_DIR not found"
+fi
+
+# ERRORS_FILE
+ERRORS_FILE=$PACKAGE_DIR/COLOR_SETUP_ERRORS.txt
+SUCCESS_FILE=$PACKAGE_DIR/COLOR_SETUP_SUCCESS.txt
+
+# Collect the images
+$COLOR_COLLECT_IMAGES $CAPTURE_DIR $PACKAGE_DIR
+if [ $? -ne 0 ]; then
+  color_setup_failure $ERRORS_FILE "Error collecting color images"
+fi
+
+# Generate JPEGs
+$COLOR_GENERATE_JPEGS $PACKAGE_DIR
+if [ $? -ne 0 ]; then
+  color_setup_failure $ERRORS_FILE "Error generating JPEGs"
+fi
+
+# Rename the files
+rename_output=$tmp.1
+$COLOR_RENAME_LIST $PACKAGE_DIR > $rename_output
+if [ $? -eq 0 ]; then
+  script_line=`grep "^  *sh " $rename_output`
+  if [ -n "$script_line" ]; then
+    if ! $script_line ; then
+      msg="Error renaming color files"
+      color_setup_failure $ERRORS_FILE "$msg"
+    fi
+  else
+    msg="Error finding rename script in \n`cat $rename_output`
+    color_setup_failure $ERRORS_FILE "$msg"
+  fi
+else
+  color_setup_failure $ERRORS_FILE "Error generating rename script."  
+fi
+
+color_setup_success $SUCCESS_FILE "Package preparation complete"
+
+
+### EXIT
+# http://stackoverflow.com/questions/430078/shell-script-templates
+rm -f $tmp.?
+trap 0
+exit 0
+
+
+
