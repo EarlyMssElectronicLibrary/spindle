@@ -133,7 +133,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Generate JPEGs
-$COLOR_GENERATE_JPEGS $PACKAGE_DIR
+$COLOR_GENERATE_JPEGS $PACKAGE_DIR/data $PACKAGE_DIR/data
 if [ $? -ne 0 ]; then
   color_setup_failure $ERRORS_FILE "Error generating JPEGs"
 fi
