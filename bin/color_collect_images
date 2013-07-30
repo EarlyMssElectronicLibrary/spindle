@@ -2,7 +2,7 @@
 
 read -r -d '' HELP <<-'EOF'
 
-For the input CAPTURE_DIR find all color imgage and copy them to a `data`
+For the input CAPTURE_DIR find all color images and copy them to a `data`
 directoy in PACKAGE_DIR. This script will create the `data` directoy in
 PACKAGE_DIR.
 
