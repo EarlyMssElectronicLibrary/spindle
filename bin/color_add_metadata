@@ -126,7 +126,7 @@ OUT_DIR=
 while getopts ":hv" opt; do
   case $opt in
     h)
-      usage 
+      usage
       version
       help
       exit 1
@@ -153,7 +153,7 @@ if dir_exists $PACKAGE_DIR
 then
   message "Using PACKAGE_DIR $PACKAGE_DIR"
 else
-  error "PACKAGE_DIR not found"  
+  error "PACKAGE_DIR not found"
 fi
 
 # The DATA_DIR
@@ -168,8 +168,15 @@ fi
 file_list=$tmp.1
 find $DATA_DIR -name \*.tif > $file_list
 
+# staging file for the sed script; we need two json files, and therefore two
+# sed scripts; one for the TIFF and one for JPEG; the two are identical
+# except for the SourceFile.
+sedstage=$tmp.4
+# Temp file for the sed scripts
 sedscr=$tmp.2
+# Temp file the JSON files
 json_tmp=$tmp.3.json
+# If any files have errors, add them to this list
 errors_found=
 while read file
 do
@@ -201,37 +208,55 @@ do
   keywords=`keywords_to_array "$keywords"`
 
   # GENERATE THE SED SCRIPT
-  echo "s!SOURCE_FILE!$full_path!" >> $sedscr
-  echo "s/CREATORS/$CREATORS/" >> $sedscr
-  echo "s/IPTC_SOURCE/$iptc_source/" >> $sedscr
-  echo "s/OBJECT_NAME/$object_name/" >> $sedscr
-  echo "s/KEYWORDS/$keywords/" >> $sedscr
-  echo "s/BITS_PER_SAMPLE/$BITS_PER_SAMPLE/" >> $sedscr
-  echo "s/SAMPLES_PER_PIXEL/$SAMPLES_PER_PIXEL/" >> $sedscr
-  echo "s/FILE_PROCESSING_ROTATION/$rotation/" >> $sedscr
-  echo "s/JOINING_SAME_PARTS/$JOINING_SAME_PARTS/" >> $sedscr
-  echo "s/JOINING_DIFF_PARTS/$JOINING_DIFF_PARTS/" >> $sedscr 
-  echo "s/PROCESSING_DESCRIPTION/$PROCESSING_DESCRIPTION/" >>$sedscr
-  echo "s/PROCESSING_COMMENTS/$PROCESSING_COMMENTS/" >> $sedscr  
-  echo "s/PROCESSING_PROGRAM/$PROCESSING_PROGRAM/" >> $sedscr
-  echo "s/SOFTWARE_VERSION/$SOFTWARE_VERSION/" >> $sedscr
-  echo "s/CONTRAST_ADJUSTMENT/$CONTRAST_ADJUSTMENT/" >> $sedscr
-  echo "s/TYPE_OF_IMAGE_PROCESSING/$TYPE_OF_IMAGE_PROCESSING/" >> $sedscr
-  echo "s/ID_PARENT_FILE/${parents}/" >> $sedscr
-  
-  # CREATE THE JSON FILE
-  sed -f $sedscr $JSON_TEMPLATE > $json_tmp
-  
-  # APPLY THE METADATA
-  if exiftool -overwrite_original -json=$json_tmp $file ; then
-    message "Added metadata to $file"
-    rm -f $file.md5 $exif_file $tiff_list
+
+  echo "s/CREATORS/$CREATORS/" >> $sedstage
+  echo "s/IPTC_SOURCE/$iptc_source/" >> $sedstage
+  echo "s/OBJECT_NAME/$object_name/" >> $sedstage
+  echo "s/KEYWORDS/$keywords/" >> $sedstage
+  echo "s/BITS_PER_SAMPLE/$BITS_PER_SAMPLE/" >> $sedstage
+  echo "s/SAMPLES_PER_PIXEL/$SAMPLES_PER_PIXEL/" >> $sedstage
+  echo "s/FILE_PROCESSING_ROTATION/$rotation/" >> $sedstage
+  echo "s/JOINING_SAME_PARTS/$JOINING_SAME_PARTS/" >> $sedstage
+  echo "s/JOINING_DIFF_PARTS/$JOINING_DIFF_PARTS/" >> $sedstage
+  echo "s/PROCESSING_DESCRIPTION/$PROCESSING_DESCRIPTION/" >>$sedstage
+  echo "s/PROCESSING_COMMENTS/$PROCESSING_COMMENTS/" >> $sedstage
+  echo "s/PROCESSING_PROGRAM/$PROCESSING_PROGRAM/" >> $sedstage
+  echo "s/SOFTWARE_VERSION/$SOFTWARE_VERSION/" >> $sedstage
+  echo "s/CONTRAST_ADJUSTMENT/$CONTRAST_ADJUSTMENT/" >> $sedstage
+  echo "s/TYPE_OF_IMAGE_PROCESSING/$TYPE_OF_IMAGE_PROCESSING/" >> $sedstage
+  echo "s/ID_PARENT_FILE/${parents}/" >> $sedstage
+
+
+  files=
+  jpeg=`echo "$file" | sed 's/\.tif$/.jpg/'
+  if [ -f $jpeg ]; then
+    files="$file $jpeg"
   else
-    invalid "Error applying metdata to $file"
-    erors_found="$erors_found $file"
+    warning "No JPEG found for $file"
   fi
-  
-  # generate the json file
+
+  success=true
+  for curr_file in $files
+  do
+    # create the sed script
+    cp $sedstage | $sedscr
+    echo "s!SOURCE_FILE!$curr_file!" >> $sedscr
+    # CREATE THE JSON FILE
+    sed -f $sedscr $JSON_TEMPLATE > $json_tmp
+    # APPLY THE METADATA
+    if exiftool -overwrite_original -json=$json_tmp $curr_file ; then
+      message "Added metadata to $curr_file"    
+    else
+      invalid "Error applying metdata to $curr_file"
+      erors_found="$erors_found $curr_file"
+      success=false
+    fi
+    
+    if $success ; then
+      rm -f ${shot_seq}_PSH_color.tif.md5 $exif_file $tiff_list
+    fi
+  done
+
 done < $file_list
 
 if [ -n "$errors_found" ]; then
