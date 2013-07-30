@@ -239,7 +239,7 @@ do
   for curr_file in $files
   do
     # create the sed script
-    cp $sedstage | $sedscr
+    cp $sedstage $sedscr
     echo "s!SOURCE_FILE!$curr_file!" >> $sedscr
     # CREATE THE JSON FILE
     sed -f $sedscr $JSON_TEMPLATE > $json_tmp
