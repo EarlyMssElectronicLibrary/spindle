@@ -380,7 +380,7 @@ not yet formalized), and load the metadata. This process will take some time.
 
 The `checkin` script calls the following scripts:
 
-
+* `checkin_collect_metadata` - collect metadata from all 
 
 # Publication of data to scholars
 
@@ -420,15 +420,38 @@ After a Capture set has been verified, the color images must be collected,
 prepared for delivery, delivered (via the `deliver` script), received,
 ingested, and checked in.
 
-* Do color prep
+Create a directory for the color images; e.g., 
 
-* `deliver`
+      $ mkdir /Volumes/SPP-Staging/ColorImages/2013.05
 
-* `receive`
+Run the script `color_setup`:
 
-* `ingest_processed`
+      $ color_setup /Volumes/SPP-Staging/Capture_Sessions/2013.05 \
+        /Volumes/SPP-Staging/ColorImages/2013.05
 
-* `checkin`
+The script `color_setup` command has this form:
+ 
+      $ color_setup CAPTURE_DIR PACKAGE_DIR
+
+where `CAPTURE_DIR` is the capture directory containing the new color images
+and `PACKAGE_DIR` is the destination for the new color images.
+
+## The scripts
+
+The `color_setup` script will run the following scripts in order:
+
+* `color_collect_images` - collect all color images from the `CAPTURE_DIR` and
+  `add them to the `PACKAGE_DIR`
+
+* `color_generate_jpegs` - for each color TIFF, generate a JPEG
+
+* `color_rename_list` - generate a command file to rename all the color TIFFs
+  to the standard format of `0000_000000_PSC_color.tif`; if the command file
+  was generated without error, `color_setup` will run it to rename all the
+  images
+
+* `color_add_metadata` - for each image, add the metadata requireed to 
+   create a procesed image delivery package
 
 ## Details
 
@@ -442,21 +465,6 @@ ingested,  and cheked in as processed images. To be received, color images
 must be put into  processed delivery packages, and conform with processed
 image metadata and file naming requirements. The `color_-` scripts prepare
 color images from a Capture data set for delivery.
-
-The scripts/steps are:
-
-1. `collect_color_images` - copy color files from Capture directory to package
-    directory; verify copy; get EXIF metadata from corresonding UV DNG (UV exif
-    will    be used to get folio #, reolution, position, cube name)
-
-2. `color_rename_list` - generate a command file to rename all the color TIFFs 
-   to the standard format of `0000_000000_PSC_color.tif`; command file should 
-   be run before other steps are taken
-
-3. `color_generate_jpegs` - for each color TIFF, generate a JPEG
-
-4. `color_add_metadata` - for each image, input the metadata requireed to 
-   create a procesed image delivery package.
 
                      
 
