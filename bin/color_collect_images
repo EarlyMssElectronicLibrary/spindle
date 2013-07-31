@@ -75,13 +75,13 @@ shift $((OPTIND-1))
 ### THESCRIPT
 # grab package directoy and confirm it exists
 CAPTURE_DIR=$1
-if dir_exists $CAPTURE_DIR
+if dir_exists $CAPTURE_DIR >/dev/null
 then
   message "Using CAPTURE_DIR $CAPTURE_DIR"
 else
   error "CAPTURE_DIR not found"
 fi
-# the package dir
+# the package dir >/dev/null
 PACKAGE_DIR=$2
 if dir_exists $PACKAGE_DIR
 then
