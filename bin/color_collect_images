@@ -102,7 +102,8 @@ else
 fi
 
 color_files=$tmp.1
-find $CAPTURE_DIR -type f -name "*_PSC.tif" -o -name "*_CCD_CCC*.tif"  > $color_files
+find $CAPTURE_DIR -type f -name "[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]*_PSC.tif" \
+  -o -name "[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]*_CCD_CCC*.tif"  > $color_files
 count=0
 total=`wc -l $color_files | awk '{ print $1 }'`
 date_cmd="date +%FT%T%z"
