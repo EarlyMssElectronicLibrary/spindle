@@ -157,6 +157,11 @@ else
   color_setup_failure $ERRORS_FILE "Error generating rename script."  
 fi
 
+$COLOR_ADD_METADATA $PACKAGE_DIR
+if [ $? -ne 0 ]; then
+  color_setup_failure $ERRORS_FILE "Error adding image metadata"
+fi
+
 color_setup_success $SUCCESS_FILE "Package preparation complete"
 
 
