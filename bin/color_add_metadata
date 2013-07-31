@@ -178,6 +178,11 @@ sedscr=$tmp.2
 json_tmp=$tmp.3.json
 # If any files have errors, add them to this list
 errors_found=
+count=0
+total=`wc -l $file_list | awk '{ print $1 }'`
+date_cmd="date +%FT%T%z"
+tstamp=`date +%FT%H%M%z`
+report_count $count $total 0
 while read file
 do
   echo $file
@@ -257,6 +262,9 @@ do
     fi
   done
 
+  # COUNT AND REPORT
+  count=$(( $count + 1 ))
+  report_count $count $total 0
 done < $file_list
 
 if [ -n "$errors_found" ]; then
