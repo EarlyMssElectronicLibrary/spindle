@@ -499,8 +499,6 @@ locate_tiff_dir() {
   # let's just find the UV TIFF for the SHOT_SEQUENCE and use its folder.
   ltd_uv_tiff=`locate_uv_tiff $ltd_seq $ltd_cap_dir`
   if [ $? -eq 0 ]; then
-    echo "tiff is $ltd_uv_tiff" >&2
-    echo "tiff dir is `dirname $ltd_uv_tiff`" >&2
     dirname $ltd_uv_tiff
     return 0
   else
