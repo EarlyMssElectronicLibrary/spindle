@@ -107,7 +107,7 @@ shift $((OPTIND-1))
 ### THESCRIPT
 # grab package directoy and confirm it exists
 CAPTURE_DIR=$1
-if dir_exists $CAPTURE_DIR
+if dir_exists $CAPTURE_DIR >/dev/null
 then
   message "Using CAPTURE_DIR $CAPTURE_DIR"
 else
@@ -115,7 +115,7 @@ else
 fi
 # the package dir
 PACKAGE_DIR=$2
-if dir_exists $PACKAGE_DIR
+if dir_exists $PACKAGE_DIR >/dev/null
 then
   message "Using PACKAGE_DIR $PACKAGE_DIR"
 else
@@ -142,7 +142,8 @@ fi
 rename_output=$tmp.1
 $COLOR_RENAME_LIST $PACKAGE_DIR > $rename_output
 if [ $? -eq 0 ]; then
-  script_line=`grep " sh color_rename*.sh" $rename_output | awk '{ print NF }'`
+  script_line=`grep "sh .*color_rename.*.sh" $rename_output | awk '{ print $NF }'`
+  echo "Got script line: $script_line"
   if [ -n "$script_line" ]; then
     if ! sh $script_line ; then
       msg="Error renaming color files"
