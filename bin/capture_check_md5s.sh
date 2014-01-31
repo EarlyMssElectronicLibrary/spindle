@@ -1,7 +1,5 @@
 #!/bin/sh
 
-#!/bin/sh
-
 read -r -d '' HELP <<-'EOF'
 For the input CAPTURE_DIR find each md5.txt file and check it.
 
