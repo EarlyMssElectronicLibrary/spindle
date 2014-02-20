@@ -78,7 +78,7 @@ testFindMD5Command() {
     assertEquals 'Command should be gmd5sum' 'gmd5sum' "$result"
   elif  which md5 > /dev/null ; then
     result=`whichMd5`
-    result=`echo "$result" awk -F '/' '{ print $NF }'`
+    result=`echo "$result" | awk -F '/' '{ print $NF }'`
     assertEquals "Command should be 'md5 -r'" 'md5 -r' "$result"
   fi
 }
