@@ -72,6 +72,12 @@ done
 
 shift $((OPTIND-1))
 
+## VARIABLES
+# Variant file types
+MD5S_TXT=md5s.txt
+SOURCE_MD5S_TXT=[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]-md5s.txt
+V2_MD5S_TXT=md5s_v2.txt
+
 ### THESCRIPT
 # grab package directoy and confirm it exists
 CAPTURE_DIR=$1
@@ -92,26 +98,27 @@ tstamp=`date +%FT%H%M%z`
 report_count $count $total 0
 while read dir
 do
-  md5_file=$dir/md5s.txt
-  v2_file=$dir/md5s_v2.txt
+  md5_file=$dir/$MD5S_TXT
+  v2_file=$dir/$V2_MD5S_TXT
+  source_md5s_file=`ls $dir/$SOURCE_MD5S_TXT`
 
-  # back up any existing md5s.txt file
-  if [ -f $dir/md5s.txt ]; then
-    cp $md5_file $md5_file.$tstamp
-    warning "Backed up md5s.txt"
-    warning "     from $md5_file"
-    warning "       to $md5_file.$tstamp"
-  fi
+  # # back up any existing md5s.txt file
+  # if [ -f $dir/md5s.txt ]; then
+  #   cp $md5_file $md5_file.$tstamp
+  #   warning "Backed up md5s.txt"
+  #   warning "     from $md5_file"
+  #   warning "       to $md5_file.$tstamp"
+  # fi
 
-  if [ -f $v2_file ]; then
-    # 0054_000081+MB365UV_001.dng;100890321;2013-05-20 17:04:49 +0200;cde31091283c72c9f1a903763e3f1c44
-    # cde31091283c72c9f1a903763e3f1c44  0054_000081+MB365UV_001.dng
-    awk -F ';' '{ print $4  "  " $1 }' $v2_file
-  else
-    error_no_exit "File not found: $v2_file"
-  fi
+  # if [ -f $v2_file ]; then
+  #   # 0054_000081+MB365UV_001.dng;100890321;2013-05-20 17:04:49 +0200;cde31091283c72c9f1a903763e3f1c44
+  #   # cde31091283c72c9f1a903763e3f1c44  0054_000081+MB365UV_001.dng
+  #   awk -F ';' '{ print $4  "  " $1 }' $v2_file
+  # else
+  #   error_no_exit "File not found: $v2_file"
+  # fi
 
-  # COUNT AND REPORT
+  # # COUNT AND REPORT
   count=$(( $count + 1 ))
   report_count $count $total 1
 done < $dir_list
