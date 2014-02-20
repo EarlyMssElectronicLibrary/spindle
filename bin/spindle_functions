@@ -169,6 +169,8 @@ valid_capture_dir() {
     error_no_exit "FLATTENED directory not found; expected $vcd_dir/FLATTENED"
     return 1
   fi
+  echo "$vcd_dir"
+  return 0
 }
 
 is_integer() {
@@ -758,6 +760,22 @@ keywords_to_array() {
     { for(i = 1; i < NF; i++) if ( $i ~ "[a-zA-Z0-9]") \
     print "\"" $i "\", " }'`
   echo $kta_vals | sed 's/,$//'
+}
+
+newest() {
+  for in_curr in $@ 
+  do
+    if [ -n "$in_curr" -a -e "$in_curr" ]; then
+      if [ -n "$in_newest" ]; then
+        if [ "$in_curr" -nt "$in_newest" ]; then
+          in_newest="$in_curr"
+        fi
+      else
+        in_newest="$in_curr"
+      fi
+    fi
+  done
+  echo "$in_newest"
 }
 
 

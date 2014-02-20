@@ -15,11 +15,41 @@ tearDown() {
 }
 
 suite() {
-  suite_addTest "testCmpActualToLoggedFileMissingFromLog"
-  suite_addTest "testCmpActualToLoggedMatch"
-  suite_addTest "testCmpActualToLoggedExtraLoggedFile"
-  suite_addTest "testFindMD5Command"
-  suite_addTest "testReturnsExpectedFilenameCode"
+  suite_addTest "testNewest"
+  # suite_addTest "testCmpActualToLoggedFileMissingFromLog"
+  # suite_addTest "testCmpActualToLoggedMatch"
+  # suite_addTest "testCmpActualToLoggedExtraLoggedFile"
+  # suite_addTest "testFindMD5Command"
+  # suite_addTest "testReturnsExpectedFilenameCode"
+}
+
+testNewest() {
+  time_file1=$tmp.1
+  time_file2=$tmp.2
+  time_file3=$tmp.3
+  touch -t 01010001 $time_file1
+  touch -t 01010002 $time_file2
+  touch -t 01010003 $time_file3
+  n=`newest $time_file1 $time_file2 $time_file3`
+  assertEquals $n $time_file3
+
+  n=`newest $time_file1 $time_file3 $time_file2`
+  assertEquals $n $time_file3
+
+  n=`newest $time_file3 $time_file2 $time_file1`
+  assertEquals $n $time_file3
+
+  n=`newest "" $time_file2 $time_file1`
+  assertEquals $n $time_file2  
+
+  n=`newest $time_file3 $time_file2 ""`
+  assertEquals $n $time_file3
+
+  n=`newest "" "" $time_file1`
+  assertEquals $n $time_file1
+
+  n=`newest "" $time_file2 ""`
+  assertEquals $n $time_file2
 }
 
 testCmpActualToLoggedFileMissingFromLog() {
