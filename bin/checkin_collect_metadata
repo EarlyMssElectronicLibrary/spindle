@@ -122,53 +122,9 @@ find data -type f ! -name .\* > $file_list
 # get the page directory name
 base_dir=`get_full_path $PACKAGE_DIR`
 base_dir=`basename $base_dir`
-json_base="${base_dir}_metadata_${approve_date}"
-json_tmp=$tmp.2
+json_base="${base_dir}_${approve_date}"
 
-# get file size in bytes, then make sure we get everything else
-exif_opts="-fileSize# -all"
-
-
-# TODO Divvy up JSON files by SHOT SEQUENCE
-# Sometimes a shot sequence will have problems loading into KI; it's easier to
-# handle if each JSON file is just for one shot sequence
-count=0  # which file we're on
-chunk=0  # chunk in to json files of 200 images ea.
-total=`wc -l $file_list | awk '{ print $1 }'`
-message "Reading image files"
-report_count $count $total 100
-while read file
-do
-  count=$(( $count + 1 ))
-  # if json_tmp is empty, then this is the first entry
-  if [ ! -s $json_tmp ]; then
-    # first file; replace last line "}]" with "},"
-    exiftool -j $exif_opts $file | sed '$ s/\]$/,/' >> $json_tmp
-  else
-    # replace first line "[{" with "{"
-    # replace last line "}]" with "},"
-    exiftool -j $exif_opts $file | sed -e '$ s/\]$/,/' -e '1 s/^\[//' >> $json_tmp
-  fi
-  if [ "$(( $count % 200 ))" -eq 0 ]; then
-    json_file="${json_base}_`printf "%03d" $chunk`.json"
-    # last line should be "}]"; make it so
-    sed '$ s/,$/]/' $json_tmp > $json_file
-    message "Wrote JSON file to: `pwd`/$json_file"
-    report_count $count $total 0
-    # empty the temp file
-    : > $json_tmp
-    chunk=$(( $chunk + 1 ))
-  fi
-done < $file_list
-
-# if we have any data left over, put it in a file
-if [ -s $json_tmp ]; then
-  # last line should be "}]"; make it so
-  json_file="${json_base}_`printf "%03d" $chunk`.json"
-  sed '$ s/,$/]/' $json_tmp > $json_file
-  message "Wrote JSON file to: `pwd`/$json_file"
-  message "`$date_cmd`  `printf "%${width}d" $count`/$total files read"
-fi
+`dirname $0`/collect_metadata $file_list $json_base
   
 
 ### EXIT

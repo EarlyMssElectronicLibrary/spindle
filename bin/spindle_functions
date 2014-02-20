@@ -151,6 +151,22 @@ package_dir() {
   return 0
 }
 
+# make sure $1 is a valid capture dir
+valid_capture_dir() {
+  vcd_dir=$1
+  if [ -z "$vcd_dir" ]; then
+    error_no_exit "Please provide a CAPTURE_DIR"
+    return 1    
+  elif [ ! -d "$vcd_dir" ]; then
+    error_no_exit "CAPTURE_DIR not found: $vcd_dir"
+    return 1
+  fi
+}
+
+is_integer() {
+  [[ "$1" =~ ^\ *[0-9][0-9]*\ *$ ]]
+}
+
 file_exists() {
   fe_file=$1
   fe_name=$2

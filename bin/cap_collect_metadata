@@ -1,0 +1,138 @@
+#!/bin/sh
+
+read -r -d '' HELP <<-'EOF' Collect metadata to upload to the KatIkon system
+for capture images files in CAPTURE_DIR. Two sets of JSON files will be
+created for capture images and named using the SESSION_TAG: one for flattened
+TIFFs and one for DNGs.  JSON metadata will be written out in chunks with 200
+records for each JSON file.
+
+For example,
+
+    $ cap_collect_metadata /Volumes/DriveName/Capture 2013.05
+    Wrote /Volumes/DriveName/Capture/2013.05_20140218_metadata_001.json
+    Wrote /Volumes/DriveName/Capture/2013.05_20140218_metadata_002.json
+    Wrote /Volumes/DriveName/Capture/2013.05_20140218_metadata_003.json
+    ...
+
+A capture folder should have the following structure.
+
+      Capture/
+        FLATTENED/
+          0050_000001/
+            0050_000001+MB365UV_001_F.tif
+            0050_000001+MB455RB_002_F.tif
+            ...
+          0050_000002/
+          0052_000001/
+          0052_000002/
+          0052_000003/
+          ...
+        RAWS
+          0050_000001/
+            0050_000001+MB365UV_001.dng
+            0050_000001+MB455RB_002.dng
+            ...
+          0050_000002/
+          0052_000001/
+          0052_000002/
+          0052_000003/
+          ...
+
+EOF
+
+### TEMPFILES
+# From:
+#   http://stackoverflow.com/questions/430078/shell-script-templates
+# create a default tmp file name
+tmp=${TMPDIR:-/tmp}/prog.$$
+# delete any existing temp files
+trap "rm -f $tmp.?; exit 1" 0 1 2 3 13 15
+# then do
+#   ...real work that creates temp files $tmp.1, $tmp.2, ...
+
+#### USAGE AND ERRORS
+cmd=`basename $0 .sh`
+export SPINDLE_COMMAND=$cmd
+source `dirname $0`/spindle_functions
+
+usage() {
+   echo "Usage: $cmd [-h] CAPTURE_DIR SESSION_TAG"
+   echo ""
+   echo "OPTIONS"
+   echo ""
+   echo "   -h             Display help message"
+   echo "   -v             Display Spindle version"
+   echo ""
+}
+
+### CONSTANTS
+# the name of the manifest in each dir
+MANIFEST_FILE=manifest-md5s.txt
+
+### VARIABLES
+# the package dir
+CAPTURE_DIR=
+# the data directory
+SESSION_TAG=
+
+
+### OPTIONS
+while getopts ":hv" opt; do
+  case $opt in
+    h)
+      usage 
+      version
+      help
+      exit 1
+      ;;
+    v)
+      version
+      exit 1
+      ;;
+    \?)
+      echo "ERROR Invalid option: -$OPTARG" >&2
+      echo ""
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND-1))
+
+### THESCRIPT
+# grab package directoy and confirm it exists
+CAPTURE_DIR=`dir_exists $1`
+if [ $? -ne 0 ]; then
+  error "Error finding capture directory: '$CAPTURE_DIR'"
+else
+  message "Using CAPTURE_DIR: $CAPTURE_DIR"
+fi
+
+SESSION_TAG="$2"
+if [ -n "$SESSION_TAG" ]; then
+  message "Using SESSION_TAG: '$SESSION_TAG'"
+else
+  error "Please provide a SESSION_TAG"
+fi 
+
+cd $CAPTURE_DIR
+
+file_list=$tmp.1
+# get all non-hidden files
+find data -type f ! -name .\* > $file_list
+# get the page directory name
+base_dir=`get_full_path $PACKAGE_DIR`
+base_dir=`basename $base_dir`
+json_base="${base_dir}_${approve_date}"
+
+`dirname $0`/collect_metadata $file_list $json_base
+  
+
+### EXIT
+# http://stackoverflow.com/questions/430078/shell-script-templates
+rm -f $tmp.?
+trap 0
+exit 0
+
+
