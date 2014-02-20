@@ -161,6 +161,14 @@ valid_capture_dir() {
     error_no_exit "CAPTURE_DIR not found: $vcd_dir"
     return 1
   fi
+  if [ ! -d "$vcd_dir/RAWS" ]; then
+    error_no_exit "RAWS directory not found; expected $vcd_dir/RAWS"
+    return 1
+  fi
+  if [ ! -d "$vcd_dir/FLATTENED" ]; then
+    error_no_exit "FLATTENED directory not found; expected $vcd_dir/FLATTENED"
+    return 1
+  fi
 }
 
 is_integer() {
