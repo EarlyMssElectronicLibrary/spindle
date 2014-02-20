@@ -32,6 +32,8 @@ export SPINDLE_COMMAND=`basename $0`
 export HELP
 source `dirname $0`/spindle_functions
 
+## FUNCTIONS
+
 usage() {
    echo "Usage: $cmd [OPTIONS] CAPTURE_DIR"
    echo ""
@@ -80,8 +82,8 @@ V2_MD5S_TXT=md5s_v2.txt
 
 ### THESCRIPT
 # grab package directoy and confirm it exists
-CAPTURE_DIR=$1
-if dir_exists $CAPTURE_DIR
+CAPTURE_DIR="$1"
+if dir_exists "$CAPTURE_DIR" >/dev/null
 then
   message "Using CAPTURE_DIR $CAPTURE_DIR"
 else
@@ -90,7 +92,7 @@ fi
 
 dir_list=$tmp.1
 find $CAPTURE_DIR -type d -name "[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]" > $dir_list
-cat $dir_list
+# cat $dir_list
 count=0
 total=`wc -l $dir_list | awk '{ print $1 }'`
 date_cmd="date +%FT%T%z"
@@ -100,23 +102,43 @@ while read dir
 do
   md5_file=$dir/$MD5S_TXT
   v2_file=$dir/$V2_MD5S_TXT
-  source_md5s_file=`ls $dir/$SOURCE_MD5S_TXT`
+  source_md5s_file=`ls $dir/$SOURCE_MD5S_TXT 2>/dev/null`
 
-  # # back up any existing md5s.txt file
-  # if [ -f $dir/md5s.txt ]; then
-  #   cp $md5_file $md5_file.$tstamp
-  #   warning "Backed up md5s.txt"
-  #   warning "     from $md5_file"
-  #   warning "       to $md5_file.$tstamp"
-  # fi
-
-  # if [ -f $v2_file ]; then
-  #   # 0054_000081+MB365UV_001.dng;100890321;2013-05-20 17:04:49 +0200;cde31091283c72c9f1a903763e3f1c44
-  #   # cde31091283c72c9f1a903763e3f1c44  0054_000081+MB365UV_001.dng
-  #   awk -F ';' '{ print $4  "  " $1 }' $v2_file
-  # else
-  #   error_no_exit "File not found: $v2_file"
-  # fi
+  newest_file=`newest "$md5_file" "$v2_file" "$source_md5s_file"`
+  if [ ! -n "$newest_file" ]; then
+    warning "No md5 file found; generating manifest on the fly"
+    md5_cmd=`whichMd5`
+    (
+      cd $dir
+      for x in `ls *.tif *.dng 2>/dev/null`
+      do
+        $md5_cmd $x
+      done > md5s.txt
+      message "Wrote `pwd`/md5s.txt"
+    )
+  elif [ "$newest_file" = "$md5_file" ]; then
+    message "Newest manifest is $md5_file"
+    message "No conversion needed"
+  elif [ "$newest_file" = "$source_md5s_file" ]; then
+    message "Newest manifest is $source_md5s_file"
+    message "Copying to canonical name: $md5_file"
+    cp -v "$source_md5s_file" "$md5_file"
+  elif [ "$newest_file" = "$v2_file" ]; then
+    message "Newest manifest is $v2_file"
+    message "Converting $v2_file to $md5_file"
+    if [ -f "$md5_file" ]; then
+      cp -v $md5_file $md5_file.$tstamp
+      warning "Backed up md5s.txt"
+      warning "     from $md5_file"
+      warning "       to $md5_file.$tstamp"
+    fi
+    # 0054_000081+MB365UV_001.dng;100890321;2013-05-20 17:04:49 +0200;cde31091283c72c9f1a903763e3f1c44
+    # cde31091283c72c9f1a903763e3f1c44  0054_000081+MB365UV_001.dng
+    awk -F ';' '{ print $4 "  " $1 }' $v2_file > $md5_file
+  else
+    # no way we should get here
+    error_no_exit "Unexpected newest manifest: $newest_file"
+  fi
 
   # # COUNT AND REPORT
   count=$(( $count + 1 ))
