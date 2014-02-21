@@ -56,9 +56,9 @@ usage() {
 this_dir=`dirname $0`
 this_dir=`(cd $this_dir; pwd)`
 # the scripts we'll run
-CAP_FIX_MANIFESTS="${this_dir}/capture_convert_md5s.sh"
-CAP_CHECK_MANIFEST="${this_dir}/capture_check_md5s.sh"
-CAP_COLLECT_METADATA="${this_dir}/cap_collect_metadata"
+CAP_FIX_MANIFESTS="${this_dir}/capture_prep_md5s"
+CAP_CHECK_MANIFEST="${this_dir}/capture_check_md5s"
+CAP_COLLECT_METADATA="${this_dir}/capture_collect_metadata"
 CAP_INSPECT_METADATA="${this_dir}/capture_inspect_metadata"
 
 ### VARIABLES
