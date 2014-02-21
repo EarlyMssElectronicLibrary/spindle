@@ -466,5 +466,20 @@ must be put into  processed delivery packages, and conform with processed
 image metadata and file naming requirements. The `color_-` scripts prepare
 color images from a Capture data set for delivery.
 
+# Capture Receipt
+
+Run 
+
+`receive_capture`
+
+This runs:
+
+  - `capture_convert_md5s.sh` - make sure that there's an `md5s.txt` file in each shot  
+    sequence folder
+  - `capture_check_md5s.sh` - verify all the checksums
+  - `cap_collect_metadata` - collect metadata on all the files
+  - `cap_inspect_metadata` - go through the metadata and make sure everything
+    is sensible; if Source is incorrect or missing, fix it
+
                      
 
