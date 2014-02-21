@@ -102,32 +102,38 @@ shift $((OPTIND-1))
 
 ### THESCRIPT
 # grab package directoy and confirm it exists
-CAPTURE_DIR=`dir_exists $1`
-if [ $? -ne 0 ]; then
-  error "Error finding capture directory: '$CAPTURE_DIR'"
-else
+CAPTURE_DIR="$1"
+if valid_capture_dir $1 ; then
   message "Using CAPTURE_DIR: $CAPTURE_DIR"
+else
+  error "Please provide a valid capture dir: '$CAPTURE_DIR'"
 fi
 
+export logfile="`get_full_path $CAPTURE_DIR`/RECPT_metadata.log"
+
 SESSION_TAG="$2"
-if [ -n "$SESSION_TAG" ]; then
-  message "Using SESSION_TAG: '$SESSION_TAG'"
-else
-  error "Please provide a SESSION_TAG"
-fi 
+if ! valid_session_tag "$SESSION_TAG"; then
+  error "Please provide a valid SESSION_TAG: '$SESSION_TAG'"
+fi
 
-cd $CAPTURE_DIR
+this_dir=`dirname $0`
+this_dir=`get_full_path "$this_dir"`
 
-file_list=$tmp.1
-# get all non-hidden files
-find data -type f ! -name .\* > $file_list
-# get the page directory name
-base_dir=`get_full_path $PACKAGE_DIR`
-base_dir=`basename $base_dir`
-json_base="${base_dir}_${approve_date}"
+( 
+  cd $CAPTURE_DIR
 
-`dirname $0`/collect_metadata $file_list $json_base
-  
+  for kind in RAWS FLATTENED
+  do
+    file_list=$tmp.1
+    # get all the RAW files
+    find $kind -path "*[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]*" \
+      \( -iname \*.dng -o -iname \*.tif \) > $file_list
+    # get the page directory name
+    json_base="CAPTURE_${kind}_${SESSION_TAG}"
+
+    ${this_dir}/collect_metadata $file_list $json_base
+  done
+)
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
