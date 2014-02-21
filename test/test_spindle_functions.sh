@@ -14,14 +14,14 @@ tearDown() {
   rm -f $tmp.?
 }
 
-suite() {
-  suite_addTest "testNewest"
-  # suite_addTest "testCmpActualToLoggedFileMissingFromLog"
-  # suite_addTest "testCmpActualToLoggedMatch"
-  # suite_addTest "testCmpActualToLoggedExtraLoggedFile"
-  # suite_addTest "testFindMD5Command"
-  # suite_addTest "testReturnsExpectedFilenameCode"
-}
+# suite() {
+#   suite_addTest "testNewest"
+#   suite_addTest "testCmpActualToLoggedFileMissingFromLog"
+#   suite_addTest "testCmpActualToLoggedMatch"
+#   suite_addTest "testCmpActualToLoggedExtraLoggedFile"
+#   suite_addTest "testFindMD5Command"
+#   suite_addTest "testReturnsExpectedFilenameCode"
+# }
 
 testNewest() {
   time_file1=$tmp.1
