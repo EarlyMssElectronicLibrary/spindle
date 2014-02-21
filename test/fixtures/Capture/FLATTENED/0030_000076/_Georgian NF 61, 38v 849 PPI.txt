@@ -1,0 +1,72 @@
+NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+NOTE
+NOTE EXIF data for 0030_000076+MB365UV_001.dng
+NOTE This file may have been copied to this directory from another
+NOTE This metadata may not apply to files in this directory
+NOTE
+NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+
+ExifTool Version Number         : 8.83
+File Name                       : 0030_000076+MB365UV_001.dng
+Directory                       : E:/CAPTURE/RAWS/0030_000076
+File Size                       : 75 MB
+File Modification Date/Time     : 2012:05:28 19:42:20+02:00
+File Permissions                : rw-rw-rw-
+File Type                       : DNG
+MIME Type                       : image/x-adobe-dng
+Exif Byte Order                 : Little-endian (Intel, II)
+Subfile Type                    : Full-resolution Image
+Image Width                     : 7216
+Image Height                    : 5412
+Bits Per Sample                 : 16
+Compression                     : Uncompressed
+Photometric Interpretation      : Linear Raw
+Make                            : MegaVision S/E6
+Camera Model Name               : E6 SN:23R171398200/Lens: HyperSpectral UV-IR_APOCHROMAT (0.9780 secs)
+Strip Offsets                   : 28256
+Orientation                     : Rotate 270 CW
+Samples Per Pixel               : 1
+Rows Per Strip                  : 5412
+Strip Byte Counts               : 78105984
+X Resolution                    : 849
+Y Resolution                    : 849
+Planar Configuration            : Chunky
+Resolution Unit                 : inches
+Modify Date                     : 2012:05:28 19:42:19
+Copyright                       : 
+Current IPTC Digest             : f23b26820986223301429e42b0256192
+Application Record Version      : 2
+Caption-Abstract                : ID
+Object Name                     : Georgian NF 61, 38v
+Source                          : 0030_000076
+Original Transmission Reference :    -   -
+Keywords                        : Resolution (PPI): 849, Position: 76,  ,  ,  ,  ,  ,  ,  ,  ,  ,
+Exposure Time                   : 1
+F Number                        : 16.0
+Spectral Sensitivity            : (MB365UV, 0.932s, 100.0w) (MB365UV, 0.932s, 100.0w)
+ISO                             : 100
+Exif Version                    : 0220
+Date/Time Original              : 2012:05:28 19:42:16
+Create Date                     : 2012:05:28 19:42:19
+Max Aperture Value              : 1.$
+Flash                           : Fired
+Focal Length                    : 120.0 mm
+Color Space                     : Unknown (0)
+Exif Image Width                : 7216
+Exif Image Height               : 5412
+File Source                     : Digital Camera
+Scene Type                      : Directly photographed
+Image Unique ID                 : 64538
+Sensing Method                  : Monochrome area
+DNG Version                     : 1.1.0.0
+DNG Backward Version            : 1 1 0 0
+Unique Camera Model             : MegaVision S/E6
+Black Level                     : 0
+White Level                     : 4095
+Default Crop Origin             : 0 0
+Default Crop Size               : 7216 5412
+Aperture                        : 16.0
+Image Size                      : 7216x5412
+Shutter Speed                   : 1
+Focal Length                    : 120.0 mm
+Light Value                     : 8.0
