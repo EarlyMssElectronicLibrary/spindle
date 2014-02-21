@@ -34,7 +34,11 @@ format_code_message() {
 print_message() {
   msg_type=$1
   msg=$2
-  echo "`printf "%-23s" "[$SPINDLE_COMMAND]"` `printf "%-12s" $msg_type`  $msg"
+  if [ -n "$logfile" ]; then
+    echo "`printf "%-23s" "[$SPINDLE_COMMAND]"` `printf "%-12s" $msg_type`  $msg" | tee -a $logfile
+  else
+    echo "`printf "%-23s" "[$SPINDLE_COMMAND]"` `printf "%-12s" $msg_type`  $msg"
+  fi
 }
 
 version() {
@@ -89,16 +93,16 @@ help() {
 
 ### LOGGING
 # the default log file
-logfile=LOG_${SPINDLE_COMMAND}.log
+# logfile=LOG_${SPINDLE_COMMAND}.log
 
 log() {
-    echo "`date +%Y-%m-%dT%H:%M:%S` [$SPINDLE_COMMAND] $1" >> $logfile
+    echo "`date +%Y-%m-%dT%H:%M:%S` [$SPINDLE_COMMAND] $1" | tee -a $logfile
 }
 
 error_file=ERROR_${SPINDLE_COMMAND}.log
 
 log_error() {
-  echo "`date +%Y-%m-%dT%H:%M:%S` [$SPINDLE_COMMAND] $1" >> $error_file
+  echo "`date +%Y-%m-%dT%H:%M:%S` [$SPINDLE_COMMAND] $1" | tee -a $error_file
 }
 
 log_invalid() {
@@ -151,25 +155,40 @@ package_dir() {
   return 0
 }
 
+# Make sure session is only alnum and _-.
+valid_session_tag() {
+  vst_tag="$1"
+  if [ -n "$vst_tag" ]; then
+    if [[ "$vst_tag" =~ ^[a-zA-Z0-9_.-]*$ ]]; then
+      return 0
+    else
+      echo "SESSION_TAG may contain only a-z, A-Z, 0-9, _, and -: $SESSION_TAG" >&2
+      return 1
+    fi
+  else
+    echo "Please provide a SESSION_TAG" >&2
+    return 1
+  fi 
+}
+
 # make sure $1 is a valid capture dir
 valid_capture_dir() {
   vcd_dir=$1
   if [ -z "$vcd_dir" ]; then
-    error_no_exit "Please provide a CAPTURE_DIR"
+    echo "Please provide a CAPTURE_DIR" >&2
     return 1    
   elif [ ! -d "$vcd_dir" ]; then
-    error_no_exit "CAPTURE_DIR not found: $vcd_dir"
+    echo "CAPTURE_DIR not found: $vcd_dir" >&2
     return 1
   fi
   if [ ! -d "$vcd_dir/RAWS" ]; then
-    error_no_exit "RAWS directory not found; expected $vcd_dir/RAWS"
+    echo "RAWS directory not found; expected $vcd_dir/RAWS" >&2
     return 1
   fi
   if [ ! -d "$vcd_dir/FLATTENED" ]; then
-    error_no_exit "FLATTENED directory not found; expected $vcd_dir/FLATTENED"
+    echo "FLATTENED directory not found; expected $vcd_dir/FLATTENED" >&2
     return 1
   fi
-  echo "$vcd_dir"
   return 0
 }
 
@@ -348,15 +367,59 @@ write_file_list() {
 
 # determine the md5sum command to use
 whichMd5() {
-  MD5_CMD=
+  vmm_md5=
   if which md5sum >/dev/null 2>&1 ; then
-    MD5_CMD=`which md5sum`
+    vmm_md5=`which md5sum`
   elif which gmd5sum >/dev/null 2>&1 ; then
-    MD5_CMD=`which gmd5sum`
+    vmm_md5=`which gmd5sum`
   elif which md5 >/dev/null 2>&1 ; then
-    MD5_CMD="`which md5` -r"
+    vmm_md5="`which md5` -r"
   fi
-  echo $MD5_CMD
+  echo $vmm_md5
+}
+
+verifyMd5Manifest() {
+  vmm_manifest="$1"
+  if [ ! -f "$vmm_manifest" ]; then
+    error "Could not find manifest $vmm_manifest"
+  fi
+  vmm_md5=
+  if which md5sum >/dev/null 2>&1 ; then
+    vmm_md5=`which md5sum`
+  elif which gmd5sum >/dev/null 2>&1 ; then
+    vmm_md5=`which gmd5sum`
+  elif which md5 >/dev/null 2>&1 ; then
+    vmm_md5="`which md5`"
+  else
+    error "No md5 command found"
+  fi
+
+  if [[ "$vmm_md5" =~ md5sum ]]; then
+    $vmm_md5 -c "$vmm_manifest"
+  else
+    while read vmm_line
+    do
+      vmm_checksum=`echo "$vmm_line" | awk '{ print $1 }'`
+      vmm_path=`echo "$vmm_line" | sed "s/^${vmm_checksum} [ *]*//"`
+      if [ -f "$vmm_path" ]; then
+        vmm_result=`$vmm_md5 -r "$vmm_path" | awk '{ print $1 }'`  
+        if [ "$vmm_checksum" = "$vmm_result" ]; then
+          echo "${vmm_path}: OK"
+        else
+          vmm_errors="$vmm_errors $vmm_path"
+          echo "${vmm_path}: FAILED"
+        fi
+      else
+        echo "${vmm_path}: FAILED (no such file)"
+        vmm_errors="$vmm_errors $vmm_path"
+      fi
+    done < "$vmm_manifest"
+    if [ -n "$vmm_errors" ]; then
+      return 1
+    else
+      return 0
+    fi
+  fi
 }
 
 # Extract the MD5 checksum for TARGET_FILE from MD5S_TXT.
