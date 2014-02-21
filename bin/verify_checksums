@@ -206,7 +206,7 @@ if echo "$MD5_CMD" | grep "md5sum" >/dev/null 2>&1 ; then
     success "ALL_VALID"
   else
     log "ERRORS_FOUND"
-    message "Errors logged to `pwd`/$logfile"x
+    message "Errors logged to `pwd`/$logfile"
     fail "ERRORS_FOUND"
   fi
 else
