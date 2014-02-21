@@ -1,0 +1,208 @@
+#!/bin/sh
+
+read -r -d '' HELP <<-'EOF'
+For CAPTURE_DIR, copy all files with their checksums to the repository making a
+record of what files are copied and where.
+
+.
+├── CAPTURE_FLATTENED_201401_metadata_000.json
+├── CAPTURE_RAWS_201401_metadata_000.json
+├── FLATTENED
+│   ├── 0031_000001
+│   │   ├── 0031_000001+MB365UV_001_F.tif
+│   │   ├── 0031_000001+MB455RB_002_F.tif
+│   │   ├── 0031_000001+MB470LB_003_F.tif
+│   │   ├── 0031_000001+MB505Cy_004_F.tif
+│   │   ├── 0031_000001+MB535Gr_005_F.tif
+│   │   ├── 0031_000001+MB570Am_006_F.tif
+│   │   ├── 0031_000001+MB625Rd_007_F.tif
+│   │   ├── 0031_000001+MB700IR_008_F.tif
+│...
+
+
+EOF
+
+### TEMPFILES
+# From:
+#   http://stackoverflow.com/questions/430078/shell-script-templates
+# create a default tmp file name
+tmp=${TMPDIR:-/tmp}/prog.$$
+# delete any existing temp files
+trap "rm -f $tmp.?; exit 1" 0 1 2 3 13 15
+# then do
+#   ...real work that creates temp files $tmp.1, $tmp.2, ...
+
+#### USAGE AND ERRORS
+cmd=`basename $0 .sh`
+export SPINDLE_COMMAND=`basename $0`
+export HELP
+source `dirname $0`/spindle_functions
+
+usage() {
+   echo "Usage: $cmd [OPTIONS] CAPTURE_DIR REPOSITORY_DRIVE SESSION_TAG"
+   echo ""
+   echo "OPTIONS"
+   echo ""
+   echo "   -h             Display help message"
+   echo "   -v             Display Spindle version"
+   echo ""
+}
+
+### CONSTANTS
+REPO_CAPT_DIR=Repository/Captured
+RECEIPT_APPROVED=RECEIPT_APPROVED.txt
+INGESTION_COMPLETE=IMAGE_INGESTION_COMPLETE.txt
+
+### VARIABLES
+# the capture dir
+CAPTURE_DIR=
+# the log of what we've ingested
+INGEST_LOG=
+# the drive where the repo is
+REPO_VOLUME=
+# the full path to the processed file folder
+REPO_PATH=
+
+### OPTIONS
+while getopts ":hv" opt; do
+  case $opt in
+    h)
+      usage 
+      version
+      help
+      exit 1
+      ;;
+    v)
+      version
+      exit 1
+      ;;
+    \?)
+      echo "ERROR Invalid option: -$OPTARG" >&2
+      echo ""
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND-1))
+
+### THESCRIPT
+# grab package directoy and confirm it exists
+CAPTURE_DIR="$1"
+if ! valid_capture_dir "$CAPTURE_DIR"; then
+  error "Error finding capture directory"
+fi
+
+REPO_VOLUME=`repo_volume $2`
+if [ $? -ne 0 ]; then
+  error "Error finding repository volume"
+fi
+
+SESSION_TAG=$3
+if ! valid_session_tag "$SESSION_TAG" ; then
+  error "Please provide a valid SESSION_TAG: '$SESSION_TAG'"
+fi
+
+this_dir=`dirname $0`
+this_dir=`get_full_path $this_dir`
+INFEST_FILE_COMMAND=$this_dir/ingest_file
+
+# TODO: Must have RECEIPT_APPROVED
+if [ -f $CAPTURE_DIR/$RECEIPT_APPROVED ]; then
+  message "Package approved: `cat $CAPTURE_DIR/$RECEIPT_APPROVED`"
+else
+  error_no_exit "File not found: $CAPTURE_DIR/$RECEIPT_APPROVED"
+  error "Capture data has not been approved"
+fi
+
+REPO_PATH=$REPO_VOLUME/$REPO_CAPT_DIR
+# TODO: REPO_VOLUME/REPO_PROC_DIR must exist
+if [ -d $REPO_PATH ]; then
+  message "Found repository directory: $REPO_PATH"
+else
+  error "Repository folder not found $REPO_PATH"
+fi
+
+REPO_RAWS=$REPO_PATH/RAWS
+if [ ! -d $REPO_RAWS ]; then
+  warning "Creating dir: $REPO_RAWS"
+  mkdir $REPO_RAWS
+fi
+
+REPO_FLAT="$REPO_PATH/FLATTENED"
+if [ ! -d $REPO_FLAT ]; then
+  warning "Creating dir: $REPO_FLAT"
+  mkdir $REPO_FLAT
+fi
+
+### INGEST FILES
+# change to the package dir
+if [ "$CAPTURE_DIR" != "." ]; then
+  cd "$CAPTURE_DIR"
+fi
+
+# name the ingest log
+INGEST_LOG=CAPT_${SESSION_TAG}_ingest_list_`date +%Y%m%dT%H%M%S%z`.log
+:>$INGEST_LOG
+INGEST_ERRORS=CAPT_${SESSION_TAG}_ingest_errors_`date +%Y%m%dT%H%M%S%z`.log
+:>$INGEST_ERRORS
+
+file_list=$tmp.1
+find RAWS FLATTENED -path "*[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]*" \
+  \( -iname \*.dng -o -iname \*.tif \) > $file_list
+
+count=0
+total=`wc -l $file_list | awk '{ print $1 }'`
+date_cmd="date +%FT%T%z"
+report_count $count $total 0
+while read file
+do
+  base=`basename $file`
+  shot_seq=`echo $base | awk -F_ '{ print $1 "_" $2 }'`
+  if [[ "$file" =~ RAWS ]]; then
+    dest=$REPO_RAWS/$shot_seq
+  else
+    dest=$REPO_FLAT/$shot_seq
+  fi
+  if [ ! -d $dest ]; then
+    mkdir $dest
+  fi
+
+  # find the checksum
+  source_dir=`dirname $file`
+  manifest=$source_dir/md5s.txt
+  checksum=`grep "${base}$" $manifest | awk '{ print $1 }'`
+  # copy the file
+  # COPY
+  copy_line=`$INFEST_FILE_COMMAND $file $dest $checksum`
+  if [ $? -eq 0 ]; then
+    valid $dest_file
+    echo $copy_line >> $INGEST_LOG
+  else
+    invalid "Deleting  $dest_file"
+    echo $copy_line >> $INGEST_ERRORS
+  fi
+  copy_line=
+
+  # COUNT AND REPORT
+  count=$(( $count + 1 ))
+  report_count $count $total 0 $file
+done < $file_list
+
+if [ -s $INGEST_ERRORS ]; then
+  invalid "Copy errors; see $INGEST_ERRORS"
+else
+  valid "ALL files copied correctly"
+  rm $INGEST_ERRORS
+fi 
+
+iso_date > $INGESTION_COMPLETE
+
+### EXIT
+# http://stackoverflow.com/questions/430078/shell-script-templates
+rm -f $tmp.?
+trap 0
+exit 0
+
+
