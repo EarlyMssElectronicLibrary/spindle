@@ -90,9 +90,14 @@ print_metadata_error() {
   reason="$1"
   bad_tag="$2"
   file=$3
+  pme_msg="$4"
 
   code="${reason}=${bad_tag}"
-  printf "%-50s %s\n" "$code" $file
+  if [ -n "$pme_msg" ]; then
+    printf "%-50s %s %s\n" "$code" $file "$pme_msg"
+  else
+    printf "%-50s %s\n" "$code" $file
+  fi
 }
 
 get_tag_value() {
@@ -106,6 +111,22 @@ check_numeric() {
   if echo "$val" | grep "^[0-9.][0-9.]*$" > /dev/null 2>&1 ; then
     return 0
   else
+    return 1
+  fi
+}
+
+# make sure Source matches the shot sequence file name
+# Usage: check_source FILE "METADATA"
+check_source() {
+  cs_file="$1"
+  cs_metadata="$2"
+  cs_base=`basename "$cs_file"`
+  cs_shot_sequence=`echo "$cs_base" | awk -F_ '{ print $1 "_" $2 }'`
+  cs_source=`get_tag_value Source "$cs_metadata"`
+  if [ "$cs_source" = "$cs_shot_sequence" ]; then
+    return 0
+  else
+    print_metadata_error MISMATCH Source "$cs_file" "Source=$cs_source"
     return 1
   fi
 }
@@ -237,6 +258,11 @@ else
     status=1
   fi
 
+  check_source $file "$metadata"
+  if [ $? -ne 0 ]; then
+    status=1
+  fi
+
   echo "$EXPECTED_KEYWORDS" | while read keyword
   do
     if ! check_keyword "$keyword" "$metadata" ; then
@@ -258,6 +284,8 @@ else
     print_metadata_error BAD_NUMBER DAT_File_Processing_Rotation $file
     status=1
   fi
+
+
 fi
 
 if [ $status -ne 0 ]; then
