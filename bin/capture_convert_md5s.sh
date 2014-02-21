@@ -90,6 +90,8 @@ else
   error "CAPTURE_DIR not found"
 fi
 
+export logfile="`get_full_path $CAPTURE_DIR`/RECPT_manifests.log"
+
 dir_list=$tmp.1
 find $CAPTURE_DIR -type d -name "[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]" > $dir_list
 # cat $dir_list

@@ -64,18 +64,30 @@ shift $((OPTIND-1))
 ### THESCRIPT
 # grab package directoy and confirm it exists
 CAPTURE_DIR=$1
-if dir_exists $CAPTURE_DIR
+if valid_capture_dir $CAPTURE_DIR
 then
   message "Using CAPTURE_DIR $CAPTURE_DIR"
 else
-  error "CAPTURE_DIR not found"
+  error "Error finding CAPTURE_DIR"
 fi
 
-tstamp=`date +%Y%m%d-%H%M%z`
-log=$CAPTURE_DIR/md5s_check_${tstamp}.log
+# determine the md5sum command to use
+MD5_CMD=
+if which md5sum >/dev/null 2>&1 ; then
+  MD5_CMD=`which md5sum`
+elif which gmd5sum >/dev/null 2>&1 ; then
+  MD5_CMD=`which gmd5sum`
+elif which md5 >/dev/null 2>&1 ; then
+  MD5_CMD="`which md5`"
+else
+  error "No md5 command found"
+fi
+
+export logfile="`get_full_path $CAPTURE_DIR`/RECPT_manifests.log"
 
 file_list=$tmp.1
-find $CAPTURE_DIR -type f -name md5s.txt > $file_list
+# only find md5s in expected folder types
+find $CAPTURE_DIR -path "*[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]*" -name md5s.txt > $file_list
 # cat $dir_list
 count=0
 total=`wc -l $file_list | awk '{ print $1 }'`
@@ -83,19 +95,36 @@ date_cmd="date +%FT%T%z"
 report_count $count $total 0
 while read md5_file
 do
-  message "$md5_file" >> $log
+  message "$md5_file"
   dir=`dirname $md5_file`
-  (
+  manifest=`basename $md5_file`
+  output=`(
     cd $dir
-    md5sum -c md5s.txt >> $log
-
-    )
+    verifyMd5Manifest md5s.txt
+  )`
+  status=$?
+  if [ -n "$logfile" ]; then
+    echo "$output" | tee -a $logfile
+  else
+    echo "$output"
+  fi
+  if [ $status -ne 0 ]; then
+    errors="$errors $md5_file"
+    error_no_exit "Validation erorrs; see above: $md5_file"
+  else
+    message "Verified $md5_file"
+  fi
 
   # COUNT AND REPORT
   count=$(( $count + 1 ))
   report_count $count $total 0 $file
 done < $file_list
 
+if [ -n "$errors" ]; then
+  fail "Checksum validation failed"
+else
+  success "ALL VALID"
+fi
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates

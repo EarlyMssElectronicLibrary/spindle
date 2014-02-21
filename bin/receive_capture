@@ -42,7 +42,7 @@ export SPINDLE_COMMAND=$cmd
 source `dirname $0`/spindle_functions
 
 usage() {
-   echo "Usage: $cmd [options] PACKAGE_DIR|PACKAGE.tar"
+   echo "Usage: $cmd [options] CAPTURE_DIR SESSION_TAG"
    echo ""
    echo "OPTIONS"
    echo ""
@@ -56,6 +56,9 @@ usage() {
 this_dir=`dirname $0`
 this_dir=`(cd $this_dir; pwd)`
 # the scripts we'll run
+CAP_FIX_MANIFESTS="${this_dir}/capture_convert_md5s.sh"
+CAP_CHECK_MANIFEST="${this_dir}/capture_check_md5s.sh"
+CAP_COLLECT_METADATA="${this_dir}/cap_collect_metadata"
 
 ### VARIABLES
 RECEIPT_APPROVED=RECEIPT_APPROVED.txt
@@ -98,18 +101,17 @@ shift $((OPTIND-1))
 ### THESCRIPT
 # grab package directoy and confirm it exists
 CAPTURE_DIR=$1
-if [ -n "$CAPTURE_DIR" ]; then
-  if [ -e $CAPTURE_DIR ]; then
-    message "Using CAPTURE_DIR: $CAPTURE_DIR"
-  else
-    error "Could not find CAPTURE_DIR: $CAPTURE_DIR"
-  fi
-else
-  error "Please provide a CAPTURE_DIR"
-fi
 if ! valid_capture_dir "$CAPTURE_DIR" >/dev/null ; then
   error "Error finding CAPTURE_DIR: $CAPTURE_DIR"
 fi
+
+SESSION_TAG="$2"
+if ! valid_session_tag "$SESSION_TAG"; then
+  error "Please provide a valid SESSION_TAG: $SESSION_TAG"
+fi
+
+## RECPT_ARTIFACTS OF PREVIOUS RUNS
+RECPT_ARTIFACTS="RECPT_manifests.log RECPT_capture.log RECPT_metadata.log RECEIPT_APPROVED.txt ERRORS_FOUND.txt VALIDATING.txt"
 
 # errors found file
 ERRORS_FOUND_FLAG=$CAPTURE_DIR/ERRORS_FOUND.txt
@@ -117,37 +119,60 @@ ERRORS_FOUND_FLAG=$CAPTURE_DIR/ERRORS_FOUND.txt
 # flag to show we started the process
 VALIDATING_FLAG=$CAPTURE_DIR/VALIDATING.txt
 
+
+# Before beginning, look for artifacts
+leftovers=
+for x in $RECPT_ARTIFACTS
+do
+  test_file=$CAPTURE_DIR/$x
+  if [ -f $test_file ]; then
+    if [ "$CLOBBER_LOGS" ]; then
+      warning "Deleting old file $test_file"
+      rm -f $test_file
+    else
+      leftovers="$leftovers $x"
+    fi
+  fi
+done
+x=
+
+if [ "$leftovers" ]; then
+  for x in $leftovers
+  do
+    error_no_exit "`format_code_message OLD_FILE_FOUND $x`"
+  done
+  receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "Stale files found"
+fi
+
+export logfile="`get_full_path $CAPTURE_DIR`/RECPT_capture.log"
+
+message "Writing log to $logfile"
+
+
 touch $VALIDATING_FLAG
 
 ## RUN EACH SCRIPT
-# * `verify_package`
-$VERIFY_PACKAGE $PACKAGE_DIR
+# * `fix manifests`
+$CAP_FIX_MANIFESTS "$CAPTURE_DIR"
 if [ $? -ne 0 ]; then
-  receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "package validation failure"
+  receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "manifest fix failure"
 fi
 
-# * `verify_manifest`
-$VERIFY_CHECKSUMS $PACKAGE_DIR
+# * `check manifests`
+$CAP_CHECK_MANIFEST "$CAPTURE_DIR"
 if [ $? -ne 0 ]; then
   receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "manifest validation failure"
 fi
 
-# * `verify_all_filenames`
-$VERIFY_ALL_FILENAMES $PACKAGE_DIR
+$CAP_COLLECT_METADATA "$CAPTURE_DIR" $SESSION_TAG
 if [ $? -ne 0 ]; then
-  receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "filename validation failure"
-fi
-
-# * `verify_all_metadata`
-$VERIFY_ALL_METADATA $PACKAGE_DIR
-if [ $? -ne 0 ]; then
-  receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "metadata validation failure"
+  receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "metadata collection failure"
 fi
 
 # mark the package complete
-iso_date > $PACKAGE_DIR/$RECEIPT_APPROVED
+iso_date > "$CAPTURE_DIR/$RECEIPT_APPROVED"
 
-receipt_success $VALIDATING_FLAG "Package preparation complete"
+receipt_success $VALIDATING_FLAG "Package receipt complete"
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
