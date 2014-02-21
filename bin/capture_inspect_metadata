@@ -1,0 +1,270 @@
+#!/usr/bin/env ruby
+
+require 'getoptlong'
+require 'json'
+require 'fileutils'
+
+require_relative 'spindle_functions'
+
+include FileUtils::Verbose
+
+COMMAND = File.basename(__FILE__)
+
+def usage
+  "Usage: #{COMMAND} [OPTIONS] PACKAGE_DIR
+"
+end # def usage
+
+opts = GetoptLong.new(
+  [ '--help', '-h', GetoptLong::NO_ARGUMENT ]
+)
+
+opts.each do |opt, arg|
+  case opt
+    when '--help'
+      puts usage
+      puts "
+OPTIONS
+
+      -h, --help: show help
+
+Inspect JSON metadata files for capture data, reporting on metadata elements
+that are missing data. Replace the Source value if is missing or an unexpected
+value is found.
+
+The following names are expected:
+
+        SourceFile
+        FileSize
+        ExifToolVersion
+        FileName
+        Directory
+        FileModifyDate
+        FileAccessDate
+        FileInodeChangeDate
+        FilePermissions
+        FileType
+        MIMEType
+        ExifByteOrder
+        SubfileType
+        ImageWidth
+        ImageHeight
+        BitsPerSample
+        Compression
+        PhotometricInterpretation
+        Make
+        Model
+        StripOffsets
+        Orientation
+        SamplesPerPixel
+        RowsPerStrip
+        StripByteCounts
+        XResolution
+        YResolution
+        PlanarConfiguration
+        ResolutionUnit
+        ModifyDate
+        Copyright
+        CurrentIPTCDigest
+        ApplicationRecordVersion
+        Caption-Abstract
+        ObjectName
+        DateCreated
+        Source
+        OriginalTransmissionReference
+        Keywords
+        ExposureTime
+        FNumber
+        SpectralSensitivity
+        ISO
+        ExifVersion
+        DateTimeOriginal
+        CreateDate
+        MaxApertureValue
+        Flash
+        FocalLength
+        ColorSpace
+        ExifImageWidth
+        ExifImageHeight
+        FileSource
+        SceneType
+        ImageUniqueID
+        SensingMethod
+        DNGVersion
+        DNGBackwardVersion
+        UniqueCameraModel
+        BlackLevel
+        WhiteLevel
+        DefaultCropOrigin
+        DefaultCropSize
+        Aperture
+        ImageSize
+        ShutterSpeed
+        FocalLength35efl
+        LightValue
+
+
+      < Application Record Version      
+      < Caption-Abstract                
+      < Object Name                     
+      < Date Created                    
+      < Source                          
+      < Original Transmission Reference 
+      < Keywords                        
+      < Exposure Time                   
+      < F Number                        
+      < Spectral Sensitivity            
+      < ISO                             
+      < Exif Version                    
+      < Date/Time Original              
+      < Create Date                     
+      < Max Aperture Value              
+      < Flash                           
+      < Focal Length                    
+      < Color Space                     
+      < Exif Image Width                
+      < Exif Image Height               
+      < File Source                     
+      < Scene Type                      
+      < Image Unique ID                 
+      < Aperture                        
+      < Shutter Speed                   
+      < Focal Length                    
+      < Light Value 
+
+"
+exit 0
+  end
+end
+
+EXPECTED_TAGS = %w( 
+  SourceFile
+  FileSize
+  ExifToolVersion
+  FileName
+  Directory
+  FileModifyDate
+  FileAccessDate
+  FileInodeChangeDate
+  FilePermissions
+  FileType
+  MIMEType
+  ExifByteOrder
+  SubfileType
+  ImageWidth
+  ImageHeight
+  BitsPerSample
+  Compression
+  PhotometricInterpretation
+  Make
+  Model
+  StripOffsets
+  Orientation
+  SamplesPerPixel
+  RowsPerStrip
+  StripByteCounts
+  XResolution
+  YResolution
+  PlanarConfiguration
+  ResolutionUnit
+  ModifyDate
+  Copyright
+  CurrentIPTCDigest
+  ApplicationRecordVersion
+  Caption-Abstract
+  ObjectName
+  DateCreated
+  Source
+  OriginalTransmissionReference
+  Keywords
+  ExposureTime
+  FNumber
+  SpectralSensitivity
+  ISO
+  ExifVersion
+  DateTimeOriginal
+  CreateDate
+  MaxApertureValue
+  Flash
+  FocalLength
+  ColorSpace
+  ExifImageWidth
+  ExifImageHeight
+  FileSource
+  SceneType
+  ImageUniqueID
+  SensingMethod
+  DNGVersion
+  DNGBackwardVersion
+  UniqueCameraModel
+  BlackLevel
+  WhiteLevel
+  DefaultCropOrigin
+  DefaultCropSize
+  Aperture
+  ImageSize
+  ShutterSpeed
+  FocalLength35efl
+  LightValue )
+
+def missing_values image_metadata
+  EXPECTED_TAGS.find_all { |tag| 
+    val = image_metadata[tag]
+    val.nil? || val == ''
+  }
+end
+
+package_dir = find_package_dir ARGV.shift
+
+if package_dir
+  message COMMAND, "Using package directory: #{package_dir}"
+else
+  puts usage
+  exit 1
+end
+
+# change to the package_dir
+Dir.chdir package_dir
+
+# get the json files
+json_files = Dir["*_metadata_*.json"]
+
+count = 0
+total = json_files.size
+interval = 0
+report_count COMMAND, count, total, interval 
+json_files.each_with_index do |file,index|
+  message COMMAND, "Reading #{file}"
+  json = JSON.parse IO.read(file)
+  changed = false
+  json.each do |image| 
+    image_file = image['FileName']
+    source = image['Source']
+    shot_sequence = (File.basename(image_file) =~ /^\d{4}_\d{6}/ ? $& : nil)
+    if shot_sequence
+      if shot_sequence != source
+        warning COMMAND, "Source does not match shot sequence; found '#{source}'; expected '#{shot_sequence}'"
+        warning COMMAND, "Changing source for #{image_file}"
+        image['Source'] = shot_sequence
+        changed = true
+      end
+    else
+      error COMMAND, "Expect shot sequence format (e.g., '0010_000123') not found: #{image_file}"
+    end
+    missing_values(image).each do |tag|
+      warning COMMAND, sprintf("%-50s %s", "MISSING=#{tag}", image_file)
+    end
+  end
+
+  if changed
+    cp file, file + '.bak'
+    File.delete file
+    File.open(file, "w+") do |f|
+      f.puts json.to_json
+    end
+    warning COMMAND, "Wrote updated file #{file}"
+  end
+  
+  report_count COMMAND, (index+1), total, interval, file
+end
+
