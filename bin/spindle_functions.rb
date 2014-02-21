@@ -14,6 +14,10 @@ def message cmd, msg
   print_message cmd, 'INFO', msg
 end # def message cmd, 
 
+def warning cmd, msg
+  print_message cmd, 'WARNING', msg
+end
+
 def error cmd, msg
   print_message cmd, 'ERROR', msg
 end # def message cmd, 
