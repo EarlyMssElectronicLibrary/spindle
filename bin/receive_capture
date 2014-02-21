@@ -59,6 +59,7 @@ this_dir=`(cd $this_dir; pwd)`
 CAP_FIX_MANIFESTS="${this_dir}/capture_convert_md5s.sh"
 CAP_CHECK_MANIFEST="${this_dir}/capture_check_md5s.sh"
 CAP_COLLECT_METADATA="${this_dir}/cap_collect_metadata"
+CAP_INSPECT_METADATA="${this_dir}/capture_inspect_metadata"
 
 ### VARIABLES
 RECEIPT_APPROVED=RECEIPT_APPROVED.txt
@@ -168,6 +169,13 @@ $CAP_COLLECT_METADATA "$CAPTURE_DIR" $SESSION_TAG
 if [ $? -ne 0 ]; then
   receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "metadata collection failure"
 fi
+
+$CAP_INSPECT_METADATA "$CAPTURE_DIR"
+if [ $? -ne -0 ]; then
+  receipt_failure $VALIDATING_FLAG $ERRORS_FOUND_FLAG "metadata inspection failure"
+fi
+
+
 
 # mark the package complete
 iso_date > "$CAPTURE_DIR/$RECEIPT_APPROVED"
