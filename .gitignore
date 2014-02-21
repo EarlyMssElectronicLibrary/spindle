@@ -7,3 +7,7 @@ test/fixtures/names_invalid/valid_file_names.txt
 test/fixtures/names_valid/*.log
 test/fixtures/names_valid/valid_file_names.txt
 tmp
+*.log
+test/fixtures/Capture/*.json
+test/fixtures/Capture/*.txt
+test/Repository/*
