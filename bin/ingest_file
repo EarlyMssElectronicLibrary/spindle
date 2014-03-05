@@ -89,7 +89,7 @@ fi
 # make sure destination exists
 DEST_DIR=`dir_exists $2 DESTINATION`
 if [ $? -ne 0 ]; then
-  error "Error finding destination directory"
+  error "Error finding destination directory: '$2'"
 fi
 # make sure checksum is valid
 CHECKSUM=$3
