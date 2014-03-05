@@ -106,7 +106,7 @@ fi
 
 this_dir=`dirname $0`
 this_dir=`get_full_path $this_dir`
-INFEST_FILE_COMMAND=$this_dir/ingest_file
+INGEST_FILE_COMMAND=$this_dir/ingest_file
 
 # TODO: Must have RECEIPT_APPROVED
 if [ -f $CAPTURE_DIR/$RECEIPT_APPROVED ]; then
@@ -159,7 +159,7 @@ report_count $count $total 0
 while read file
 do
   base=`basename $file`
-  shot_seq=`echo $base | awk -F_ '{ print $1 "_" $2 }'`
+  shot_seq=`echo $base | awk -F[_+] '{ print $1 "_" $2 }'`
   if [[ "$file" =~ RAWS ]]; then
     dest=$REPO_RAWS/$shot_seq
   else
@@ -168,6 +168,10 @@ do
   if [ ! -d $dest ]; then
     mkdir $dest
   fi
+  if [ $? -ne 0 ];
+  then
+    error "Couldn't make destination directory: '$dest'"
+  fi
 
   # find the checksum
   source_dir=`dirname $file`
@@ -175,7 +179,7 @@ do
   checksum=`grep "${base}$" $manifest | awk '{ print $1 }'`
   # copy the file
   # COPY
-  copy_line=`$INFEST_FILE_COMMAND $file $dest $checksum`
+  copy_line=`$INGEST_FILE_COMMAND $file $dest $checksum`
   if [ $? -eq 0 ]; then
     valid $dest_file
     echo $copy_line >> $INGEST_LOG
