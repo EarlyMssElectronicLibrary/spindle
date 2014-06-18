@@ -35,8 +35,9 @@ or
 
      $ git clone git@bitbucket.org:postertorn/spindle.git
 
-To download a zip or gzip archive, click on the Tags tab from the downloads page,
-and unzip the downloaded archive to a folder on your computer:
+To download a zip or gzip archive, click on the Tags tab from the downloads page.
+Download the most recent tag in the archive format of your choice and unzip the
+downloaded archive to a folder on your computer:
 
 - <https://bitbucket.org/postertorn/spindle/downloads>
 
