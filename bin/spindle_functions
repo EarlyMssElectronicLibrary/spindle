@@ -1,6 +1,6 @@
 # spindle functions shared by all spindle shells scripts.  Scripts using
 # spindle_functions should:
-# 
+#
 #  --  export SPINDLE_COMMAND=`basename $0`
 #  --  export HELP
 #  --  source `dirname $0`/spindle_functions
@@ -18,7 +18,7 @@
 # VERSION
 VERSION=0.5.1
 
-# MESSAGE AND USAGE FUNCTIONS 
+# MESSAGE AND USAGE FUNCTIONS
 
 # ISO date format YYYY-mm-ddTHH:MM:SS+-OFFSET
 iso_date() {
@@ -44,7 +44,7 @@ print_message() {
 version() {
   prog=$1
   echo "Spindle version $VERSION"
-  echo 
+  echo
 }
 
 message() {
@@ -168,7 +168,7 @@ valid_session_tag() {
   else
     echo "Please provide a SESSION_TAG" >&2
     return 1
-  fi 
+  fi
 }
 
 # make sure $1 is a valid capture dir
@@ -176,7 +176,7 @@ valid_capture_dir() {
   vcd_dir=$1
   if [ -z "$vcd_dir" ]; then
     echo "Please provide a CAPTURE_DIR" >&2
-    return 1    
+    return 1
   elif [ ! -d "$vcd_dir" ]; then
     echo "CAPTURE_DIR not found: $vcd_dir" >&2
     return 1
@@ -269,7 +269,7 @@ check_manifest_files() {
 
   # get the actual files
   zzfile_list=$work.1
-  find data -type f | sort > $zzfile_list 
+  find data -type f | sort > $zzfile_list
 
   # get the manifest file list
   zzmanifest=manifest-md5s.txt
@@ -314,11 +314,11 @@ check_manifest_files() {
 # The arguments are:
 #
 #     Usage: report_count COUNT TOTAL INTERVAL [FILE]
-# 
+#
 #   COUNT     the count/index of the current file
 #   TOTAL     the total number of files
 #   INTERVAL  how often to report the count, an interval of 0 (zero)
-#             will force the count to be printed 
+#             will force the count to be printed
 #   FILE      optional file name to print with count
 #
 # Output is printed as an INFO message and includes a time stamp.
@@ -334,7 +334,7 @@ report_count() {
     rc_time=`date +%Y-%m-%dT%H:%M:%S`
     if [ -n "$rc_file" ]; then
       message "$rc_mark  `printf "%-40s" $rc_file` $rc_time"
-    else 
+    else
       message "$rc_mark  $rc_time"
     fi
   elif [ "$(( $rc_count % $rc_interval ))" -eq 0 ]; then
@@ -402,7 +402,7 @@ verifyMd5Manifest() {
       vmm_checksum=`echo "$vmm_line" | awk '{ print $1 }'`
       vmm_path=`echo "$vmm_line" | sed "s/^${vmm_checksum} [ *]*//"`
       if [ -f "$vmm_path" ]; then
-        vmm_result=`$vmm_md5 -r "$vmm_path" | awk '{ print $1 }'`  
+        vmm_result=`$vmm_md5 -r "$vmm_path" | awk '{ print $1 }'`
         if [ "$vmm_checksum" = "$vmm_result" ]; then
           echo "${vmm_path}: OK"
         else
@@ -423,7 +423,7 @@ verifyMd5Manifest() {
 }
 
 # Extract the MD5 checksum for TARGET_FILE from MD5S_TXT.
-# 
+#
 # Usage: extract_checksum TARGET_FILE MD5S_TXT
 #
 # Note that this function calls `grep "[* ]TARGET_FILE$" $MD5S_TXT`. The value
@@ -483,7 +483,7 @@ isImageFile() {
   file=$1
   ext=`getExtension $file`
   stat=0
-  for iext in $FILE_TYPES 
+  for iext in $FILE_TYPES
   do
     if [ "$ext" = "$iext" ]; then
       return 0
@@ -496,7 +496,7 @@ hasValidExt() {
   file=$1
   ext=`getExtension $file`
   stat=0
-  for iext in $STANDARD_EXTS 
+  for iext in $STANDARD_EXTS
   do
     if [ "$ext" = "$iext" ]; then
       return 0
@@ -538,7 +538,7 @@ has_prep_json_files() {
   if [ -d "$hpjf_dir" ]; then
     hpjf_files=`( cd $hpjf_dir; ls *-prep.json.gz 2>/dev/null )`
     if [ "$hpjf_files" ]; then
-      for x in $hpjf_files 
+      for x in $hpjf_files
       do
         warning "Found $x"
       done
@@ -641,7 +641,7 @@ has_exif_json_files() {
   if [ -d "$hejf_dir" ]; then
     hejf_files=`( cd $hejf_dir; ls *_metadata_*.json 2>/dev/null )`
     if [ "$hejf_files" ]; then
-      for x in $hejf_files 
+      for x in $hejf_files
       do
         warning "Found $x"
       done
@@ -656,7 +656,7 @@ has_exif_json_files() {
 }
 
 validateFilename() {
-  file=$1 
+  file=$1
   if [ -z "$file" ]; then
     error "validateFilename: please provide a file name; got '$file'"
   fi
@@ -677,11 +677,11 @@ validateFilename() {
     proc_type=`echo $base | awk -F '_' '{ print $4 }'`
     num_fields=`echo $base | awk -F '_' '{ print NF }'`
     if [ $num_fields -gt 4 ]; then
-      modifiers=`echo $base | awk -F '_' '{ 
-      printf $5; 
-      for (i = 6; i <= NF; i++) { 
-        printf "_" $i 
-      }; 
+      modifiers=`echo $base | awk -F '_' '{
+      printf $5;
+      for (i = 6; i <= NF; i++) {
+        printf "_" $i
+      };
       printf "\n" }'`
     fi
     if ! matchesPattern "$shoot_list" "$SHOOT_LIST_PTRN" ; then
@@ -749,7 +749,7 @@ cmpActualToLogged() {
     do
       error_no_exit "NO_SUCH_FILE  $file"
     done
-    
+
     return 1
   fi
 }
@@ -766,7 +766,7 @@ parent_files() {
   pf_color_tiff=$1
   if [ -f $pf_color_tiff ]; then
     pf_shot_seq=`extract_shot_sequence $pf_color_tiff`
-    
+
     pf_tiff_list=`dirname $pf_color_tiff`/${pf_shot_seq}_tiff_list.txt
     if [ -f $pf_tiff_list ]; then
       PF_TIFFS=
@@ -775,7 +775,7 @@ parent_files() {
         pf_wave=`echo $pair | awk '{ print $1 }'`
         pf_index=`echo $pair | awk '{ print $2 }'`
         pf_next_tiff=`grep "_${pf_index}_F.tif" $pf_tiff_list`
-        if echo "$pf_next_tiff" | grep "$pf_wave" >/dev/null ; then          
+        if echo "$pf_next_tiff" | grep "$pf_wave" >/dev/null ; then
           PF_TIFFS="$PF_TIFFS `basename $pf_next_tiff`"
           # echo $pf_tiffs
         else
@@ -786,7 +786,7 @@ parent_files() {
 470 003
 505 004
 535 005
-570 006      
+570 006
 EOF
     else
       echo "Expected TIFF list not found: $pf_tiff_list" >&2
@@ -813,7 +813,7 @@ get_exif_tag() {
 json_array() {
   ja_list="$1"
   echo "$ja_list" | sed -e 's/^/"/g' -e 's/$/"/' \
-    -e 's/[[:space:]][[:space:]]*/", "/g' 
+    -e 's/[[:space:]][[:space:]]*/", "/g'
 
 }
 
@@ -826,7 +826,7 @@ keywords_to_array() {
 }
 
 newest() {
-  for in_curr in $@ 
+  for in_curr in $@
   do
     if [ -n "$in_curr" -a -e "$in_curr" ]; then
       if [ -n "$in_newest" ]; then
