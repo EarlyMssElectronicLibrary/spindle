@@ -250,7 +250,7 @@ The correct file names have these fields:
 Where:
 
   * SHOOT_LIST is zero or one characters followed by a 4-digit string, right-
-    padded with zeros: '0009', 'X0003'
+    padded with zeros: '0009', 'X0003' (See Note below.)
 
   * SHOT_SEQ is a 6-digit string, right-padded with zeros: '000123'
 
