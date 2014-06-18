@@ -249,7 +249,8 @@ The correct file names have these fields:
 
 Where:
 
-  * SHOOT_LIST is a 4-digit string, right-padded with zeros: '0009'
+  * SHOOT_LIST is zero or one characters followed by a 4-digit string, right-
+    padded with zeros: '0009', 'X0003'
 
   * SHOT_SEQ is a 6-digit string, right-padded with zeros: '000123'
 
@@ -264,6 +265,14 @@ Where:
 Sample:
 
     0015_000012_KTK_sharpie_MB365UV-MB625Rd.jpg
+
+Note: The optional inital shoot list character indicates the KatIkon
+installation that generated the shoot list number. At present, no initial
+character indicates the shoot list was generated on the Sinai KatIkon
+installation known as 'Moses'. The 'K' prefix is used for the Sinai
+Palimpsests Project's on-line web installation of Katikon. Since all shoot
+lists begin numbering at one, the prefix character is needed to prevent
+filename  collisions.
 
 ### Valid extensions
 

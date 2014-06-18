@@ -39,7 +39,8 @@ The correct file names have these fields:
 
 Where:
 
-  * SHOOT_LIST is a 4-digit string, right-padded with zeros: '0009'
+  * SHOOT_LIST is zero or one characters followed by a 4-digit string, right-
+    padded with zeros: '0009', 'X0003'
 
   * SHOT_SEQ is a 6-digit string, right-padded with zeros: '000123'
 
