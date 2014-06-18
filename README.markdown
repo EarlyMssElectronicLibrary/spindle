@@ -1,7 +1,7 @@
 # Spindle: Sinai Palimpsests Project Image Delivery scripts
 
-Spindle is a set of scripts for the preparation and delivery of data to 
-the Sinai Palimpsests Project repository and for validating data upon 
+Spindle is a set of scripts for the preparation and delivery of data to
+the Sinai Palimpsests Project repository and for validating data upon
 its receipt.
 
 ### Software dependencies
@@ -110,7 +110,7 @@ There are five basic *package* scripts to use for preparing data:
  5. `verify_package` - script that checks the all other scripts have been run
 
 > Two additional scripts should be of interest. They are:
-> 
+>
 >  * `verify_filename` - script to validate a single file name
 >  * `verify_metadata` - script to validate metadat for a single file
 
@@ -138,7 +138,7 @@ The `deliver` script invocation would be:
       $ deliver /home/john/packages/MS22
 
 The `deliver` script would then invoke each of script 2-5 above to validate
-the contents of the package. 
+the contents of the package.
 
 #### Some general notes
 
@@ -309,7 +309,7 @@ images.
 
 ### For the impatient
 
-Copy processed file to a staging area; for example, to 
+Copy processed file to a staging area; for example, to
 
   * `/Volumes/SPP-Stagin/Processed/KTK_2013-08`
 
@@ -348,11 +348,11 @@ Run `ingest_processed` on the package directory:
 This script will copy all files to repository, verify the copy was completed
 successfully, and create a record of each copy. NB: This record is used by the
 check in process and must not be deleted.
-  
+
 ### The scripts
 
 The primary script is `ingest_processed` it relies on one other script:
-`ingest_file`. 
+`ingest_file`.
 
 The `ingest_file` script takes as its arguments a file, a destination
 direcoty, anda  checksum. It copies the file to the destination, and verifies
@@ -380,12 +380,12 @@ not yet formalized), and load the metadata. This process will take some time.
 
 The `checkin` script calls the following scripts:
 
-* `checkin_collect_metadata` - collect metadata from all 
+* `checkin_collect_metadata` - collect metadata from all
 
 # Publication of data to scholars
 
 The creation of a package of files for sharing with scholars. The steps to
-creating the data set are. 
+creating the data set are.
 
 
 * Preparing an input file listing files to select - TBD
@@ -416,11 +416,11 @@ section  describes how to do this.
 
 ## For the impatient
 
-After a Capture set has been verified, the color images must be collected, 
+After a Capture set has been verified, the color images must be collected,
 prepared for delivery, delivered (via the `deliver` script), received,
 ingested, and checked in.
 
-Create a directory for the color images; e.g., 
+Create a directory for the color images; e.g.,
 
       $ mkdir /Volumes/SPP-Staging/ColorImages/2013.05
 
@@ -430,7 +430,7 @@ Run the script `color_setup`:
         /Volumes/SPP-Staging/ColorImages/2013.05
 
 The script `color_setup` command has this form:
- 
+
       $ color_setup CAPTURE_DIR PACKAGE_DIR
 
 where `CAPTURE_DIR` is the capture directory containing the new color images
@@ -450,7 +450,7 @@ The `color_setup` script will run the following scripts in order:
   was generated without error, `color_setup` will run it to rename all the
   images
 
-* `color_add_metadata` - for each image, add the metadata requireed to 
+* `color_add_metadata` - for each image, add the metadata requireed to
    create a procesed image delivery package
 
 ## Details
@@ -468,13 +468,13 @@ color images from a Capture data set for delivery.
 
 # Capture Receipt
 
-Run 
+Run
 
 `capture_receive`
 
 This runs:
 
-  - `capture_prep_md5s` - make sure that there's an `md5s.txt` file in each shot  
+  - `capture_prep_md5s` - make sure that there's an `md5s.txt` file in each shot
     sequence folder
   - `capture_check_md5s` - verify all the checksums
   - `capture_collect_metadata` - collect metadata on all the files
@@ -490,5 +490,5 @@ into a shot sequence folder in one of the following directories.
 
   <REPO_DRIVE>/Repository/Capture/RAWS
   <REPO_DRIVE>/Repository/Capture/FLATTENED
-                     
+
 
