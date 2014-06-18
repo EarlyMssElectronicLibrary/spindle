@@ -35,6 +35,11 @@ or
 
      $ git clone git@bitbucket.org:postertorn/spindle.git
 
+To download a zip or gzip archive, click on the Tags tab from the downloads page,
+and unzip the downloaded archive to a folder on your computer:
+
+- <https://bitbucket.org/postertorn/spindle/downloads>
+
 Add the spindle/bin directory to your path.  In `.bashrc`:
 
      PATH=$PATH:path/to/spindle/bin
@@ -499,5 +504,3 @@ into a shot sequence folder in one of the following directories.
 
   <REPO_DRIVE>/Repository/Capture/RAWS
   <REPO_DRIVE>/Repository/Capture/FLATTENED
-
-
