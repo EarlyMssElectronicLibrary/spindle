@@ -470,16 +470,25 @@ color images from a Capture data set for delivery.
 
 Run 
 
-`receive_capture`
+`capture_receive`
 
 This runs:
 
-  - `capture_convert_md5s.sh` - make sure that there's an `md5s.txt` file in each shot  
+  - `capture_prep_md5s` - make sure that there's an `md5s.txt` file in each shot  
     sequence folder
-  - `capture_check_md5s.sh` - verify all the checksums
-  - `cap_collect_metadata` - collect metadata on all the files
-  - `cap_inspect_metadata` - go through the metadata and make sure everything
+  - `capture_check_md5s` - verify all the checksums
+  - `capture_collect_metadata` - collect metadata on all the files
+  - `capture_inspect_metadata` - go through the metadata and make sure everything
     is sensible; if Source is incorrect or missing, fix it
 
+Run
+
+`capture_ingest`
+
+This script securely copies files into the repository. Each file is copied
+into a shot sequence folder in one of the following directories.
+
+  <REPO_DRIVE>/Repository/Capture/RAWS
+  <REPO_DRIVE>/Repository/Capture/FLATTENED
                      
 
