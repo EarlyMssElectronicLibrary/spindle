@@ -342,7 +342,7 @@ The `receive` script runs the following scripts:
 
   * `verify_package` - confirm delivery has been performed successfully
 
-  * `verify_checksums` - validate delivery manifest
+  * `verify_manifest` - validate delivery manifest
 
   * `verify_all_filenames` - check all image file names
 
