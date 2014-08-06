@@ -87,7 +87,7 @@ export logfile="`get_full_path $CAPTURE_DIR`/RECPT_manifests.log"
 
 file_list=$tmp.1
 # only find md5s in expected folder types
-find $CAPTURE_DIR/RAWS $CAPTURE_DIR/FLATTENED -path "*[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]*" -name md5s.txt > $file_list
+find $CAPTURE_DIR/RAWS $CAPTURE_DIR/FLATTENED $CAPTURE_DIR/DEVELOPTED -path "*[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]*" -name md5s.txt > $file_list
 # cat $dir_list
 count=0
 total=`wc -l $file_list | awk '{ print $1 }'`

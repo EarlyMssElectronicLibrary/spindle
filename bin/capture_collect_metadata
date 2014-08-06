@@ -119,15 +119,21 @@ fi
 this_dir=`dirname $0`
 this_dir=`get_full_path "$this_dir"`
 
+file_list=$tmp.1
 ( 
   cd $CAPTURE_DIR
 
-  for kind in RAWS FLATTENED
+  for kind in RAWS FLATTENED DEVELOPED
   do
-    file_list=$tmp.1
-    # get all the RAW files
-    find $kind -path "*[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]*" \
-      \( -iname \*.dng -o -iname \*.tif \) > $file_list
+    # get all the developed jpegs
+    if [ $kind = "DEVELOPED" ]; then
+      find $kind -path "*[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]*" -iname \*.jpg > $file_list
+
+    # get all the DNGs and TIFFs
+    else
+      find $kind -path "*[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]*" \
+        \( -iname \*.dng -o -iname \*.tif \) > $file_list
+    fi
     # get the page directory name
     json_base="CAPTURE_${kind}_${SESSION_TAG}"
 
