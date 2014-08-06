@@ -136,6 +136,12 @@ if [ ! -d $REPO_FLAT ]; then
   mkdir $REPO_FLAT
 fi
 
+REPO_DEVD="$REPO_DEVD/DEVELOPED"
+if [ ! -d $REPO_DEVD ]; then
+  warning "Creating dir: $REPO_DEVD"
+  mkdir $REPO_DEVD
+fi
+
 ### INGEST FILES
 # change to the package dir
 if [ "$CAPTURE_DIR" != "." ]; then
@@ -151,6 +157,9 @@ INGEST_ERRORS=CAPT_${SESSION_TAG}_ingest_errors_`date +%Y%m%dT%H%M%S%z`.log
 file_list=$tmp.1
 find RAWS FLATTENED -path "*[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]*" \
   \( -iname \*.dng -o -iname \*.tif \) > $file_list
+# add the developed JPEGs
+find DEVELOPED -path "*[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]*" \
+  -iname \*.jpg >> $file_list
 
 count=0
 total=`wc -l $file_list | awk '{ print $1 }'`
@@ -162,8 +171,10 @@ do
   shot_seq=`echo $base | awk -F[_+] '{ print $1 "_" $2 }'`
   if [[ "$file" =~ RAWS ]]; then
     dest=$REPO_RAWS/$shot_seq
-  else
+  elif [[ "$file" =~ FLATTENED ]]; then
     dest=$REPO_FLAT/$shot_seq
+  else
+    dest=$REPO_DEVD/$shot_seq
   fi
   if [ ! -d $dest ]; then
     mkdir $dest
