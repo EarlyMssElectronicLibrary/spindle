@@ -1,12 +1,14 @@
 #!/bin/sh
 
 read -r -d '' HELP <<-'EOF'
-For CAPTURE_DIR, copy all files with their checksums to the repository making a
-record of what files are copied and where.
+
+For CAPTURE_DIR, copy all flattened TIFF files and developed JPEGs with their
+checksums to the repository making a record of what files are copied and
+where.
 
 .
 ├── CAPTURE_FLATTENED_201401_metadata_000.json
-├── CAPTURE_RAWS_201401_metadata_000.json
+├── CAPTURE_DEVELOPED_201401_metadata_000.json
 ├── FLATTENED
 │   ├── 0031_000001
 │   │   ├── 0031_000001+MB365UV_001_F.tif
@@ -67,7 +69,7 @@ REPO_PATH=
 while getopts ":hv" opt; do
   case $opt in
     h)
-      usage 
+      usage
       version
       help
       exit 1
@@ -124,12 +126,6 @@ else
   error "Repository folder not found $REPO_PATH"
 fi
 
-REPO_RAWS=$REPO_PATH/RAWS
-if [ ! -d $REPO_RAWS ]; then
-  warning "Creating dir: $REPO_RAWS"
-  mkdir $REPO_RAWS
-fi
-
 REPO_FLAT="$REPO_PATH/FLATTENED"
 if [ ! -d $REPO_FLAT ]; then
   warning "Creating dir: $REPO_FLAT"
@@ -155,11 +151,9 @@ INGEST_ERRORS=CAPT_${SESSION_TAG}_ingest_errors_`date +%Y%m%dT%H%M%S%z`.log
 :>$INGEST_ERRORS
 
 file_list=$tmp.1
-find RAWS FLATTENED -path "*[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]*" \
-  \( -iname \*.dng -o -iname \*.tif \) > $file_list
+find FLATTENED -path "*[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]*" -iname \*.tif > $file_list
 # add the developed JPEGs
-find DEVELOPED -path "*[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]*" \
-  -iname \*.jpg >> $file_list
+find DEVELOPED -path "*[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]*" -iname \*.jpg >> $file_list
 
 count=0
 total=`wc -l $file_list | awk '{ print $1 }'`
@@ -169,9 +163,7 @@ while read file
 do
   base=`basename $file`
   shot_seq=`echo $base | awk -F[_+] '{ print $1 "_" $2 }'`
-  if [[ "$file" =~ RAWS ]]; then
-    dest=$REPO_RAWS/$shot_seq
-  elif [[ "$file" =~ FLATTENED ]]; then
+  if [[ "$file" =~ FLATTENED ]]; then
     dest=$REPO_FLAT/$shot_seq
   else
     dest=$REPO_DEVD/$shot_seq
@@ -210,7 +202,7 @@ if [ -s $INGEST_ERRORS ]; then
 else
   valid "ALL files copied correctly"
   rm $INGEST_ERRORS
-fi 
+fi
 
 iso_date > $INGESTION_COMPLETE
 

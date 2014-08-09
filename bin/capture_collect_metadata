@@ -1,14 +1,16 @@
 #!/bin/sh
 
-read -r -d '' HELP <<-'EOF' Collect metadata to upload to the KatIkon system
-for capture images files in CAPTURE_DIR. Two sets of JSON files will be
-created for capture images and named using the SESSION_TAG: one for flattened
-TIFFs and one for DNGs.  JSON metadata will be written out in chunks with 200
-records for each JSON file.
+read -r -d '' HELP <<-'EOF'
+
+Collect metadata to upload to the KatIkon system for capture images files in
+CAPTURE_DIR. Two sets of JSON files will be created for capture images and
+named using the SESSION_TAG: one for flattened TIFFs and one for  developed
+JPEG images.  JSON metadata will be written out in chunks with 200 records for
+each JSON file. DNG files in the RAWS folder are not handled.
 
 For example,
 
-    $ cap_collect_metadata /Volumes/DriveName/Capture 2013.05
+    $ capture_collect_metadata /Volumes/DriveName/Capture 2013.05
     Wrote /Volumes/DriveName/Capture/2013.05_20140218_metadata_001.json
     Wrote /Volumes/DriveName/Capture/2013.05_20140218_metadata_002.json
     Wrote /Volumes/DriveName/Capture/2013.05_20140218_metadata_003.json
@@ -37,6 +39,17 @@ A capture folder should have the following structure.
           0052_000002/
           0052_000003/
           ...
+       DEVELOPED/
+          0050_000001/
+            0050_000001+MB365UV_001.jpg
+            0050_000001+MB455RB_002.jpg
+            ...
+          0050_000002/
+          0052_000001/
+          0052_000002/
+          0052_000003/
+          ...
+
 
 EOF
 
@@ -80,7 +93,7 @@ SESSION_TAG=
 while getopts ":hv" opt; do
   case $opt in
     h)
-      usage 
+      usage
       version
       help
       exit 1
@@ -120,10 +133,11 @@ this_dir=`dirname $0`
 this_dir=`get_full_path "$this_dir"`
 
 file_list=$tmp.1
-( 
+(
   cd $CAPTURE_DIR
 
-  for kind in RAWS FLATTENED DEVELOPED
+  # 2014-08-09 remove RAWS; no longer ingesting/checking in DNGs
+  for kind in FLATTENED DEVELOPED
   do
     # get all the developed jpegs
     if [ $kind = "DEVELOPED" ]; then

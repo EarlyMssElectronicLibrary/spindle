@@ -189,6 +189,10 @@ valid_capture_dir() {
     echo "FLATTENED directory not found; expected $vcd_dir/FLATTENED" >&2
     return 1
   fi
+  if [ ! -d "$vcd_dir/DEVELOPED" ]; then
+    echo "DEVELOPED directory not found; expected $vcd_dir/DEVELOPED" >&2
+    return 1
+  fi
   return 0
 }
 

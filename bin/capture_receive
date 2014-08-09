@@ -1,9 +1,9 @@
 #!/bin/sh
 
 HELP=`cat<<-EOF
-For a set of capture dataa, check the data for validaity, and collect metadata.
+For a set of capture data, check the data for validaity, and collect metadata.
 
-A valid Capture folder must contain folders RAWS and FLATTENED.
+A valid Capture folder must contain folders RAWS, FLATTENED, and DEVELOPED.
 
 EOF`
 
@@ -73,7 +73,7 @@ FLATTENED_DIR=
 while getopts ":hvCo:" opt; do
   case $opt in
     h)
-      usage 
+      usage
       version
       help
       exit 0
