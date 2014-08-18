@@ -132,7 +132,7 @@ if [ ! -d $REPO_FLAT ]; then
   mkdir $REPO_FLAT
 fi
 
-REPO_DEVD="$REPO_DEVD/DEVELOPED"
+REPO_DEVD="$REPO_PATH/DEVELOPED"
 if [ ! -d $REPO_DEVD ]; then
   warning "Creating dir: $REPO_DEVD"
   mkdir $REPO_DEVD
