@@ -108,21 +108,23 @@ shift $((OPTIND-1))
 
 ### THESCRIPT
 # grab package directoy and confirm it exists
-PACKAGE_DIR=`package_dir $1`
+PACKAGE_DIR=`dir_exists $1`
 if [ $? -ne 0 ]; then
   error "Error finding package directory"
-fi
-
-# make sure there's a data directory in PACKAGE_DIR
-DATA_DIR=`data_dir $PACKAGE_DIR`
-if [ $? -ne 0 ]; then
-  error "Error finding data directory"
 fi
 
 ### HARVEST METADATA
 # change to the package dir
 if [ "$PACKAGE_DIR" != "." ]; then
   cd $PACKAGE_DIR
+fi
+
+ingest_file=`ls *_ingest_list_* 2>/dev/null`
+ingest_file_count=`echo $ingest_file | wc -w`
+if [ $ingest_file_count -eq 1 ]; then
+  message "Using ingest list: $ingest_file"
+else
+  error "Expected one ingest list; found $ingest_file_count: $ingest_file"
 fi
 
 approve_date=
@@ -132,14 +134,6 @@ if [ -f $RECEIPT_APPROVED ]; then
   message "APPROVE_DATE=$approve_date"
 else
   warning "PACKAGE_NOT_APPROVED"
-fi
-
-ingest_file=`ls *_ingest_list_* 2>/dev/null`
-ingest_file_count=`echo $ingest_file | wc -w`
-if [ $ingest_file_count -eq 1 ]; then
-  message "Using ingest list: $ingest_file"
-else
-  error "Expected one ingest list; found $ingest_file_count: $ingest_file"
 fi
 
 file_list=$tmp.1
