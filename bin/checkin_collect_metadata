@@ -6,7 +6,7 @@ Collect metadata for images files in PACKAGE_DIR to upload to the KatIkon system
 For a PACKAGE_DIR of the correct structure, collect image file metadata for
 upload to KatIkon delivery.  PACKAGE_DIR must contain at its root a 'data'
 directory.  Metadata will be collected for TIFF and JPEG image in the 'data'
-directory and its subdirectories.  All other directories will be ignored, and 
+directory and its subdirectories.  All other directories will be ignored, and
 images of types other than TIFF and JPEG will also be ignored.
 
 The following illustrates the correct directory structure.
@@ -68,7 +68,7 @@ JSON_FILE=
 while getopts ":hv" opt; do
   case $opt in
     h)
-      usage 
+      usage
       version
       help
       exit 1
