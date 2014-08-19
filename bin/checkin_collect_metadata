@@ -3,24 +3,42 @@
 read -r -d '' HELP <<-'EOF'
 Collect metadata for images files in PACKAGE_DIR to upload to the KatIkon system.
 
-For a PACKAGE_DIR of the correct structure, collect image file metadata for
-upload to KatIkon delivery.  PACKAGE_DIR must contain at its root a 'data'
-directory.  Metadata will be collected for TIFF and JPEG image in the 'data'
-directory and its subdirectories.  All other directories will be ignored, and
-images of types other than TIFF and JPEG will also be ignored.
+For a PACKAGE_DIR, collect image file metadata for all images that have been
+ingested into the repository for upload to KatIkon delivery. The list of
+ingested files is extracted from the ingest list file create by the
+`capture_ingest` or `ingest_processed` scripts. These files have names
+formatted as follows:
 
-The following illustrates the correct directory structure.
+    CAPT_2012-09_ingest_list_20140818T135337-0700.log
+    KTK_ingest_list_20140221T082844-0800.log
 
-      .
-      ├── LOG_verify_filenames.log
-      ├── LOG_verify_metadata.log
-      ├── data
-      │   ├── 0015_000013_DJK_ICA_01_2.jpeg
-      │   ├── 0015_000013_DJK_ICA_01_2.tif
-      │   ├── ...
-      │   ├── 0015_000013_DJK_ICA_04_RGB.jpeg
-      │   └── 0015_000013_DJK_ICA_04_RGB.tif
-      └── manifest-md5s.txt
+Directories containing more than one `*_ingest_list_*` file will not be
+processed.
+
+The log lists each file's source and repository locations. The source location
+is relative to the PACKAGE_DIR:
+
+FLATTENED/0031_000001/0031_000001+MB365UV_001_F.tif -> \
+        /.../Repository/Capture/FLATTENED/0031_000001/0031_000001+MB365UV_001_F.tif
+FLATTENED/0031_000001/0031_000001+MB455RB_002_F.tif -> \
+        /.../Repository/Capture/FLATTENED/0031_000001/0031_000001+MB455RB_002_F.tif
+FLATTENED/0031_000001/0031_000001+MB470LB_003_F.tif -> \
+        /.../Repository/Capture/FLATTENED/0031_000001/0031_000001+MB470LB_003_F.tif
+FLATTENED/0031_000001/0031_000001+MB505Cy_004_F.tif -> \
+        /.../Repository/Capture/FLATTENED/0031_000001/0031_000001+MB505Cy_004_F.tif
+FLATTENED/0031_000001/0031_000001+MB535Gr_005_F.tif -> \
+        /.../Repository/Capture/FLATTENED/0031_000001/0031_000001+MB535Gr_005_F.tif
+FLATTENED/0031_000001/0031_000001+MB570Am_006_F.tif -> \
+        /.../Repository/Capture/FLATTENED/0031_000001/0031_000001+MB570Am_006_F.tif
+FLATTENED/0031_000001/0031_000001+MB625Rd_007_F.tif -> \
+        /.../Repository/Capture/FLATTENED/0031_000001/0031_000001+MB625Rd_007_F.tif
+FLATTENED/0031_000001/0031_000001+MB700IR_008_F.tif -> \
+        /.../Repository/Capture/FLATTENED/0031_000001/0031_000001+MB700IR_008_F.tif
+FLATTENED/0031_000001/0031_000001+MB735IR_009_F.tif -> \
+        /.../Repository/Capture/FLATTENED/0031_000001/0031_000001+MB735IR_009_F.tif
+FLATTENED/0031_000001/0031_000001+MB780IR_010_F.tif -> \
+        /.../Repository/Capture/FLATTENED/0031_000001/0031_000001+MB780IR_010_F.tif
+
 
 EOF
 
@@ -116,16 +134,23 @@ else
   warning "PACKAGE_NOT_APPROVED"
 fi
 
+ingest_file=`ls *_ingest_list_* 2>/dev/null`
+ingest_file_count=`echo $ingest_file | wc -w`
+if [ $ingest_file_count -eq 1 ]; then
+  message "Using ingest list: $ingest_file"
+else
+  error "Expected one ingest list; found $ingest_file_count: $ingest_file"
+fi
+
 file_list=$tmp.1
 # get all non-hidden files
-find data -type f ! -name .\* > $file_list
+awk -F' -> ' '{ print $1 }' $ingest_file > $file_list
 # get the page directory name
 base_dir=`get_full_path $PACKAGE_DIR`
 base_dir=`basename $base_dir`
 json_base="${base_dir}_${approve_date}"
 
 `dirname $0`/collect_metadata $file_list $json_base
-  
 
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
