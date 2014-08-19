@@ -10,7 +10,7 @@ Specifically, the script has these prerequisites:
 * the package must have a RECEIPT_APPROVED.txt file
 
 * the package image files must have been ingested; thus, an
-  INGESTION_COMPLETE.txt file must be present
+  IMAGE_INGESTION_COMPLETE.txt file must be present
 
 It runs the following scripts:
 
@@ -105,7 +105,7 @@ UPLOAD_FORCE=
 while getopts ":hvjJgGkKaA" opt; do
   case $opt in
     h)
-      usage 
+      usage
       version
       help
       exit 1
@@ -162,13 +162,7 @@ if [ $? -ne 0 ]; then
   error "Error finding package directory"
 fi
 
-# make sure there's a data directory in PACKAGE_DIR
-DATA_DIR=`data_dir $PACKAGE_DIR`
-if [ $? -ne 0 ]; then
-  error "Error finding data directory"
-fi
-
-# TODO: Must have RECEIPT_APPROVED
+# Must have RECEIPT_APPROVED
 if [ -f $PACKAGE_DIR/$RECEIPT_APPROVED ]; then
   message "Package approved: `cat $PACKAGE_DIR/$RECEIPT_APPROVED`"
 else
@@ -176,7 +170,7 @@ else
   error "Package has not been approved"
 fi
 
-# TODO: Must have INGEST_COMPLETE
+# Must have INGEST_COMPLETE
 if [ -f $PACKAGE_DIR/$INGESTION_COMPLETE ]; then
   message "Ingest completed: `cat $PACKAGE_DIR/$INGESTION_COMPLETE`"
 else
