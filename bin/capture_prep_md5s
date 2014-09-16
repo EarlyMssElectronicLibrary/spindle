@@ -173,20 +173,24 @@ do
     )
   fi
 
-  if ls *_CCD_CCC-RC0905.tif > /dev/null 2>&1 ; then
-    if ! grep "_CCD_CCC-RC0905.tif" $md5_file > /dev/null 2>&1; then
-      message "Add MD5 for color TIFF to $md5_file"
-      md5_cmd=`whichMd5`
-      (
-        color_tiffs=`ls *_CCD_CCC-RC0905.tif`
-        cd $dir
-        for x in $color_tiffs
-        do
-          $md5_cmd $x >> md5s.txt
-        done
-      )
-      message "Added MD5s for to `pwd`/md5s.txt for $color_tiffs"
-    fi
+  # look for color tiffs; if there is at least one, check to see that
+  # each has an MD5 in md5s.txt
+  if ls $dir/*_CCD_CCC-RC0905.tif >/dev/null 2>&1 || ls $dir/*_PSC.tif >/dev/null 2>&1; then
+    (
+      cd $dir
+      color_tiffs=`ls *_CCD_CCC-RC0905.tif *_PSC.tif 2>/dev/null`
+      for tiff in $color_tiffs
+      do
+        # if we don't find $tiff in md5s.txt; add it
+        if ! grep "$tiff" $MD5S_TXT >/dev/null 2>&1 ; then
+          message "Adding MD5 for $tiff to `pwd`/$MD5S_TXT"
+          $md5_cmd "$tiff" >> $MD5S_TXT
+          if [ $? -ne 0 ]; then
+            error_no_exit "Error adding MD5 for $tiff to `pwd`/$MD5S_TXT"
+          fi
+        fi
+      done
+    )
   fi
 
   # # COUNT AND REPORT
