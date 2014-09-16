@@ -155,6 +155,7 @@ find $CAPTURE_DIR/DEVELOPED -type d -name "*[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9]
 count=0
 total=`wc -l $dir_list | awk '{ print $1 }'`
 report_count $count $total 0
+md5_cmd=`whichMd5`
 while read dir
 do
   md5_file=$dir/$MD5S_TXT
@@ -162,7 +163,6 @@ do
     message "Found JPEG MD5s in $md5_file"
   else
     message "Add MD5s for developed JPEGs to $md5_file"
-    md5_cmd=`whichMd5`
     (
       cd $dir
       for x in `ls *.jpg *.jpeg 2>/dev/null`
