@@ -3,7 +3,7 @@
 read -r -d '' HELP <<-'EOF'
 
 For FILE, verify all image file have the corret metadata.
-  
+
 Files are expected to have the following metadata values:
 
 * IPTC Source                        - required
@@ -122,7 +122,7 @@ check_source() {
   cs_metadata="$2"
   cs_base=`basename "$cs_file"`
   cs_shot_sequence=`echo "$cs_base" | awk -F_ '{ print $1 "_" $2 }'`
-  cs_source=`get_tag_value Source "$cs_metadata"`
+  cs_source=`get_tag_value "$cs_metadata" Source`
   if [ "$cs_source" = "$cs_shot_sequence" ]; then
     return 0
   else
@@ -213,7 +213,7 @@ photoshoot_color_image() {
 while getopts ":hv" opt; do
   case $opt in
     h)
-      usage 
+      usage
       version
       help
       exit 0
@@ -246,7 +246,7 @@ then
   status=0
   warning "Not checking metadata for PhotoShoot color image"
 else
-  metadata=`exiftool -args $file` 
+  metadata=`exiftool -args $file`
   missing=`check_required "$metadata"`
 
   status=0
