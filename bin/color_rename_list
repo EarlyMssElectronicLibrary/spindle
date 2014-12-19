@@ -2,13 +2,13 @@
 
 read -r -d '' HELP <<-'EOF'
 Create a command file to rename color images in PAGKAGE_DIR. The command file
-will be created as 
+will be created as
 
     PAGKAGE_DIR/color_rename-`date +%F`.sh
 
 This command file should be run to rename color files to standard format.
 
-A color file like 
+A color file like
 
     0030_000076+MB365UV_CCD_CCC-RC0905.tif
 
@@ -24,14 +24,10 @@ sources files would be given the same name. For example, these two files:
 
 Would both be renamed to:
 
-    0016_000013_PSH_color.tif    
+    0016_000013_PSH_color.tif
 
 EOF
 # functions
-SHOT_SEQ_PATTERN="^[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]$"
-valid_shot_sequence() {
-  echo "$1" | grep "$SHOT_SEQ_PATTERN" > /dev/null
-}
 
 ### TEMPFILES
 # From:
@@ -66,7 +62,7 @@ usage() {
 while getopts ":hv" opt; do
   case $opt in
     h)
-      usage 
+      usage
       version
       help
       exit 1
@@ -115,10 +111,10 @@ do
   dir=`dirname $file`
   ext=`getExtension $base`
   sequence=`echo $base | awk -F '+' '{ print $1 }' | awk -F '_' '{ print $1 "_" $2 }'`
-  if valid_shot_sequence $sequence
+  if valid_cube_name "$sequence"
   then
     newname=${sequence}_PSH_color.${ext}
-    if grep "${newname}$" $copy_script 
+    if grep "${newname}$" $copy_script
     then
       error_no_exit "Duplicate new file name: ${newname}"
       error_no_exit "    Original name: ${file}"

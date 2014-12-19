@@ -27,10 +27,6 @@ This script will add the following metadata tags
 
 EOF
 # functions
-SHOT_SEQ_PATTERN="^[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]$"
-valid_shot_sequence() {
-  echo "$1" | grep "$SHOT_SEQ_PATTERN" > /dev/null
-}
 
 ### TEMPFILES
 # From:
@@ -250,13 +246,13 @@ do
     sed -f $sedscr $JSON_TEMPLATE > $json_tmp
     # APPLY THE METADATA
     if exiftool -overwrite_original -json=$json_tmp $curr_file ; then
-      message "Added metadata to $curr_file"    
+      message "Added metadata to $curr_file"
     else
       invalid "Error applying metdata to $curr_file"
       erors_found="$erors_found $curr_file"
       success=false
     fi
-    
+
     if $success ; then
       rm -f `dirname $file`/${shot_seq}*.tif.md5 $exif_file $tiff_list
     fi

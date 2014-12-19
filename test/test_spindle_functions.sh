@@ -14,14 +14,45 @@ tearDown() {
   rm -f $tmp.?
 }
 
-# suite() {
-#   suite_addTest "testNewest"
-#   suite_addTest "testCmpActualToLoggedFileMissingFromLog"
-#   suite_addTest "testCmpActualToLoggedMatch"
-#   suite_addTest "testCmpActualToLoggedExtraLoggedFile"
-#   suite_addTest "testFindMD5Command"
-#   suite_addTest "testReturnsExpectedFilenameCode"
-# }
+suite() {
+  suite_addTest testValidCubeName
+  # suite_addTest "testNewest"
+  # suite_addTest "testCmpActualToLoggedFileMissingFromLog"
+  # suite_addTest "testCmpActualToLoggedMatch"
+  # suite_addTest "testCmpActualToLoggedExtraLoggedFile"
+  # suite_addTest "testFindMD5Command"
+  # suite_addTest "testReturnsExpectedFilenameCode"
+}
+
+testValidCubeName() {
+  cubename=0023_123456
+  valid_cube_name $cubename
+  assertEquals "Cube name $cubename should be valid" 0 $?
+
+  cubename=K0023_123456
+  valid_cube_name $cubename
+  assertEquals "Cube name $cubename should be valid" 0 $?
+
+  cubename=k0023_123456
+  valid_cube_name $cubename
+  assertEquals "Cube name $cubename should be valid" 0 $?
+
+  cubename=0023_1234567
+  valid_cube_name $cubename
+  assertEquals "Cube name $cubename should not be valid" 1 $?
+
+  cubename=0023_12.4567
+  valid_cube_name $cubename
+  assertEquals "Cube name $cubename should not be valid" 1 $?
+
+  cubename=0023_12345
+  valid_cube_name $cubename
+  assertEquals "Cube name $cubename should not be valid" 1 $?
+
+  cubename=002x_123456
+  valid_cube_name $cubename
+  assertEquals "Cube name $cubename should not be valid" 1 $?
+}
 
 testNewest() {
   time_file1=$tmp.1
@@ -40,7 +71,7 @@ testNewest() {
   assertEquals $n $time_file3
 
   n=`newest "" $time_file2 $time_file1`
-  assertEquals $n $time_file2  
+  assertEquals $n $time_file2
 
   n=`newest $time_file3 $time_file2 ""`
   assertEquals $n $time_file3
@@ -56,10 +87,10 @@ testCmpActualToLoggedFileMissingFromLog() {
   content="file1 file2 file3 file4 file5"
   actual=$tmp.1
   logged=$tmp.2
-  for file in $content 
+  for file in $content
   do
-    echo $file >> $actual 
-    echo $file >> $logged 
+    echo $file >> $actual
+    echo $file >> $logged
   done
   # add the extra file
   echo file6 >> $actual
@@ -71,10 +102,10 @@ testCmpActualToLoggedMatch() {
   content="file1 file2 file3 file4 file5"
   actual=$tmp.1
   logged=$tmp.2
-  for file in $content 
+  for file in $content
   do
-    echo $file >> $actual 
-    echo $file >> $logged 
+    echo $file >> $actual
+    echo $file >> $logged
   done
   output=`cmpActualToLogged $actual $logged`
   assertEquals "Exit status should be 0" 0 $?
@@ -85,10 +116,10 @@ testCmpActualToLoggedExtraLoggedFile() {
   content="file1 file2 file3 file4 file5"
   actual=$tmp.1
   logged=$tmp.2
-  for file in $content 
+  for file in $content
   do
-    echo $file >> $actual 
-    echo $file >> $logged 
+    echo $file >> $actual
+    echo $file >> $logged
   done
   # add the extra file
   echo file6 >> $logged
@@ -128,6 +159,7 @@ BAD_PROC_TYPE=sha'rpie data/0020_000011_KTK_sha'rpie_WBUVR25-MB625Rd.jpg
 VALID data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd.jpg
 VALID data/0020_000011_KTK_sharpie_WBUVR25-MB625Rd_xyz.jpg
 VALID data/0020_000011_WCB_PCA.jpg
+VALID data/K0020_000011_WCB_PCA.jpg
 EOF
   while read line
   do

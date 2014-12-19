@@ -4,10 +4,6 @@ read -r -d '' HELP <<-'EOF'
 Convert all L/A/B TIFF's in IN_DIR to RGB JPEG's, writing the to OUT_DIR
 EOF
 # functions
-SHOT_SEQ_PATTERN="^[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]$"
-valid_shot_sequence() {
-  echo "$1" | grep "$SHOT_SEQ_PATTERN" > /dev/null
-}
 
 ### TEMPFILES
 # From:
@@ -44,7 +40,7 @@ OUT_DIR=
 while getopts ":hv" opt; do
   case $opt in
     h)
-      usage 
+      usage
       version
       help
       exit 1
@@ -87,7 +83,7 @@ fi
 total=`wc -l $file_list | awk '{ print $1 }'`
 count=0
 report_count $count $total 0
-while read file 
+while read file
 do
   new_name=`echo $file | sed 's!tif$!jpg!'`
   base=`basename $new_name`

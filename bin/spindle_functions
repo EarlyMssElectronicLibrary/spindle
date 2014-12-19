@@ -475,6 +475,7 @@ SHOT_SEQ_PTRN="^[0-9]{6}$"
 PROCESSOR_PTRN="^[a-zA-Z]{3}$"
 PROC_TYPE_PTRN="^${VALID_INIT_FINAL_CHARS}${VALID_MEDIAL_CHARS}*${VALID_INIT_FINAL_CHARS}$"
 MODIFIERS_PTRN="^(${VALID_INIT_FINAL_CHARS}$|${VALID_INIT_FINAL_CHARS}${VALID_MEDIAL_CHARS}*${VALID_INIT_FINAL_CHARS}$|$)"
+CUBE_NAME_PTRN="^[A-Za-z]?[0-9]{4}_[0-9]{6}$"
 # valid file name patterns
 # FILE_SHOOT_LIST_PTRN="^${SHOOT_LIST}_"
 # FILE_SHOT_SEQ_PTRN="${FILE_SHOOT_LIST_PTRN}${SHOT_SEQ}_"
@@ -496,6 +497,7 @@ isImageFile() {
   return 1
 }
 
+
 hasValidExt() {
   file=$1
   ext=`getExtension $file`
@@ -515,12 +517,9 @@ getExtension() {
 }
 
 matchesPattern() {
-  text=$1
-  pattern=$2
-  if echo "$text" | egrep "$pattern" >/dev/null 2>&1 ; then
-    return 0
-  fi
-  return 1
+  mp_text=$1
+  mp_pattern=$2
+  echo "$mp_text" | egrep "$mp_pattern" >/dev/null 2>&1
 }
 
 is_a_tar_file() {
@@ -657,6 +656,10 @@ has_exif_json_files() {
     error_no_exit "Dir not found: $hejf_dir"
     return 1
   fi
+}
+
+valid_cube_name() {
+  echo "$1" | egrep "$CUBE_NAME_PTRN" >/dev/null 2>&1
 }
 
 validateFilename() {
