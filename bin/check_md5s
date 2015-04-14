@@ -100,7 +100,7 @@ do
   manifest=`basename $md5_file`
   output=`(
     cd $dir
-    verifyMd5Manifest md5s.txt
+    verifyMd5Manifest $manifest
   )`
   status=$?
   if [ -n "$logfile" ]; then
