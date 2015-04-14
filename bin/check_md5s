@@ -64,7 +64,7 @@ shift $((OPTIND-1))
 ### THESCRIPT
 # grab package directoy and confirm it exists
 REPO_DIR=$1
-if valid_REPO_DIR $REPO_DIR
+if dir_exists $REPO_DIR
 then
   message "Using REPO_DIR $REPO_DIR"
 else
