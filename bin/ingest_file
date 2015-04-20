@@ -59,7 +59,7 @@ usage() {
 while getopts ":hv" opt; do
   case $opt in
     h)
-      usage 
+      usage
       version
       help
       exit 1
@@ -95,7 +95,7 @@ fi
 CHECKSUM=$3
 if [ -z "$CHECKSUM" ]; then
   error "Please provide a CHECKSUM"
-fi 
+fi
 if echo "$CHECKSUM" | egrep "^[[:alnum:]]{32}$" >/dev/null ; then
   :
 else
@@ -113,14 +113,6 @@ if [ -f $dest_file ]; then
 fi
 cp -v $SOURCE_FILE $DEST_DIR > $copy_line
 
-# copy the checksum
-# grep -F pattern is fixed string
-md5_file=$DEST_DIR/$base.md5
-if [ -f $md5_file ]; then
-  echo "WARNING: Overwriting existing md5 file $md5_file" >&2
-fi
-echo "$checksum  $base" > $md5_file
-
 cat $copy_line
 # VERIFY THE COPY WAS CORRECT
 if ! file_valid $dest_file $CHECKSUM ; then
@@ -129,10 +121,26 @@ if ! file_valid $dest_file $CHECKSUM ; then
   exit 1
 fi
 
+# copy the checksum
+# grep -F pattern is fixed string
+md5_file=$DEST_DIR/$base.md5
+if [ -f $md5_file ]; then
+  cp -v $md5_file ${md5_file}.bak > &2
+  echo "WARNING: Overwriting existing md5 file $md5_file" >&2
+fi
+echo "$CHECKSUM  $base" > $md5_file
+
+md5_file_parts=`wc -w $md5_file | awk '{ print $1 }'`
+if [[ $md5_file_parts -ne 2 ]]; then
+  echo "ERROR: MD5 ($md5_file) should have checksum and file name; found: `cat $md5_file`" >&2
+  exit 1
+else
+  echo "INFO: Created MD5 file: $md5_file: `cat $md5_file`"
+fi
+
+
 ### EXIT
 # http://stackoverflow.com/questions/430078/shell-script-templates
 rm -f $tmp.?
 trap 0
 exit 0
-
-
