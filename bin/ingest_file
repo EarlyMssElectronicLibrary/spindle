@@ -125,7 +125,7 @@ fi
 # grep -F pattern is fixed string
 md5_file=$DEST_DIR/$base.md5
 if [ -f $md5_file ]; then
-  cp -v $md5_file ${md5_file}.bak > &2
+  cp -v $md5_file ${md5_file}.bak >&2
   echo "WARNING: Overwriting existing md5 file $md5_file" >&2
 fi
 echo "$CHECKSUM  $base" > $md5_file
