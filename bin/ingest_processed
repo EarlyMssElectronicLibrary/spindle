@@ -66,7 +66,7 @@ REPO_PATH=
 while getopts ":hv" opt; do
   case $opt in
     h)
-      usage 
+      usage
       version
       help
       exit 1
@@ -160,13 +160,13 @@ do
   checksum=`grep -F "$file" $MANIFEST_FILE | awk '{ print $1 }'`
   # copy the file
   # COPY
-  copy_line=`ingest_file $file $dest $checksum`
+  copy_line="`ingest_file $file $dest $checksum`"
   if [ $? -eq 0 ]; then
     valid $dest_file
-    echo $copy_line >> $INGEST_LOG
+    echo "$copy_line" >> $INGEST_LOG
   else
     invalid "Deleting  $dest_file"
-    echo $copy_line >> $INGEST_ERRORS
+    echo "$copy_line" >> $INGEST_ERRORS
   fi
   copy_line=
 
@@ -180,7 +180,7 @@ if [ -s $INGEST_ERRORS ]; then
 else
   valid "ALL files copied correctly"
   rm $INGEST_ERRORS
-fi 
+fi
 
 iso_date > $INGESTION_COMPLETE
 
@@ -189,5 +189,3 @@ iso_date > $INGESTION_COMPLETE
 rm -f $tmp.?
 trap 0
 exit 0
-
-
