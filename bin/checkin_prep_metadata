@@ -103,6 +103,7 @@ json_files.each_with_index do |file,index|
   updates = []
   json.each do |image|
     image_file = image['FileName']
+    message COMMAND, "Checking file #{image}"
     cmd =  "grep \"/#{image_file}$\" #{ingest_log}"
     log_line = `#{cmd}`
     repo_path = log_line.strip.split.pop
