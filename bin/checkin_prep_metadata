@@ -44,7 +44,7 @@ example, note these metadata file names:
 The pattern is:
 
     <DIRECTORY>_metadata_<INGEST_DATE>_<SERIAL_NUMBER>.json
-    
+
 The ingest log has a name like this:
 
 * KTK_ingest_list_20130403T010045-0400.log
@@ -77,11 +77,11 @@ Dir.chdir package_dir
 json_files = Dir["*_metadata_*.json"]
 
 ingest_files = Dir["*_ingest_list_*.log"]
-if ingest_files.size == 0 
+if ingest_files.size == 0
   error COMMAND, "No ingest file found: expected 1"
   exit 1
 elsif ingest_files.size > 1
-  error COMMAND, "Wrong number of ingest logs; expected 1; found " + 
+  error COMMAND, "Wrong number of ingest logs; expected 1; found " +
     "#{ingest_files.size}:"
 
   ingest_files.each do |file|
@@ -95,13 +95,13 @@ ingest_log = ingest_files.shift
 count = 0
 total = json_files.size
 interval = 0
-report_count COMMAND, count, total, interval 
+report_count COMMAND, count, total, interval
 json_files.each_with_index do |file,index|
   message COMMAND, "Reading #{file}"
   json = JSON.parse IO.read(file)
   out_file = file.sub /\.json/, '-prep.json.gz'
   updates = []
-  json.each do |image| 
+  json.each do |image|
     image_file = image['FileName']
     cmd =  "grep \"/#{image_file}$\" #{ingest_log}"
     log_line = `#{cmd}`
@@ -112,10 +112,9 @@ json_files.each_with_index do |file,index|
   end
 
   File.delete(out_file) if File.exists?(out_file)
-  
+
   Zlib::GzipWriter.open(out_file) do |gz|
     gz.write updates.to_json
   end
   report_count COMMAND, (index+1), total, interval, out_file
 end
-
