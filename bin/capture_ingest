@@ -182,13 +182,13 @@ do
   checksum=`grep "${base}$" $manifest | awk '{ print $1 }'`
   # copy the file
   # COPY
-  copy_line=`$INGEST_FILE_COMMAND $file $dest $checksum`
+  copy_line="`$INGEST_FILE_COMMAND $file $dest $checksum`"
   if [ $? -eq 0 ]; then
     valid $dest_file
-    echo $copy_line >> $INGEST_LOG
+    echo "$copy_line" >> $INGEST_LOG
   else
     invalid "Deleting  $dest_file"
-    echo $copy_line >> $INGEST_ERRORS
+    echo "$copy_line" >> $INGEST_ERRORS
   fi
   copy_line=
 
