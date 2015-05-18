@@ -7,20 +7,19 @@ checksums to the repository making a record of what files are copied and
 where.
 
 .
-├── CAPTURE_FLATTENED_201401_metadata_000.json
-├── CAPTURE_DEVELOPED_201401_metadata_000.json
-├── FLATTENED
-│   ├── 0031_000001
-│   │   ├── 0031_000001+MB365UV_001_F.tif
-│   │   ├── 0031_000001+MB455RB_002_F.tif
-│   │   ├── 0031_000001+MB470LB_003_F.tif
-│   │   ├── 0031_000001+MB505Cy_004_F.tif
-│   │   ├── 0031_000001+MB535Gr_005_F.tif
-│   │   ├── 0031_000001+MB570Am_006_F.tif
-│   │   ├── 0031_000001+MB625Rd_007_F.tif
-│   │   ├── 0031_000001+MB700IR_008_F.tif
-│...
-
+  CAPTURE_FLATTENED_201401_metadata_000.json
+  CAPTURE_DEVELOPED_201401_metadata_000.json
+  FLATTENED
+    0031_000001
+      0031_000001+MB365UV_001_F.tif
+      0031_000001+MB455RB_002_F.tif
+      0031_000001+MB470LB_003_F.tif
+      0031_000001+MB505Cy_004_F.tif
+      0031_000001+MB535Gr_005_F.tif
+      0031_000001+MB570Am_006_F.tif
+      0031_000001+MB625Rd_007_F.tif
+      0031_000001+MB700IR_008_F.tif
+      ...
 
 EOF
 
