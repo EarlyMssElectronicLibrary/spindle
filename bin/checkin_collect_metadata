@@ -138,7 +138,7 @@ fi
 
 file_list=$tmp.1
 # get all non-hidden files
-awk -F' -> ' '{ print $1 }' $ingest_file > $file_list
+grep -v "^INFO" $ingest_file | awk -F' -> ' '{ print $1 }' > $file_list
 # get the page directory name
 base_dir=`get_full_path $PACKAGE_DIR`
 base_dir=`basename $base_dir`
